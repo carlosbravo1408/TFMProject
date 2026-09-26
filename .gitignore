@@ -1,2 +1,7 @@
 .venv/
 .idea/
+.env
+__pycache__/
+estado_del_arte/mendeley_sync/data/
+.ipynb_checkpoints
+/.ipynb_checkpoints
