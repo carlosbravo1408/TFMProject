@@ -40,6 +40,7 @@ from physics_models import (
     WalkerMonteCarlo,
     fit_double_exponential,
     linear_regression_extrapolation,
+    observed_rate_bound,
 )
 from scoring import penalty_score, rmse_mm, score_table
 
@@ -63,7 +64,7 @@ PAPER_PREDICTIONS = {
 class HybridPipeline:
     data_root: Path
     features: list[str] = field(default_factory=lambda: list(OPTIMAL_FEATURES))
-    ensemble_sigma_mm: float = 0.5
+    ensemble_sigma_mm: float = 1.0
     walker_models: int = 100
     random_state: int = 0
 
@@ -80,6 +81,7 @@ class HybridPipeline:
     def build_feature_tables(self) -> pd.DataFrame:
         """Feature tables for all specimens (labeled cycles for training
         specimens; all measured cycles for T7/T8)."""
+        self.extractor.set_alignment_anchor(self.specimens)
         for name, spec in self.specimens.items():
             labeled_only = name not in ("T7", "T8")
             self.feature_tables[name] = self.extractor.specimen_feature_table(
@@ -130,18 +132,18 @@ class HybridPipeline:
 
     def run_physics_t7(self) -> pd.DataFrame:
         """Ensemble prognostics prediction of T7's four signal-less cycles."""
-        self.exponential_models = []
+        curvas = {}
         for name in ENSEMBLE_SPECIMENS:
             spec = self.specimens[name]
             desc = spec.description[spec.description["crack_length_mm"] > 0]
             n0 = spec.initiation_cycle()
-            self.exponential_models.append(
-                fit_double_exponential(
-                    name,
-                    desc["cycle"].to_numpy(float) - n0,
-                    desc["crack_length_mm"].to_numpy(float),
-                )
-            )
+            curvas[name] = (desc["cycle"].to_numpy(float) - n0,
+                            desc["crack_length_mm"].to_numpy(float))
+        self.rate_bound = observed_rate_bound(curvas)
+        self.exponential_models = [
+            fit_double_exponential(name, *curvas[name], rate_ub=self.rate_bound)
+            for name in ENSEMBLE_SPECIMENS
+        ]
         self.t7_ensemble = EnsemblePrognostics(self.exponential_models, self.ensemble_sigma_mm)
         n_initial, cycles, cracks = self._normalized_history("T7")
         target = np.array(PREDICTION_CYCLES["T7"], float) - n_initial

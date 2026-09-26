@@ -34,13 +34,15 @@ BANDPASS_ORDER = 5
 REFERENCE_ACTUATOR_PEAK_INDEX = 1700
 
 # Time range holding the principal S0 mode of the received wave after
-# alignment. Figure 4 of the paper compares the pre-processed T4 signals over
-# 106-126 us (its axis reads 10.6-12.6 in 1e-5 s), where the separation
-# between cycles is noticeable; the default window is that range slightly
-# widened, which keeps the same wave packet while making the envelope-peak
-# phase-delay feature more robust at the packet edges.
-S0_WINDOW_START_S = 100e-6
-S0_WINDOW_END_S = 130e-6
+# alignment: the range Figure 4 of the paper plots for specimen T4, where it
+# states the features were extracted. Its axis is printed as 10.6-12.6 with
+# the unit "us", which cannot be read literally: the actuation burst alone
+# peaks near 82 us in these records. Read in units of 1e-5 s the range is
+# 106-126 us, and that is where the mean envelope of the received signal
+# holds its first propagated packet: the actuation crosstalk decays by 95 us,
+# the packet rises from 106 us, and later arrivals take over past 130 us.
+S0_WINDOW_START_S = 106e-6
+S0_WINDOW_END_S = 126e-6
 
 
 def bandpass_filter(
@@ -78,6 +80,24 @@ def phase_alignment_shift(
     return (reference_index - int(np.argmax(reference_ch1))) - lag
 
 
+# Maximum deviation, in samples, that a record's cross-correlation shift may
+# have from its specimen's consensus before it is treated as a lobe-lock
+# failure and snapped to the consensus. The sensing geometry is fixed within
+# a specimen, so the actuator-to-record delay has to be constant there: in
+# seven of the eight specimens the spread is 0 to 1 sample, and the only
+# outlier is T3's cycle 50000, which locks 196 samples (9.8 us) away from the
+# other nine records of T3 -- half the width of the feature window.
+SHIFT_CONSENSUS_TOLERANCE = 5
+
+
+def consensus_shift(shifts: list[int], tolerance: int = SHIFT_CONSENSUS_TOLERANCE) -> tuple[int, list[int]]:
+    """Specimen-wide alignment shift and the shifts with outliers snapped to it."""
+    if not shifts:
+        return 0, []
+    consensus = int(np.median(shifts))
+    return consensus, [consensus if abs(s - consensus) > tolerance else s for s in shifts]
+
+
 def apply_shift(x: np.ndarray, shift: int) -> np.ndarray:
     """Shift a signal by ``shift`` samples (positive = delay), zero-padding."""
     out = np.zeros_like(x)
@@ -107,9 +127,16 @@ class SignalPreprocessor:
         all specimens (any record works; the excitation burst is shared)."""
         self.reference_ch1 = np.asarray(ch1, dtype=float)
 
-    def preprocess(self, ch1: np.ndarray, ch2: np.ndarray) -> np.ndarray:
-        """Filtered, phase-aligned received signal (full record)."""
-        shift = phase_alignment_shift(ch1, self.reference_ch1, self.reference_index)
+    def record_shift(self, ch1: np.ndarray) -> int:
+        return phase_alignment_shift(ch1, self.reference_ch1, self.reference_index)
+
+    def preprocess(self, ch1: np.ndarray, ch2: np.ndarray, shift: int | None = None) -> np.ndarray:
+        """Filtered, phase-aligned received signal (full record). ``shift``
+        overrides the record's own cross-correlation lag, which is how a
+        specimen's consensus shift is imposed on a record that locked onto
+        the wrong lobe of the actuation burst."""
+        if shift is None:
+            shift = self.record_shift(ch1)
         return apply_shift(bandpass_filter(ch2), shift)
 
     def window_slice(self, n_samples: int) -> slice:
@@ -117,9 +144,9 @@ class SignalPreprocessor:
         i1 = int(round(self.window_end_s / DT_S))
         return slice(max(i0, 0), min(i1, n_samples))
 
-    def s0_window(self, ch1: np.ndarray, ch2: np.ndarray) -> np.ndarray:
+    def s0_window(self, ch1: np.ndarray, ch2: np.ndarray, shift: int | None = None) -> np.ndarray:
         """Pre-processed received signal restricted to the S0 time range."""
-        aligned = self.preprocess(ch1, ch2)
+        aligned = self.preprocess(ch1, ch2, shift)
         return aligned[self.window_slice(len(aligned))]
 
     def window_times_s(self, n_samples: int) -> np.ndarray:

@@ -58,26 +58,52 @@ class ExponentialModel:
         return double_exponential(np.asarray(n, dtype=float), *self.params)
 
 
-def fit_double_exponential(specimen: str, cycles: np.ndarray, cracks: np.ndarray) -> ExponentialModel:
+def observed_rate_bound(curves: dict[str, tuple[np.ndarray, np.ndarray]]) -> float:
+    """Fastest exponential growth rate ``d(ln a)/dN`` seen between consecutive
+    measured points of the training curves.
+
+    It bounds the fitted rates of Eq. 6, and tying it to the data forbids any
+    component from growing faster than a measured crack ever did. A looser
+    bound leaves room for a degenerate fit: given 1.5e-3 per cycle, which is
+    2.6 times the fastest growth any specimen shows, T1's best least-squares
+    solution parks an amplitude of 2.7e-7 mm on a rate pinned at the bound,
+    reproduces the six fitted points and then climbs from 4.28 to 8.44 mm
+    over the two thousand cycles it is extrapolated across."""
+    rates = []
+    for cycles, cracks in curves.values():
+        order = np.argsort(cycles)
+        n, a = np.asarray(cycles, float)[order], np.asarray(cracks, float)[order]
+        keep = a > 0
+        if keep.sum() < 2:
+            continue
+        rates.extend(np.diff(np.log(a[keep])) / np.diff(n[keep]))
+    return float(np.max(rates)) if rates else 1.5e-3
+
+
+def fit_double_exponential(
+    specimen: str, cycles: np.ndarray, cracks: np.ndarray, rate_ub: float = 1.5e-3
+) -> ExponentialModel:
     """Least-squares fit of Eq. 6 on normalized cycles (N=0 at initiation).
 
-    The parameters are bounded to non-negative amplitudes and growth rates of
-    at most 1.5e-3 per cycle: fatigue crack growth is monotonically
-    increasing, and an unbounded fit can park a near-zero amplitude on a huge
-    rate, which reproduces the data but explodes when the model is
-    extrapolated a few thousand cycles ahead (the extrapolation is exactly
-    how these models are used in the ensemble prognostics). The nonlinear
-    least squares is restarted from 60 random initial guesses and the best
-    solution kept, since single-start fits routinely stall in poor local
-    minima for these small data sets."""
+    Amplitudes are non-negative and both rates are capped at ``rate_ub``,
+    which the pipeline sets from the training curves themselves through
+    :func:`observed_rate_bound`. The nonlinear least squares is restarted from
+    60 random initial guesses and the best solution kept, since single-start
+    fits routinely stall in poor local minima for these small data sets.
+
+    Eq. 6 is over-parameterized for these curves and that is a property of the
+    published model, not of this fit: with five to seven points per specimen,
+    AICc prefers a single exponential for all four, and in T3 and T6 the two
+    fitted rates agree to five significant figures, so the sum collapses to
+    one exponential on its own. The published form is kept regardless."""
     cycles = cycles.astype(float)
     cracks = cracks.astype(float)
-    rate_ub = 1.5e-3
     bounds = ([0.0, 0.0, 0.0, 0.0], [20.0, rate_ub, 20.0, rate_ub])
     rng = np.random.default_rng(0)
     best_params, best_sse = None, np.inf
     for _ in range(60):
-        p0 = [rng.uniform(0, 3), rng.uniform(0, 3e-4), rng.uniform(0, 0.05), rng.uniform(2e-4, rate_ub)]
+        p0 = [rng.uniform(0, 3), rng.uniform(0, rate_ub / 5), rng.uniform(0, 0.05),
+              rng.uniform(rate_ub / 8, rate_ub)]
         try:
             params, _ = curve_fit(
                 double_exponential, cycles, cracks, p0=p0, bounds=bounds, maxfev=20000
@@ -96,10 +122,12 @@ class EnsemblePrognostics:
     Each training-specimen exponential model is a 'particle'. At every
     prediction step:
       1. generate a Gaussian PDF per particle, centred on that model's crack
-         length at the current cycle (sigma fixed; the paper does not report
-         its value — Figure 7's illustrative PDFs suggest sigma ~= 1 mm, but
-         sigma = 0.5 mm reproduces the paper's published T7 prediction
-         trajectory more closely and is the default here);
+         length at the current cycle. The paper does not state sigma, but
+         its Figure 7 plots the PDFs with a peak probability of 0.4, and a
+         Gaussian of peak 1/(sigma*sqrt(2*pi)) = 0.4 has sigma = 1.0 mm.
+         That reading is the default. Fitting sigma to the paper's published
+         T7 trajectory instead would select an unpublished parameter on an
+         evaluation specimen, so the sweep is reported as sensitivity;
       2. weight each particle by its PDF value at the current crack length of
          the validation specimen (estimated for the last cycle with signals,
          previously predicted afterwards) — the Gaussian's bounded maximum
@@ -108,7 +136,7 @@ class EnsemblePrognostics:
          crack lengths at the next cycle.
     """
 
-    def __init__(self, models: list[ExponentialModel], sigma_mm: float = 0.5) -> None:
+    def __init__(self, models: list[ExponentialModel], sigma_mm: float = 1.0) -> None:
         self.models = models
         self.sigma_mm = sigma_mm
 
@@ -139,10 +167,13 @@ class EnsemblePrognostics:
 # ----------------------------------------------------------------------------
 
 # Variable-amplitude loading block (Table 2): (N_i cycles, S_max MPa, S_min MPa).
+# Verificado contra el perfil publicado del propio dataset,
+# ``PHMDC2019_Data/validation/T8/Variable Loading Profile-1 block-1000 cycles.csv``:
+# 20001 muestras a 20 por ciclo dan 1000 ciclos exactos, 500 con S_max = 90.00 MPa
+# y 500 con S_max = 100.21 MPa, todos con S_min = 4.77 MPa.
 VARIABLE_LOADING_BLOCK = (
-    (500, 91.0, 4.77),
+    (500, 90.0, 4.77),
     (500, 100.21, 4.77),
-    (1, 100.21, 4.77),
 )
 
 
@@ -216,15 +247,23 @@ class WalkerMonteCarlo:
         self.fits: list[WalkerFitResult] = []
 
     def objective(self, params: np.ndarray) -> np.ndarray:
-        """Eq. 12: weighted squared error with i^2 weights (vectorized: params
-        has shape (4,) or (4, S))."""
+        """Eq. 12, as a genuine weighted root mean square error.
+
+        The paper only says the objective is an RMSE "with more weights on the
+        cracks in the latter cycles"; the i^2 weights are this replica's
+        reading of that sentence and have to be declared as such. The square
+        root and the division by the sum of the weights are what make the
+        expression a root mean square in the first place; dropping either
+        leaves the argmin untouched but rescales the objective, and
+        ``differential_evolution`` stops on ``tol`` relative to the spread of
+        the population."""
         params = np.atleast_2d(params.T).T  # (4, S)
         c0, gamma, m, sigma_fc = params
         a0 = self.fit_cracks[0] + sigma_fc
         y = self.model.integrate(a0, self.fit_cycles, c0, gamma, m)  # (5, S)
         weights = (np.arange(1, len(self.fit_cycles) + 1) ** 2)[:, None]
         err = (y - self.fit_cracks[:, None]) ** 2
-        return np.squeeze(np.mean(weights * err, axis=0))
+        return np.squeeze(np.sqrt(np.sum(weights * err, axis=0) / weights.sum()))
 
     def fit(self) -> list[WalkerFitResult]:
         """Run the evolutionary optimization ``n_models`` times from random

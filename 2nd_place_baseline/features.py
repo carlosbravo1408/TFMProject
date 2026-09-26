@@ -38,7 +38,7 @@ import numpy as np
 import pandas as pd
 from scipy.signal import hilbert
 
-from signal_processing import DT_S, SignalPreprocessor
+from signal_processing import DT_S, SignalPreprocessor, consensus_shift
 
 FEATURE_NAMES = [
     "max_amplitude",
@@ -175,28 +175,83 @@ class FeatureExtractor:
 
     DEFAULT_REFERENCE_OVERRIDE = {"T8": 50000}
 
+    # Minimum correlation between the two repetitions of a reference cycle for
+    # the second one to stand in as the undamaged baseline. Seven of the eight
+    # specimens clear it with 0.99 or better; only T1's cycle 50000 fails, at
+    # 0.20, and T1 has no other crack-free cycle to fall back to.
+    REFERENCE_COHERENCE_MIN = 0.9
+
+    # Record whose actuation burst every other record is cross-correlated
+    # against (see ``set_alignment_anchor``).
+    ALIGNMENT_ANCHOR = ("T6", 55000)
+
     def __init__(
         self,
         preprocessor: SignalPreprocessor | None = None,
         reference_override: dict[str, int] | None = None,
     ) -> None:
         self.preprocessor = preprocessor or SignalPreprocessor()
+        self.alignment_anchor: tuple[str, int] | None = None
+        self.degenerate_reference: set[str] = set()
         self.reference_override = (
             dict(self.DEFAULT_REFERENCE_OVERRIDE)
             if reference_override is None
             else reference_override
         )
 
-    def specimen_windows(self, specimen) -> dict[int, np.ndarray]:
-        """Pre-processed S0 windows for every measured cycle of a specimen."""
-        windows = {}
-        for cycle in specimen.signal_cycles:
-            df = specimen.signal(cycle)
-            ch1 = df["ch1"].to_numpy()
-            if self.preprocessor.reference_ch1 is None:
-                self.preprocessor.set_reference(ch1)
-            windows[cycle] = self.preprocessor.s0_window(ch1, df["ch2"].to_numpy())
-        return windows
+    def specimen_windows(self, specimen, channel: str = "signal_1") -> dict[int, np.ndarray]:
+        """Pre-processed S0 windows for every measured cycle of a specimen.
+
+        The alignment lag of each record is taken from the specimen's
+        consensus rather than from its own cross-correlation peak, because
+        the sensing geometry does not change within a specimen and a lag
+        that departs from the rest is a lobe-lock failure, not a real delay
+        (see ``consensus_shift``)."""
+        if self.preprocessor.reference_ch1 is None:
+            raise RuntimeError(
+                "No alignment anchor set; call set_alignment_anchor first so every "
+                "specimen is aligned against the same actuation burst."
+            )
+        cycles = list(specimen.signal_cycles)
+        records = {c: specimen.signal(c, channel) for c in cycles}
+        shifts = [self.preprocessor.record_shift(records[c]["ch1"].to_numpy()) for c in cycles]
+        _, shifts = consensus_shift(shifts)
+        return {
+            c: self.preprocessor.s0_window(
+                records[c]["ch1"].to_numpy(), records[c]["ch2"].to_numpy(), shift
+            )
+            for c, shift in zip(cycles, shifts)
+        }
+
+    def specimen_consensus_shift(self, specimen) -> int:
+        """Alignment lag shared by every record of a specimen."""
+        shifts = [
+            self.preprocessor.record_shift(specimen.signal(c)["ch1"].to_numpy())
+            for c in specimen.signal_cycles
+        ]
+        return consensus_shift(shifts)[0]
+
+    def set_alignment_anchor(self, specimens: dict) -> tuple[str, int]:
+        """Fix the common actuation burst every specimen is aligned against.
+
+        It is ``ALIGNMENT_ANCHOR``, the undamaged reference cycle of the
+        training specimen with the smallest PM over the training folds, which
+        is the paper's own selection metric and involves no validation
+        specimen. Fixing it explicitly keeps the anchor out of the hands of
+        dictionary order.
+
+        The choice matters far more than that margin suggests, and the
+        notebook reports the sweep: across the six candidate anchors PM spans
+        only 1.10 to 1.28 while the final penalty spans 111 to 440, with no
+        ordering between the two. The anchor is therefore a nuisance
+        parameter with a large effect and no training-side signal to pin it
+        down, and that has to be declared rather than hidden behind whichever
+        record happened to be read first.
+        """
+        name, cycle = self.ALIGNMENT_ANCHOR
+        self.preprocessor.set_reference(specimens[name].signal(cycle)["ch1"].to_numpy())
+        self.alignment_anchor = (name, cycle)
+        return self.alignment_anchor
 
     def reference_window(self, specimen) -> np.ndarray:
         """Undamaged reference window of a specimen.
@@ -220,10 +275,14 @@ class FeatureExtractor:
         available = available_signal_channels(specimen.root, specimen.name, cycle)
         own = self.specimen_windows(specimen)[cycle]
         if "signal_2" not in available:
+            self.degenerate_reference.add(specimen.name)
             return own
         df = specimen.signal(cycle, "signal_2")
-        repeat = self.preprocessor.s0_window(df["ch1"].to_numpy(), df["ch2"].to_numpy())
-        if np.corrcoef(own, repeat)[0, 1] < 0.9:
+        repeat = self.preprocessor.s0_window(
+            df["ch1"].to_numpy(), df["ch2"].to_numpy(), self.specimen_consensus_shift(specimen)
+        )
+        if np.corrcoef(own, repeat)[0, 1] < self.REFERENCE_COHERENCE_MIN:
+            self.degenerate_reference.add(specimen.name)
             return own
         return repeat
 

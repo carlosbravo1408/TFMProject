@@ -29,6 +29,9 @@ TREES_GRID = (5, 10, 15, 20, 25)
 N_ENSEMBLE_MODELS = 20
 CV_SPECIMENS = ("T1", "T2", "T3", "T4", "T6")
 
+# Forests averaged per grid point when computing PM (see ``grid_search``).
+N_PM_SEEDS = 5
+
 
 def rmse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return float(np.sqrt(np.mean((np.asarray(y_true) - np.asarray(y_pred)) ** 2)))
@@ -58,6 +61,7 @@ class RandomForestCrackEstimator:
         self.max_depth: int | None = None
         self.n_trees: int | None = None
         self.models: list[RandomForestRegressor] = []
+        self.fitted_threshold_mm: float = 2.0
         self.scaler_mean: pd.Series | None = None
         self.scaler_std: pd.Series | None = None
 
@@ -121,14 +125,33 @@ class RandomForestCrackEstimator:
         return pm, fold_rmse
 
     def grid_search(
-        self, table: pd.DataFrame, features: list[str] | None = None, random_state: int = 0
+        self,
+        table: pd.DataFrame,
+        features: list[str] | None = None,
+        random_state: int = 0,
+        n_pm_seeds: int = N_PM_SEEDS,
     ) -> GridSearchResult:
-        """Grid-search hyper-parameter optimization (Section 3.2.4)."""
+        """Grid-search hyper-parameter optimization (Section 3.2.4).
+
+        PM is averaged over ``n_pm_seeds`` forests per grid point rather than
+        read off a single one. Section 3.2.4 is explicit that the forest is
+        stochastic, and it is the paper's own reason for ensembling 20 models;
+        the same applies to the metric that selects the hyper-parameters.
+        Measured on one seed the choice of tree count is unstable: sweeping
+        the seed from 0 to 5 it lands on 10, 25, 10, 20, 25 and 25, and PM
+        ranges from 0.94 to 1.23."""
         features = list(features or self.features)
         best: GridSearchResult | None = None
         for depth in DEPTH_GRID:
             for trees in TREES_GRID:
-                pm, folds = self.kfold_pm(table, features, depth, trees, random_state)
+                runs = [
+                    self.kfold_pm(table, features, depth, trees, random_state + k)
+                    for k in range(n_pm_seeds)
+                ]
+                pm = float(np.mean([r[0] for r in runs]))
+                folds = {
+                    k: float(np.mean([r[1][k] for r in runs])) for k in runs[0][1]
+                }
                 if best is None or pm < best.pm:
                     best = GridSearchResult(features, depth, trees, pm, folds)
         return best
@@ -167,6 +190,7 @@ class RandomForestCrackEstimator:
             best = self.grid_search(table, self.features, self.random_state)
             max_depth, n_trees = best.max_depth, best.n_trees
         self.max_depth, self.n_trees = max_depth, n_trees
+        self.fitted_threshold_mm = self.detection_threshold(table)
         self._fit_scaler(table)
         train_std = self._standardize(table)
         self.models = []
@@ -182,8 +206,27 @@ class RandomForestCrackEstimator:
         preds = [m.predict(x.reshape(1, -1))[0] for m in self.models]
         return max(float(np.mean(preds)), 0.0)
 
+    @staticmethod
+    def detection_threshold(train_table: pd.DataFrame) -> float:
+        """Crack-initiation threshold, taken as the smallest crack length any
+        training specimen shows at its first damaged cycle.
+
+        It is derived from training labels alone, so it involves neither T7
+        nor T8, and on this dataset it is T6's 0.82 mm. The paper bounds this
+        threshold from above: it reports 1.722 mm at the very cycle it
+        declares N_initial for T8 (Sec. 3.3.1), so any threshold above that
+        value, applied to its own published estimates, would move N_initial
+        to 74883."""
+        first = (
+            train_table[train_table["crack_length_mm"] > 0]
+            .sort_values("cycle")
+            .groupby("specimen")["crack_length_mm"]
+            .first()
+        )
+        return float(first.min())
+
     def estimate(
-        self, table: pd.DataFrame, detection_threshold_mm: float = 2.0
+        self, table: pd.DataFrame, detection_threshold_mm: float | None = None
     ) -> pd.DataFrame:
         """Recursive ensemble estimation for a validation specimen's feature
         table (chronological).
@@ -194,18 +237,23 @@ class RandomForestCrackEstimator:
         and takes N_initial as the first cycle with a nonzero *estimated*
         crack. Until the ensemble output exceeds the threshold the crack is
         considered not yet initiated and the estimate (and the recursive
-        ``prev_crack`` feature) is 0. The default of 2.0 mm is the order of
-        the smallest measured cracks at first damage in the training set
-        (1.61-3.25 mm) and reproduces the paper's N_initial for both T7
-        (44054) and T8 (70000). Since crack growth is monotonic, a single
-        above-threshold output followed by sub-threshold ones is treated as a
-        false alarm: N_initial is the earliest cycle from which the raw
-        ensemble output *stays* at or above the threshold. Once initiated,
-        the raw ensemble output is reported unthresholded.
+        ``prev_crack`` feature) is 0. It defaults to
+        :meth:`detection_threshold`, fitted on the training labels.
+
+        A second rule rides on top of the threshold and has to be declared as
+        such: since crack growth is monotonic, a single above-threshold output
+        followed by sub-threshold ones is a false alarm, so N_initial is the
+        earliest cycle from which the raw ensemble output *stays* at or above
+        the threshold. Without it no threshold whatsoever reproduces the
+        paper's pair of N_initial values, because T8's cycle-40000 output sits
+        above its cycle-50000 one. Once initiated, the raw ensemble output is
+        reported unthresholded.
 
         The detection only affects the *reported* estimate; the recursive
         ``prev_crack`` state keeps tracking the raw ensemble output, so a
         sub-threshold early estimate still informs the next cycle."""
+        if detection_threshold_mm is None:
+            detection_threshold_mm = self.fitted_threshold_mm
         table = table.sort_values("cycle").reset_index(drop=True)
         table_std = self._standardize(table)
         X = table_std[self.features].to_numpy().copy()
