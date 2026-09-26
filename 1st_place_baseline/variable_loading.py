@@ -47,17 +47,23 @@ def paris_law_growth_rate_samples(
 
 
 def fit_paris_law_exponent(specimens: dict[str, SpecimenData]) -> tuple[float, float]:
-    """Return ``(m, C)`` from da/dN = C * a^m (log-log linear regression).
+    """Return Paris' ``(m, C)`` by log-log regression of da/dN against ``a``.
 
-    Since all specimens share the same constant applied stress range,
-    Delta K = Y * dsigma * sqrt(pi*a) ∝ sqrt(a), so log(da/dN) = log(C) +
-    m*log(a) with C absorbing the (specimen-independent) stress-range term.
+    All specimens share the same constant applied stress range, so
+    ``Delta K = Y * dsigma * sqrt(pi * a)`` is proportional to ``sqrt(a)`` and
+    Paris' law reads ``da/dN = C * (Delta K)^m ∝ a^(m/2)``. The slope of
+    ``log(da/dN)`` against ``log(a)`` is therefore ``m / 2``, and the exponent
+    has to be recovered as twice that slope.
+
+    Reading the slope directly as ``m`` halves it: on this dataset that is
+    1.3291 instead of 2.6581, against the 2.0597 the paper obtains by MCMC.
     """
     a, dadn = paris_law_growth_rate_samples(specimens)
-    log_a = np.log(a)
-    log_dadn = np.log(dadn)
-    m, log_c = np.polyfit(log_a, log_dadn, 1)
-    return float(m), float(np.exp(log_c))
+    slope, log_c = np.polyfit(np.log(a), np.log(dadn), 1)
+    return float(2.0 * slope), float(np.exp(log_c))
+
+
+SAMPLES_PER_LOADING_CYCLE = 20
 
 
 def equivalent_stress_ratio(
@@ -70,16 +76,36 @@ def equivalent_stress_ratio(
     """
     delta_sigma_constant = constant_profile["loading"].max() - constant_profile["loading"].min()
 
-    period = _estimate_period(constant_profile)
-    cycle_idx = (variable_profile["time"] // period).astype(int)
-    per_cycle_max = variable_profile.groupby(cycle_idx)["loading"].max()
-    per_cycle_min = variable_profile.groupby(cycle_idx)["loading"].min()
-    delta_sigma_per_cycle = per_cycle_max - per_cycle_min
+    delta_sigma_per_cycle = _per_cycle_stress_ranges(variable_profile)
 
-    levels = np.sort(delta_sigma_per_cycle.unique())
-    delta_sigma_lower, delta_sigma_upper = levels.min(), levels.max()
-    delta_sigma_variable = (delta_sigma_lower + delta_sigma_upper) / 2
+    # The variable profile holds exactly two load levels, 85.23 and 95.44 MPa,
+    # each over 500 of the block's 1000 cycles. Two safeguards are needed to
+    # recover them. First, the cycles are segmented by samples per cycle: an
+    # estimated period does not divide the sampling grid exactly, so roughly
+    # one bin in thirteen falls a sample short of its cycle's extremum and
+    # yields a spurious range (83.14 MPa in 78 bins, 93.10 in 75). Second, the
+    # two modal levels are taken rather than the minimum and the maximum,
+    # since a single mis-segmented bin would otherwise set the lower level and
+    # drag the ratio from the paper's ~0.95 down to 0.9356.
+    levels, counts = np.unique(np.round(delta_sigma_per_cycle, 2), return_counts=True)
+    dominant = np.sort(levels[np.argsort(counts)[-2:]])
+    delta_sigma_variable = float(dominant.mean())
     return float(delta_sigma_variable / delta_sigma_constant)
+
+
+def _per_cycle_stress_ranges(profile: pd.DataFrame) -> np.ndarray:
+    """Peak-to-trough stress range of every load cycle in a profile.
+
+    The profile files are sampled at a fixed number of points per cycle, so the
+    cycles are segmented by that count rather than by an estimated period,
+    which avoids straddling two cycles in one bin.
+    """
+    values = profile["loading"].to_numpy(dtype=float)
+    per_cycle = SAMPLES_PER_LOADING_CYCLE
+    n_cycles = (len(values) - 1) // per_cycle
+    return np.array([
+        np.ptp(values[i * per_cycle:(i + 1) * per_cycle + 1]) for i in range(n_cycles)
+    ])
 
 
 def _estimate_period(profile: pd.DataFrame) -> float:

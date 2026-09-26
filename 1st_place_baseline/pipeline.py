@@ -42,16 +42,69 @@ def train_estimator(
     return TrainedEstimator(model=model, training_table=table, train_rmse=model.rmse(X, y))
 
 
+# Per-cycle values the paper publishes for the two validation specimens: the
+# estimation halves from its Tables 5 and 8, and the prognosis halves from its
+# Tables 7 and 11. They allow the replica to be compared against the paper
+# specimen by specimen, which the paper itself never does: it reports only the
+# 7.36 total. Normalising these by each specimen's final crack length recovers
+# T7 = 3.4147, T8 = 3.9442 and a 7.3588 total.
+#
+# ``true_mm`` is the dataset's measured crack length, not the paper's printed
+# one. Table 7 prints 4.48 mm as the ground truth of cycle 51030, the very
+# value it predicts there, and then a penalty of 43.90, which is impossible for
+# two equal values; the dataset gives 4.13 mm, and 4.13 reproduces both the
+# 43.895 penalty and the 7.36 total. The printed 4.48 is a transcription
+# slip that carried the prediction into the truth cell.
+PAPER_TABLES = {
+    "T7": {
+        "cycle": [36001, 40167, 44054, 47022, 49026, 51030, 53019, 55031],
+        "predicted_mm": [0.0, 0.0, 1.92, 3.08, 3.59, 4.48, 5.67, 7.21],
+        "printed_true_mm": [0.0, 0.0, 2.07, 3.14, 3.56, 4.48, 5.05, 7.22],
+        "final_crack_mm": 7.22,
+    },
+    "T8": {
+        "cycle": [40000, 50000, 70000, 74883, 76931, 89237, 92315, 96475, 98492, 100774],
+        "predicted_mm": [0.0, 0.0, 1.37, 1.94, 2.51, 3.70, 4.09, 4.70, 5.02, 5.41],
+        "printed_true_mm": [0.0, 0.0, 0.0, 1.94, 2.5, 3.71, 3.88, 4.61, 4.96, 5.52],
+        "final_crack_mm": 5.52,
+    },
+}
+
+TRANSLOCATION_LAMBDA = 30000.0
+"""Regularisation weight of the translocation step.
+
+The paper declares the regularised term and its MAP equivalence but never
+publishes the weight, so any value has to be declared rather than derived. This
+one is kept from the replica's original choice on purpose: the sweep in the
+notebook shows the total penalty is genuinely sensitive to it, and picking the
+value that scores best on T7 and T8 would select a hyper-parameter on the two
+specimens the method is judged by.
+"""
+
+
 def estimate_specimen(
     trained: TrainedEstimator, sd: SpecimenData, baseline_override: int | None = None
 ) -> pd.DataFrame:
     """Estimated crack length for every cycle of ``sd`` that has a wave signal
-    (Section 4.1/4.2 first step, reproduces Tables 5 and 8)."""
+    (Section 4.1/4.2 first step, reproduces Tables 5 and 8).
+
+    Cycles up to and including the specimen's undamaged reference are reported
+    as zero, which is what the paper's Tables 5 and 8 do: both list exactly 0
+    with penalty 0 for those cycles, because the reference is by definition the
+    last record judged undamaged. The gate stops there and does not extend to
+    every pre-initiation cycle: Table 8 estimates 1.37 mm at T8's cycle 70000
+    against a true zero, and takes the resulting 28.97 penalty.
+
+    Negative predictions are also clipped, since a crack length below zero has
+    no physical reading and the regressor is unconstrained in sign.
+    """
     table = build_feature_table(
         {sd.name: sd}, baseline_overrides={sd.name: baseline_override}
     )
     X = table[FEATURE_NAMES].to_numpy()
-    table["estimated"] = trained.model.predict(X)
+    table["estimated"] = np.clip(trained.model.predict(X), 0.0, None)
+    reference_cycle = baseline_override or sd.undamaged_baseline_cycle()
+    table.loc[table["cycle"] <= reference_cycle, "estimated"] = 0.0
     return table
 
 
@@ -128,13 +181,21 @@ def predict_specimen(
     target_cycles = [
         c for c in sd.description["cycle"].tolist() if c not in known_cycles
     ]
-    # The trans-fitting/translocation step (Section 3.2.3) anchors on "the
-    # initial crack length of the target specimen" (singular) -- i.e. only
-    # the most recently estimated point, not every previously estimated
-    # cycle. Everything downstream happens in "cycles since this target
-    # specimen's own crack initiation" (see fit_reference_curve).
-    last_known_cycle, last_known_estimate = known_cycles[-1], known_estimates[-1]
-    initial_anchors_rel = [(last_known_cycle - target_N0, last_known_estimate)]
+    # Eq. 17 sums the translocation residual over ``i = 1..l``, that is over
+    # every estimated point of the target specimen, while the prose of Sec. 4
+    # speaks of "the initial crack length of the target specimen" in the
+    # singular. The equation is followed here. The choice is worth a measured
+    # note rather than a silent one: with everything else corrected the two
+    # readings differ by under 2 % of the total penalty, so this is not the
+    # lever it turned out to be in the third-place replica. Everything
+    # downstream happens in cycles since the target's own crack initiation.
+    initial_anchors_rel = [
+        (cycle - target_N0, estimate)
+        for cycle, estimate in zip(known_cycles, known_estimates)
+        if estimate > 0
+    ]
+    if not initial_anchors_rel:
+        initial_anchors_rel = [(known_cycles[-1] - target_N0, known_estimates[-1])]
     target_cycles_rel = [c - target_N0 for c in target_cycles]
     final_predictions_rel, iteration_tables_rel = sequential_trans_fit(
         curves, initial_anchors_rel, target_cycles_rel, lam=lam_translocate

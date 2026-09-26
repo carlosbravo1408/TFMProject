@@ -34,6 +34,18 @@ FEATURE_WINDOW_SAMPLES = int(
 
 TARGET_FREQUENCY_HZ = 300e3
 
+# The onset detected on the actuator channel marks when the burst is emitted,
+# not when it arrives at the receiver. Anchoring the feature window there puts
+# it on the electrical crosstalk between channels: measured on T7 at cycle
+# 40167 it spans 75.8-95.8 us, holds 3.2 % of the filtered receiver energy and
+# straddles the silent 90-100 us gap, while the propagated S0 packet arrives
+# from 100 us onwards. The propagation delay is therefore measured once per
+# specimen, on its undamaged record, as the first envelope arrival after the
+# actuation burst has died out.
+ARRIVAL_SEARCH_SKIP_SAMPLES = 400
+ARRIVAL_SEARCH_END_SAMPLES = 2800
+ARRIVAL_THRESHOLD_RATIO = 0.25
+
 FEATURE_NAMES = ["rms", "std", "orthogonality", "mag_300khz"]
 
 
@@ -81,6 +93,30 @@ def extract_window(
     return window
 
 
+def propagated_arrival_index(
+    ch2: np.ndarray,
+    actuation_onset: int,
+    threshold_ratio: float = ARRIVAL_THRESHOLD_RATIO,
+) -> int:
+    """Sample at which the propagated wave packet arrives at the receiver.
+
+    Searched on the filtered receiver channel, from far enough past the
+    actuation burst that the inter-channel crosstalk has decayed, and taken as
+    the first sample whose envelope clears ``threshold_ratio`` of the largest
+    envelope value inside the search window. The window stops before the late
+    reflections that dominate the record's energy.
+    """
+    filtered = bandpass_filter(ch2)
+    envelope = np.abs(filtered)
+    start = actuation_onset + ARRIVAL_SEARCH_SKIP_SAMPLES
+    end = min(actuation_onset + ARRIVAL_SEARCH_END_SAMPLES, len(envelope))
+    if start >= end:
+        return actuation_onset
+    segment = envelope[start:end]
+    above = np.flatnonzero(segment >= threshold_ratio * segment.max())
+    return start + int(above[0]) if above.size else start
+
+
 def preprocess_received_signal(ch2: np.ndarray, onset: int) -> np.ndarray:
     """Filter the raw received signal and extract its four-cycle feature window
     at a pre-computed ``onset`` sample index (see :func:`detect_onset`)."""
@@ -100,8 +136,15 @@ def compute_raw_features(
     signal (used by the orthogonality metric, Eq. 7).
     """
     n = len(window)
-    feature1_rms = np.mean(window**2)
+    # Eq. 5 is labelled "root mean square" but its printed form carries no
+    # square root, while Eq. 6 does. The root is applied here: without it the
+    # feature is a mean square, and since the SVR runs at a fixed kernel width
+    # of 1.0 the resulting change of scale is not cosmetic.
+    feature1_rms = np.sqrt(np.mean(window**2))
     feature2_std = np.std(window)
+    # Eq. 7 prints its denominator without a square root, which would leave the
+    # metric dimensionally inconsistent. It is read here as the cosine between
+    # the two windows, which is what "orthogonality" requires.
     denom = np.sqrt(np.sum(window**2) * np.sum(reference_window**2))
     feature3_orthogonality = np.sum(window * reference_window) / denom if denom else 0.0
     spectrum = np.abs(np.fft.rfft(window))
@@ -129,8 +172,10 @@ class FeatureExtractor:
     def cycle_windows(self, signals: dict) -> dict[str, np.ndarray]:
         windows = {}
         for path, df in signals.items():
-            onset = detect_onset(df["ch1"].to_numpy(), self.onset_threshold_ratio)
-            windows[path] = preprocess_received_signal(df["ch2"].to_numpy(), onset)
+            ch1, ch2 = df["ch1"].to_numpy(), df["ch2"].to_numpy()
+            actuation = detect_onset(ch1, self.onset_threshold_ratio)
+            arrival = propagated_arrival_index(ch2, actuation)
+            windows[path] = preprocess_received_signal(ch2, arrival)
         return windows
 
     def cycle_features(
