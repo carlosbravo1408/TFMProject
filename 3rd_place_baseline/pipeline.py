@@ -66,7 +66,11 @@ PAPER_TOTAL_SCORE = 16.14
 class Angler3rdPlacePipeline:
     data_root: Path
     v5_exponent_step: float | None = 0.1
-    donor_specimen: str | None = None  # auto-picked (most nonzero-crack points) if None
+    # Sec. 4.3.1 names T4 explicitly ("the T4 dataset contains most thorough
+    # information about crack length growth"). Auto-picking by number of
+    # nonzero-crack points ties T3 with T4 at 7 and resolves the tie
+    # arbitrarily, so the donor is fixed here instead.
+    donor_specimen: str | None = "T4"
     random_state: int = 0
 
     def __post_init__(self) -> None:
@@ -140,10 +144,8 @@ class Angler3rdPlacePipeline:
         cycles, cracks = build_t7_initial_dataset(
             nonzero["cycle"].to_numpy(float),
             nonzero["estimated_crack_mm"].to_numpy(float),
-            t7_v50=float(self.specimens["T7"].last_zero_crack_cycle()),
             donor_cycles=donor_desc["cycle"].to_numpy(float),
             donor_cracks_mm=donor_desc["crack_length_mm"].to_numpy(float),
-            donor_v50=float(donor.last_zero_crack_cycle()),
             target_crack_mm=target_crack,
         )
         self.paris_fits["T7"] = fit_paris_law(

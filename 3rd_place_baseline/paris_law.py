@@ -138,23 +138,37 @@ def donor_curve_cycle_at_crack(
     return float(np.polyval(coeffs, target_crack_mm))
 
 
+ANCHOR_CRACK_MM = 2.0
+
+
 def build_t7_initial_dataset(
     own_cycles: np.ndarray,
     own_cracks_mm: np.ndarray,
-    t7_v50: float,
     donor_cycles: np.ndarray,
     donor_cracks_mm: np.ndarray,
-    donor_v50: float,
     target_crack_mm: float,
     n_discard_early: int = 2,
+    anchor_crack_mm: float = ANCHOR_CRACK_MM,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Sec. 4.3.1's initial dataset for T7 (Table 5): the specimen's own
     nonzero crack-length estimates (the first ``n_discard_early`` are
     dropped -- the paper discards its first two as they "greatly deviate
     from the relationship curve") plus a point at ``target_crack_mm``
-    obtained by finding, on a donor specimen's own fitted a(N) curve, the
-    cycle at which it reaches that crack length, then mapping that same
-    cycle-since-initiation onto T7."""
+    obtained by the equidistant-curve construction of the paper's Figure 12.
+
+    That construction fits a polynomial to the donor's own (crack, cycle)
+    history and reads off two points on it: A at ``anchor_crack_mm`` and B at
+    ``target_crack_mm``. Assuming T7's crack-growth curve is the equidistant
+    curve of the donor's, the cycle of B' on T7 satisfies
+    ``N_B' - N_B = N_A' - N_A``, where A' is T7's own cycle at
+    ``anchor_crack_mm``. The paper reports 54,795 cycles for the 7.46 mm point
+    of T7 obtained this way.
+
+    Anchoring the translation on the crack length -- and not on each
+    specimen's crack-initiation cycle -- is what the paper prescribes, and the
+    difference is large: initiation-anchored translation puts the 7.46 mm
+    point some 13,000 cycles later, which flattens the subsequent Paris fit.
+    """
     own_cycles = np.asarray(own_cycles, dtype=float)
     own_cracks_mm = np.asarray(own_cracks_mm, dtype=float)
     order = np.argsort(own_cycles)
@@ -162,11 +176,12 @@ def build_t7_initial_dataset(
     kept_cycles = own_cycles[n_discard_early:]
     kept_cracks = own_cracks_mm[n_discard_early:]
 
-    donor_relative_cycles = np.asarray(donor_cycles, dtype=float) - donor_v50
-    donor_relative_at_target = donor_curve_cycle_at_crack(
-        donor_relative_cycles, np.asarray(donor_cracks_mm, dtype=float), target_crack_mm
-    )
-    extra_cycle = t7_v50 + donor_relative_at_target
+    donor_cycles = np.asarray(donor_cycles, dtype=float)
+    donor_cracks_mm = np.asarray(donor_cracks_mm, dtype=float)
+    cycle_a = donor_curve_cycle_at_crack(donor_cycles, donor_cracks_mm, anchor_crack_mm)
+    cycle_b = donor_curve_cycle_at_crack(donor_cycles, donor_cracks_mm, target_crack_mm)
+    cycle_a_prime = float(np.interp(anchor_crack_mm, own_cracks_mm, own_cycles))
+    extra_cycle = cycle_b + (cycle_a_prime - cycle_a)
 
     cycles = np.concatenate([kept_cycles, [extra_cycle]])
     cracks = np.concatenate([kept_cracks, [target_crack_mm]])
