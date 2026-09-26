@@ -1,0 +1,49 @@
+from __future__ import annotations
+
+import pandas as pd
+
+# Las cuatro combinaciones: (motor de extrapolación, modo de resumir el latente).
+COMBINACIONES = {
+    "Config 1  (a+b)":     ("analítica", "media"),
+    "Config 2  (a+b+c)":   ("paso a paso", "media"),
+    "Config 3  (a+b+d)":   ("analítica", "ponderado"),
+    "Config 4  (a+b+c+d)": ("paso a paso", "ponderado"),
+}
+
+MOTORES = ("analítica", "paso a paso", "ponderado")
+
+
+def tabla_contrastes(detalle: dict, especimen: str) -> pd.DataFrame:
+    """Penalización de cada combinación, dispuesta en las dos decisiones."""
+    filas: dict[str, dict[str, float]] = {}
+    for etiqueta, (motor, resumen) in COMBINACIONES.items():
+        filas.setdefault(motor, {})[resumen] = detalle[etiqueta][especimen]["penalizacion"]
+    return pd.DataFrame(filas).T[["media", "ponderado"]]
+
+
+def aportaciones(detalle: dict, especimen: str) -> pd.DataFrame:
+    """Aportación de cada componente y aportación conjunta, en penalización.
+
+    Con dos decisiones binarias, la aportación de una de ellas es la media de sus
+    dos contrastes simples, y la aportación conjunta es la mitad de la diferencia
+    entre esos dos contrastes. Signo negativo significa mejora, porque la
+    penalización baja.
+    """
+    t = tabla_contrastes(detalle, especimen)
+    c_media = t.loc["paso a paso", "media"] - t.loc["analítica", "media"]
+    c_ponderado = t.loc["paso a paso", "ponderado"] - t.loc["analítica", "ponderado"]
+    d_analitica = t.loc["analítica", "ponderado"] - t.loc["analítica", "media"]
+    d_paso = t.loc["paso a paso", "ponderado"] - t.loc["paso a paso", "media"]
+    return pd.DataFrame([
+        {"término": "(c) integración paso a paso",
+         "valor": 0.5 * (c_media + c_ponderado),
+         "detalle": f"{c_media:+.3f} con resumen por media, "
+                    f"{c_ponderado:+.3f} con resumen ponderado"},
+        {"término": "(d) ponderación aprendida",
+         "valor": 0.5 * (d_analitica + d_paso),
+         "detalle": f"{d_analitica:+.3f} con extrapolación analítica, "
+                    f"{d_paso:+.3f} con integración paso a paso"},
+        {"término": "aportación conjunta de (c) y (d)",
+         "valor": 0.5 * (c_ponderado - c_media),
+         "detalle": "mitad de la diferencia entre los dos contrastes de (c)"},
+    ])
