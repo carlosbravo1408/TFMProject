@@ -1,16 +1,3 @@
-"""Evaluación de la Configuración 3 sobre T7 y T8, contra la Configuración 1.
-
-La comparación es de una sola variable: **misma arquitectura convolucional,
-misma pérdida, mismo protocolo, mismas semillas**; lo único que cambia es cómo
-la cabeza de coeficiente resume la secuencia de ciclos del espécimen —promedio
-de peso igual (Configuración 1) frente a autoatención (Configuración 3)—.
-
-La métrica que decide no es la penalización global sino **|Δlog10 C|**: el
-diagnóstico previo estableció que el estimador de grieta funciona y que lo que
-hunde T8 es ese único escalar, con 0,219 décadas de error. Si la atención sirve
-para lo que el diseño del TFM le encomienda —detectar que un espécimen está en
-otro régimen de carga— tiene que verse ahí.
-"""
 from __future__ import annotations
 
 import json
