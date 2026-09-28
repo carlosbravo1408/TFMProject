@@ -1,18 +1,3 @@
-"""Data-driven crack-length estimation with a random forest (Sections 3.2.3-3.2.4).
-
-- Random forest regression (scikit-learn), whose two key hyper-parameters are
-  the maximum depth and the number of trees.
-- Grid-search hyper-parameter optimization over n_depth = {1, 2, 3} and
-  n_trees = {5, 10, 15, 20, 25}, minimizing the performance metric
-  PM = (1/5) * sum_i RMSE_T(i) of a specimen-wise k-fold cross validation
-  (each of T1, T2, T3, T4, T6 is held out once; T5 is excluded as an outlier).
-- Feature-subset selection by repeatedly running the grid search on candidate
-  subsets and comparing PM.
-- The final estimator is an ensemble of 20 independently seeded random forest
-  models (the RF is stochastic); the estimate is their average.
-- For validation specimens, the ``prev_crack`` feature is filled recursively
-  with the estimate of the previous cycle (starting at 0).
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -29,7 +14,8 @@ TREES_GRID = (5, 10, 15, 20, 25)
 N_ENSEMBLE_MODELS = 20
 CV_SPECIMENS = ("T1", "T2", "T3", "T4", "T6")
 
-# Forests averaged per grid point when computing PM (see ``grid_search``).
+# PM from a single forest is unstable: over seeds 0-5 the selected tree count is
+# 10, 25, 10, 20, 25 and 25.
 N_PM_SEEDS = 5
 
 
@@ -47,8 +33,6 @@ class GridSearchResult:
 
 
 class RandomForestCrackEstimator:
-    """K-fold-validated random forest ensemble for crack-length estimation."""
-
     def __init__(
         self,
         features: list[str] | None = None,
@@ -65,7 +49,6 @@ class RandomForestCrackEstimator:
         self.scaler_mean: pd.Series | None = None
         self.scaler_std: pd.Series | None = None
 
-    # ------------------------------------------------------------------ utils
     def _fit_scaler(self, table: pd.DataFrame) -> None:
         cols = [c for c in FEATURE_NAMES]
         self.scaler_mean = table[cols].mean()
@@ -80,13 +63,9 @@ class RandomForestCrackEstimator:
     def _standardize_value(self, column: str, value: float) -> float:
         return (value - self.scaler_mean[column]) / self.scaler_std[column]
 
-    # ----------------------------------------------------------- k-fold / PM
     def _recursive_predict_fold(
         self, model: RandomForestRegressor, test_std: pd.DataFrame, features: list[str]
     ) -> np.ndarray:
-        """Predict a held-out specimen chronologically, feeding back the
-        previous estimate through the (standardized) ``prev_crack`` feature —
-        the same procedure later applied to T7/T8."""
         preds = []
         prev_estimate = 0.0
         X = test_std[features].to_numpy().copy()
@@ -107,7 +86,6 @@ class RandomForestCrackEstimator:
         n_trees: int,
         random_state: int = 0,
     ) -> tuple[float, dict[str, float]]:
-        """Performance metric PM (Eq. 5): mean held-out-specimen RMSE."""
         fold_rmse: dict[str, float] = {}
         for test_specimen in CV_SPECIMENS:
             train = table[table["specimen"] != test_specimen]
@@ -131,15 +109,6 @@ class RandomForestCrackEstimator:
         random_state: int = 0,
         n_pm_seeds: int = N_PM_SEEDS,
     ) -> GridSearchResult:
-        """Grid-search hyper-parameter optimization (Section 3.2.4).
-
-        PM is averaged over ``n_pm_seeds`` forests per grid point rather than
-        read off a single one. Section 3.2.4 is explicit that the forest is
-        stochastic, and it is the paper's own reason for ensembling 20 models;
-        the same applies to the metric that selects the hyper-parameters.
-        Measured on one seed the choice of tree count is unstable: sweeping
-        the seed from 0 to 5 it lands on 10, 25, 10, 20, 25 and 25, and PM
-        ranges from 0.94 to 1.23."""
         features = list(features or self.features)
         best: GridSearchResult | None = None
         for depth in DEPTH_GRID:
@@ -163,10 +132,6 @@ class RandomForestCrackEstimator:
         subset_sizes: tuple[int, ...] = (3, 4, 5, 6),
         random_state: int = 0,
     ) -> pd.DataFrame:
-        """Search feature subsets, running the full hyper-parameter grid search
-        on each (the paper samples subsets randomly and compares PM; here the
-        search is exhaustive over the given subset sizes, which contains the
-        paper's random search). Returns results sorted by PM."""
         results = []
         for size in subset_sizes:
             for combo in combinations(candidate_features, size):
@@ -182,10 +147,7 @@ class RandomForestCrackEstimator:
                 )
         return pd.DataFrame(results).sort_values("pm").reset_index(drop=True)
 
-    # ------------------------------------------------------------------- fit
     def fit(self, table: pd.DataFrame, max_depth: int | None = None, n_trees: int | None = None):
-        """Fit the 20-model ensemble on all training rows. If hyper-parameters
-        are not given, they are chosen by the grid search."""
         if max_depth is None or n_trees is None:
             best = self.grid_search(table, self.features, self.random_state)
             max_depth, n_trees = best.max_depth, best.n_trees
@@ -208,15 +170,6 @@ class RandomForestCrackEstimator:
 
     @staticmethod
     def detection_threshold(train_table: pd.DataFrame) -> float:
-        """Crack-initiation threshold, taken as the smallest crack length any
-        training specimen shows at its first damaged cycle.
-
-        It is derived from training labels alone, so it involves neither T7
-        nor T8, and on this dataset it is T6's 0.82 mm. The paper bounds this
-        threshold from above: it reports 1.722 mm at the very cycle it
-        declares N_initial for T8 (Sec. 3.3.1), so any threshold above that
-        value, applied to its own published estimates, would move N_initial
-        to 74883."""
         first = (
             train_table[train_table["crack_length_mm"] > 0]
             .sort_values("cycle")
@@ -228,30 +181,6 @@ class RandomForestCrackEstimator:
     def estimate(
         self, table: pd.DataFrame, detection_threshold_mm: float | None = None
     ) -> pd.DataFrame:
-        """Recursive ensemble estimation for a validation specimen's feature
-        table (chronological).
-
-        ``detection_threshold_mm`` realizes the crack-initiation decision of
-        Section 3.3.1: the paper reports exactly 0 for the validation cycles
-        before N_initial (36001/40167 for T7, 40000/50000/pre-70000 for T8)
-        and takes N_initial as the first cycle with a nonzero *estimated*
-        crack. Until the ensemble output exceeds the threshold the crack is
-        considered not yet initiated and the estimate (and the recursive
-        ``prev_crack`` feature) is 0. It defaults to
-        :meth:`detection_threshold`, fitted on the training labels.
-
-        A second rule rides on top of the threshold and has to be declared as
-        such: since crack growth is monotonic, a single above-threshold output
-        followed by sub-threshold ones is a false alarm, so N_initial is the
-        earliest cycle from which the raw ensemble output *stays* at or above
-        the threshold. Without it no threshold whatsoever reproduces the
-        paper's pair of N_initial values, because T8's cycle-40000 output sits
-        above its cycle-50000 one. Once initiated, the raw ensemble output is
-        reported unthresholded.
-
-        The detection only affects the *reported* estimate; the recursive
-        ``prev_crack`` state keeps tracking the raw ensemble output, so a
-        sub-threshold early estimate still informs the next cycle."""
         if detection_threshold_mm is None:
             detection_threshold_mm = self.fitted_threshold_mm
         table = table.sort_values("cycle").reset_index(drop=True)
@@ -268,6 +197,8 @@ class RandomForestCrackEstimator:
             prev_estimate = raw
         raw_arr = np.asarray(raw_estimates)
         above = raw_arr >= detection_threshold_mm
+        # Initiation is where the output stays above the threshold: T8's cycle-40000
+        # output exceeds its cycle-50000 one, and no plain threshold reproduces the paper.
         sustained = np.logical_and.accumulate(above[::-1])[::-1]
         initiation_idx = int(np.argmax(sustained)) if sustained.any() else len(raw_arr)
         estimates = [raw if i >= initiation_idx else 0.0 for i, raw in enumerate(raw_estimates)]

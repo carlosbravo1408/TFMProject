@@ -1,24 +1,3 @@
-"""End-to-end hybrid pipeline replicating Kong et al. (2020) — the 2nd-place
-entry of the 2019 PHM Conference Data Challenge (Figure 5 of the paper).
-
-Data-driven method (Lamb wave signals available):
-    band-pass filter + phase alignment -> S0-window feature extraction ->
-    standardization -> random forest (grid-searched hyper-parameters, k-fold
-    specimen-wise validation, 20-model ensemble) -> crack-length estimation
-    for the cycles of T7/T8 that have signals.
-
-Physics-based method (no Lamb wave signals):
-    cycle normalization (subtract N_initial, drop zero-crack cycles) ->
-      * T7 (same loading): ensemble prognostics of the T1/T3/T4/T6 double
-        exponential models with simplified particle-filter weights;
-      * T8 (different loading): linear regression to reach five points, then
-        Walker's-equation models optimized by evolutionary search and averaged
-        over a 100-model Monte Carlo.
-
-Scoring: challenge penalty functions on normalized crack lengths + RMSE (mm).
-Paper reference results (Table 3): RMSE_T7 = 0.2021, RMSE_T8 = 0.551,
-penalty score = 7.63.
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -44,14 +23,11 @@ from physics_models import (
 )
 from scoring import penalty_score, rmse_mm, score_table
 
-# Cycles of the validation specimens for which no Lamb wave signals were
-# provided and the crack length must be *predicted* (physics-based method).
 PREDICTION_CYCLES = {
     "T7": [49026, 51030, 53019, 55031],
     "T8": [89237, 92315, 96475, 98492, 100774],
 }
 
-# Paper results (Table 3) for side-by-side comparison.
 PAPER_PREDICTIONS = {
     "T7": {36001: 0.0, 40167: 0.0, 44054: 2.175, 47022: 3.017,
            49026: 3.423, 51030: 4.310, 53019: 5.547, 55031: 7.170},
@@ -77,10 +53,7 @@ class HybridPipeline:
         self.estimator = RandomForestCrackEstimator(self.features, random_state=self.random_state)
         self.feature_tables: dict[str, pd.DataFrame] = {}
 
-    # ------------------------------------------------------------- features
     def build_feature_tables(self) -> pd.DataFrame:
-        """Feature tables for all specimens (labeled cycles for training
-        specimens; all measured cycles for T7/T8)."""
         self.extractor.set_alignment_anchor(self.specimens)
         for name, spec in self.specimens.items():
             labeled_only = name not in ("T7", "T8")
@@ -90,20 +63,15 @@ class HybridPipeline:
         return pd.concat(self.feature_tables.values(), ignore_index=True)
 
     def training_table(self) -> pd.DataFrame:
-        """Training rows of the data-driven model (T1-T4, T6; T5 excluded as
-        an outlier, Section 3.2.2)."""
         if not self.feature_tables:
             self.build_feature_tables()
         return pd.concat(
             [self.feature_tables[s] for s in DATA_DRIVEN_SPECIMENS], ignore_index=True
         )
 
-    # ---------------------------------------------------------- data-driven
     def run_data_driven(
         self, max_depth: int | None = None, n_trees: int | None = None
     ) -> dict[str, pd.DataFrame]:
-        """Fit the RF ensemble and estimate T7/T8 crack lengths for the
-        cycles with Lamb wave signals."""
         train = self.training_table()
         self.estimator.fit(train, max_depth=max_depth, n_trees=n_trees)
         self.estimates = {
@@ -111,10 +79,7 @@ class HybridPipeline:
         }
         return self.estimates
 
-    # --------------------------------------------------------- physics-based
     def _normalized_history(self, name: str) -> tuple[int, np.ndarray, np.ndarray]:
-        """(N_initial, normalized cycles, estimated cracks) of a validation
-        specimen's nonzero data-driven estimates (Sec. 3.3.1)."""
         est = self.estimates[name]
         nonzero = est[est["estimated_crack_mm"] > 0]
         if nonzero.empty:
@@ -131,7 +96,6 @@ class HybridPipeline:
         )
 
     def run_physics_t7(self) -> pd.DataFrame:
-        """Ensemble prognostics prediction of T7's four signal-less cycles."""
         curvas = {}
         for name in ENSEMBLE_SPECIMENS:
             spec = self.specimens[name]
@@ -153,11 +117,9 @@ class HybridPipeline:
         )
 
     def run_physics_t8(self) -> pd.DataFrame:
-        """Walker's-equation Monte Carlo prediction of T8's five signal-less
-        cycles."""
         n_initial, cycles, cracks = self._normalized_history("T8")
-        # Five points for building the Walker model: the (nonzero) data-driven
-        # estimates extended by linear regression to cycles 89237 and 92315.
+        # The paper extends the estimates by linear regression to cycles 89237 and 92315
+        # so that the Walker fit has five points.
         lr_cycles = np.array(PREDICTION_CYCLES["T8"][:2], float) - n_initial
         lr_cracks = linear_regression_extrapolation(cycles, cracks, lr_cycles)
         fit_cycles = np.concatenate([cycles, lr_cycles])
@@ -172,9 +134,7 @@ class HybridPipeline:
             {"specimen": "T8", "cycle": PREDICTION_CYCLES["T8"], "estimated_crack_mm": preds}
         )
 
-    # -------------------------------------------------------------- results
     def run(self, max_depth: int | None = None, n_trees: int | None = None) -> pd.DataFrame:
-        """Full hybrid pipeline; returns the Table 3 analogue."""
         self.run_data_driven(max_depth=max_depth, n_trees=n_trees)
         physics = {"T7": self.run_physics_t7(), "T8": self.run_physics_t8()}
         rows = []
@@ -191,7 +151,6 @@ class HybridPipeline:
         return self.results
 
     def summary(self) -> pd.DataFrame:
-        """RMSE and penalty score per specimen (+ the paper's reference)."""
         rows = []
         for name in ("T7", "T8"):
             sub = self.results[self.results["specimen"] == name]

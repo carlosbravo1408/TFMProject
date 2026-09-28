@@ -1,37 +1,3 @@
-"""Feature extraction from the pre-processed S0 windows (Section 3.2.2).
-
-Based on the physical interpretation of crack-length effects on the received
-Lamb waves, eight candidate features are computed for each measurement cycle,
-always comparing the current (possibly cracked) window against the *reference*
-window of the same specimen — its first measured cycle, where no crack is
-present:
-
-Energy-loss features (the received energy decreases as the crack grows):
-  1. ``max_amplitude``     — maximum absolute amplitude of the S0 window.
-  2. ``max_energy``        — maximum of the short-time energy of the window.
-  3. ``dtw_residual_energy`` — energy of the residual after aligning the
-     current window onto the reference window with dynamic time warping.
-
-Phase-change features (scattering at the crack delays the transmitted wave):
-  4. ``xcorr_lag``         — cross-correlation time lag (us) w.r.t. the
-     reference window.
-  5. ``phase_delay``       — point time delay (us): time of the window's
-     absolute peak minus the time of the reference window's absolute peak.
-  6. ``dtw_distance``      — dynamic-time-warping distance to the reference.
-
-Similarity feature (crack discontinuities distort the transmitted shape):
-  7. ``corr_coef``         — Pearson correlation coefficient between the
-     current and reference windows.
-
-Sequential-process feature:
-  8. ``prev_crack``        — previously estimated/measured crack length (mm).
-
-The optimal subset found by the paper's k-fold search (Section 3.2.4) is
-``max_amplitude, max_energy, phase_delay, corr_coef, prev_crack``.
-
-Considering the different ranges of the features, they are standardized with
-a standard normal distribution (z-score fitted on the training rows).
-"""
 from __future__ import annotations
 
 import numpy as np
@@ -51,10 +17,9 @@ FEATURE_NAMES = [
     "prev_crack",
 ]
 
-# Optimal feature subset reported in Section 3.2.4 of the paper.
 OPTIMAL_FEATURES = ["max_amplitude", "max_energy", "phase_delay", "corr_coef", "prev_crack"]
 
-# Short-time energy window: one period of the ~200 kHz tone at 20 MHz sampling.
+# One period of the 200 kHz tone at 20 MHz.
 SHORT_TIME_ENERGY_SAMPLES = 100
 
 
@@ -63,27 +28,19 @@ def max_amplitude(window: np.ndarray) -> float:
 
 
 def max_energy(window: np.ndarray, n: int = SHORT_TIME_ENERGY_SAMPLES) -> float:
-    """Maximum of the moving (short-time) energy of the window."""
     energy = np.convolve(window**2, np.ones(n), mode="valid")
     return float(np.max(energy))
 
 
 def cross_correlation_lag_us(window: np.ndarray, reference: np.ndarray) -> float:
-    """Lag (us) that maximizes the cross-correlation with the reference
-    window; positive = current signal delayed w.r.t. the reference."""
     corr = np.correlate(window, reference, mode="full")
     lag = int(np.argmax(corr)) - (len(reference) - 1)
     return lag * DT_S * 1e6
 
 
 def point_time_delay_us(window: np.ndarray, reference: np.ndarray) -> float:
-    """Point time delay ('phase delay', us): arrival-time difference of the
-    S0 packet peak w.r.t. the reference window's packet peak. The peak is
-    located on the signal envelope (Hilbert transform), which tracks the
-    packet arrival robustly; tracking the raw absolute peak instead jumps by
-    a carrier period whenever two neighbouring oscillation peaks swap order
-    (visible in Figure 8(c) of the paper, where T4's delay jumps to ~4.5 us
-    at the last cycle)."""
+    # Envelope peak, not raw peak: the raw peak jumps by a carrier period when two
+    # oscillation peaks swap order.
     env = np.abs(hilbert(window))
     env_ref = np.abs(hilbert(reference))
     return (int(np.argmax(env)) - int(np.argmax(env_ref))) * DT_S * 1e6
@@ -94,20 +51,16 @@ def correlation_coefficient(window: np.ndarray, reference: np.ndarray) -> float:
 
 
 def _dtw_path(x: np.ndarray, y: np.ndarray) -> tuple[float, list[tuple[int, int]]]:
-    """Classic O(n*m) dynamic time warping with absolute-difference cost.
-    Returns (accumulated distance, warping path)."""
     n, m = len(x), len(y)
     cost = np.abs(x[:, None] - y[None, :])
     acc = np.full((n + 1, m + 1), np.inf)
     acc[0, 0] = 0.0
     for i in range(1, n + 1):
-        # acc[i, j] depends on acc[i, j-1]; fill each row sequentially.
         row = acc[i]
         arow = acc[i - 1]
         crow = cost[i - 1]
         for j in range(1, m + 1):
             row[j] = crow[j - 1] + min(arow[j], arow[j - 1], row[j - 1])
-    # Backtrack
     path = []
     i, j = n, m
     while i > 0 and j > 0:
@@ -123,16 +76,11 @@ def _dtw_path(x: np.ndarray, y: np.ndarray) -> tuple[float, list[tuple[int, int]
     return float(acc[n, m]), path
 
 
-# The DTW features are computed on decimated windows to keep the O(n^2)
-# alignment cheap; the decimation (factor 4 -> 100 points per window) does not
-# change their monotonic trends.
+# Keeps the O(n^2) alignment cheap without changing the feature trends.
 DTW_DECIMATION = 4
 
 
 def dtw_features(window: np.ndarray, reference: np.ndarray) -> tuple[float, float]:
-    """(dtw_residual_energy, dtw_distance) of the current window w.r.t. the
-    reference window. The residual is the reference minus the current window
-    warped onto the reference's time base along the DTW path."""
     x = window[::DTW_DECIMATION]
     y = reference[::DTW_DECIMATION]
     distance, path = _dtw_path(x, y)
@@ -147,7 +95,6 @@ def dtw_features(window: np.ndarray, reference: np.ndarray) -> tuple[float, floa
 
 
 def signal_features(window: np.ndarray, reference: np.ndarray) -> dict[str, float]:
-    """The seven signal-based features (all but ``prev_crack``)."""
     residual_energy, distance = dtw_features(window, reference)
     return {
         "max_amplitude": max_amplitude(window),
@@ -161,28 +108,14 @@ def signal_features(window: np.ndarray, reference: np.ndarray) -> dict[str, floa
 
 
 class FeatureExtractor:
-    """Builds the per-cycle feature table of a specimen.
-
-    ``reference_override`` maps specimen name -> cycle to use as the
-    undamaged reference instead of the first measured cycle. It is used for
-    T8, whose cycle-40000 record is anomalous — its received wave packet
-    differs completely from every later T8 record (arriving ~10 us apart)
-    even though both its repetitions agree, so it cannot serve as the
-    undamaged reference. Cycle 50000 (also crack-free) is used instead; the
-    resulting correlation-coefficient trend (~0.45 at 40000, ~0.9 at the
-    last cycles) closely matches the T8 curve of Figure 8(d) in the paper,
-    which suggests the authors made the same choice."""
-
+    # T8's cycle-40000 packet arrives ~10 us apart from every later T8 record.
     DEFAULT_REFERENCE_OVERRIDE = {"T8": 50000}
 
-    # Minimum correlation between the two repetitions of a reference cycle for
-    # the second one to stand in as the undamaged baseline. Seven of the eight
-    # specimens clear it with 0.99 or better; only T1's cycle 50000 fails, at
-    # 0.20, and T1 has no other crack-free cycle to fall back to.
+    # Every specimen reaches 0.99 except T1 (0.20 at cycle 50000).
     REFERENCE_COHERENCE_MIN = 0.9
 
-    # Record whose actuation burst every other record is cross-correlated
-    # against (see ``set_alignment_anchor``).
+    # Lowest-PM training specimen. Fixed explicitly: the anchor moves the final
+    # penalty between 111 and 440 with no training-side signal to choose it.
     ALIGNMENT_ANCHOR = ("T6", 55000)
 
     def __init__(
@@ -200,13 +133,6 @@ class FeatureExtractor:
         )
 
     def specimen_windows(self, specimen, channel: str = "signal_1") -> dict[int, np.ndarray]:
-        """Pre-processed S0 windows for every measured cycle of a specimen.
-
-        The alignment lag of each record is taken from the specimen's
-        consensus rather than from its own cross-correlation peak, because
-        the sensing geometry does not change within a specimen and a lag
-        that departs from the rest is a lobe-lock failure, not a real delay
-        (see ``consensus_shift``)."""
         if self.preprocessor.reference_ch1 is None:
             raise RuntimeError(
                 "No alignment anchor set; call set_alignment_anchor first so every "
@@ -224,7 +150,6 @@ class FeatureExtractor:
         }
 
     def specimen_consensus_shift(self, specimen) -> int:
-        """Alignment lag shared by every record of a specimen."""
         shifts = [
             self.preprocessor.record_shift(specimen.signal(c)["ch1"].to_numpy())
             for c in specimen.signal_cycles
@@ -232,43 +157,12 @@ class FeatureExtractor:
         return consensus_shift(shifts)[0]
 
     def set_alignment_anchor(self, specimens: dict) -> tuple[str, int]:
-        """Fix the common actuation burst every specimen is aligned against.
-
-        It is ``ALIGNMENT_ANCHOR``, the undamaged reference cycle of the
-        training specimen with the smallest PM over the training folds, which
-        is the paper's own selection metric and involves no validation
-        specimen. Fixing it explicitly keeps the anchor out of the hands of
-        dictionary order.
-
-        The choice matters far more than that margin suggests, and the
-        notebook reports the sweep: across the six candidate anchors PM spans
-        only 1.10 to 1.28 while the final penalty spans 111 to 440, with no
-        ordering between the two. The anchor is therefore a nuisance
-        parameter with a large effect and no training-side signal to pin it
-        down, and that has to be declared rather than hidden behind whichever
-        record happened to be read first.
-        """
         name, cycle = self.ALIGNMENT_ANCHOR
         self.preprocessor.set_reference(specimens[name].signal(cycle)["ch1"].to_numpy())
         self.alignment_anchor = (name, cycle)
         return self.alignment_anchor
 
     def reference_window(self, specimen) -> np.ndarray:
-        """Undamaged reference window of a specimen.
-
-        The released copy of the dataset lacks the 'Baseline' (cycle 0)
-        folders described in the ReadMe, so the reference is taken at the
-        specimen's first measured cycle (crack length 0). To keep it an
-        *independent* record — as a true baseline measurement would be — the
-        second repetition (``signal_2``) is used: comparing every
-        ``signal_1`` window (including the reference cycle's own) against it
-        yields realistic undamaged feature values instead of the degenerate
-        corr = 1 / delay = 0 that self-comparison would produce.
-
-        If the two repetitions of the reference cycle disagree (their windows
-        correlate below 0.9 — the case for T1, whose cycle-50000 records are
-        anomalously dissimilar), ``signal_2`` is not a trustworthy stand-in
-        and the specimen falls back to the ``signal_1`` self-reference."""
         cycle = self.reference_override.get(specimen.name, specimen.reference_cycle())
         from data_loader import available_signal_channels
 
@@ -277,6 +171,8 @@ class FeatureExtractor:
         if "signal_2" not in available:
             self.degenerate_reference.add(specimen.name)
             return own
+        # The dataset ships no cycle-0 baseline; signal_2 stands in as an independent
+        # record, since comparing signal_1 with itself gives corr = 1 and delay = 0.
         df = specimen.signal(cycle, "signal_2")
         repeat = self.preprocessor.s0_window(
             df["ch1"].to_numpy(), df["ch2"].to_numpy(), self.specimen_consensus_shift(specimen)
@@ -287,10 +183,6 @@ class FeatureExtractor:
         return repeat
 
     def specimen_feature_table(self, specimen, labeled_only: bool = True) -> pd.DataFrame:
-        """Signal features for each cycle (chronological). ``prev_crack`` and
-        the target ``crack_length_mm`` are filled from the description labels;
-        for validation specimens the target may be missing (NaN) and
-        ``prev_crack`` is overwritten recursively at estimation time."""
         windows = self.specimen_windows(specimen)
         reference = self.reference_window(specimen)
         cycles = specimen.labeled_cycles() if labeled_only else specimen.signal_cycles
