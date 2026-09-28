@@ -1,19 +1,3 @@
-"""Scoring of the 2019 PHM Conference Data Challenge (Section 2.3).
-
-Three penalty functions are combined per cycle (Eqs. 1-4):
-    T(i) = 2 + 10*x_i                                   (time penalty)
-    A(i) = exp(|x~_i - x_i| / 0.5) - 1   if x~_i >= x_i  (asymmetric penalty)
-           exp(|x~_i - x_i| / 0.2) - 1   if x~_i <  x_i
-    M(i) = 1 + 10*|x~_i - x~_{i-1}|      if decreasing    (monotonicity penalty)
-    S(i) = T(i) * A(i) * M(i),      S_sum = sum_i S(i)
-
-As in the official scoring spreadsheet distributed by the PHM Society (and
-as required to reproduce this paper's reported score of 16.14), the crack
-lengths entering these formulas are NORMALIZED by the final (last cycle)
-true crack length of the corresponding specimen. The monotonicity constant
-m = 10 matches Eq. 3 (the original spreadsheet's m = 100 was corrected by
-the organizers).
-"""
 from __future__ import annotations
 
 import numpy as np
@@ -21,19 +5,16 @@ import pandas as pd
 
 
 def time_penalty(x_true_norm: float) -> float:
-    """Eq. 1 on normalized crack length."""
     return 2 + 10 * x_true_norm
 
 
 def asymmetric_penalty(x_hat_norm: float, x_true_norm: float) -> float:
-    """Eq. 2: underestimation is penalized more harshly than overestimation."""
     diff = x_hat_norm - x_true_norm
     scale = 0.5 if diff >= 0 else 0.2
     return float(np.exp(abs(diff) / scale) - 1)
 
 
 def monotonicity_penalty(x_hat_norm: float, x_hat_prev_norm: float | None) -> float:
-    """Eq. 3 (m = 10): penalizes decreasing estimate sequences."""
     if x_hat_prev_norm is None:
         return 1.0
     delta = x_hat_norm - x_hat_prev_norm
@@ -43,11 +24,9 @@ def monotonicity_penalty(x_hat_norm: float, x_hat_prev_norm: float | None) -> fl
 def score_table(
     cycles, x_hat_mm, x_true_mm, final_crack_mm: float | None = None
 ) -> pd.DataFrame:
-    """Per-cycle penalty scores for one specimen's chronological sequence of
-    estimates/predictions. ``final_crack_mm`` (the normalizing true crack
-    length) defaults to the last true value."""
     x_hat_mm = np.asarray(x_hat_mm, dtype=float)
     x_true_mm = np.asarray(x_true_mm, dtype=float)
+    # Normalised by the final true crack, as in the official scoring spreadsheet.
     norm = float(final_crack_mm if final_crack_mm is not None else x_true_mm[-1])
     rows, prev = [], None
     for cycle, hat, true in zip(cycles, x_hat_mm / norm, x_true_mm / norm):
@@ -61,7 +40,6 @@ def score_table(
 
 
 def penalty_score(cycles, x_hat_mm, x_true_mm, final_crack_mm: float | None = None) -> float:
-    """S_sum (Eq. 4) for one specimen."""
     return float(score_table(cycles, x_hat_mm, x_true_mm, final_crack_mm)["S"].sum())
 
 

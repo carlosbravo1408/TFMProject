@@ -1,23 +1,3 @@
-"""End-to-end pipeline replicating Rao et al. (2020) -- the 3rd-place entry
-("Angler") of the 2019 PHM Conference Data Challenge.
-
-Crack length ESTIMATION (Sec. 3), for cycles with wave signals:
-    band-pass filter + FWP truncation -> v1-v4 (+v5 for T7) features ->
-    Table 1 crack-detection algorithm -> ensemble of 3 (of 6) leave-one-
-    specimen-out Best-Subset-Selected linear regression models.
-
-Crack length PREDICTION (Sec. 4), for cycles without wave signals:
-    Paris' Law (Eq. 5/6) with material parameters (C, m, and for T8 the
-    equivalent stress range) fitted by a genetic-algorithm-style optimizer
-    to an "initial dataset" of a few (cycle, crack) anchor points.
-
-Scoring: official PHM 2019 penalty score (Eqs. 1-4) + RMSE, both on the full
-chronological sequence of estimates+predictions for T7 and T8. The paper
-reports a total score of 16.14; ``scoring.py`` reproduces that number to
-within 0.3% when fed the paper's own Table A values (see its docstring),
-validating the scoring implementation independently of this pipeline's own
-signal-processing/modeling choices.
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -45,8 +25,6 @@ from paris_law import (
 )
 from scoring import penalty_score, rmse_mm, score_table
 
-# Paper's Table A (Appendix) estimated/predicted and real crack lengths, for
-# side-by-side comparison with this replica.
 PAPER_TABLE_A = {
     "T7": {
         "cycle": [36001, 40167, 44054, 47022, 49026, 51030, 53019, 55031],
@@ -66,10 +44,7 @@ PAPER_TOTAL_SCORE = 16.14
 class Angler3rdPlacePipeline:
     data_root: Path
     v5_exponent_step: float | None = 0.1
-    # Sec. 4.3.1 names T4 explicitly ("the T4 dataset contains most thorough
-    # information about crack length growth"). Auto-picking by number of
-    # nonzero-crack points ties T3 with T4 at 7 and resolves the tie
-    # arbitrarily, so the donor is fixed here instead.
+    # Sec. 4.3.1 names T4; counting non-zero points ties it with T3.
     donor_specimen: str | None = "T4"
     random_state: int = 0
 
@@ -82,12 +57,10 @@ class Angler3rdPlacePipeline:
         self.paris_fits: dict[str, ParisFit] = {}
         self.results: dict[str, pd.DataFrame] = {}
 
-    # ------------------------------------------------------------- features
     def build_feature_tables(self) -> None:
         for name, spec in self.specimens.items():
             self.feature_tables[name] = self.extractor.specimen_feature_table(spec)
 
-    # ------------------------------------------------------- ensemble (Sec 3)
     def fit_ensembles(self) -> None:
         if not self.feature_tables:
             self.build_feature_tables()
@@ -97,22 +70,15 @@ class Angler3rdPlacePipeline:
             self.ensembles[target] = select_ensemble(models)
 
     def _crack_onset_cycle(self, name: str) -> int:
-        """First cycle from which the ensemble regression is applied,
-        instead of declaring crack = 0 (Table 1). Falls back to the second
-        available cycle if the strict Table 1 algorithm never triggers --
-        the algorithm is admittedly fragile (the paper's own detector
-        produces false alarms), and this pipeline's independently-recovered
-        features do not always reproduce the paper's exact trigger timing."""
         table = self.feature_tables[name]
         onset = detect_crack_onset_cycle(table[table["run"] == "signal_1"])
         if onset is not None:
             return onset
+        # The Table 1 detector may never trigger on the replica's features.
         cycles = sorted(table["cycle"].unique())
         return cycles[1] if len(cycles) > 1 else cycles[0]
 
     def estimate_signal_cycles(self, name: str) -> pd.DataFrame:
-        """Crack-length estimates for a validation specimen's cycles that
-        have wave signals (Table 1 detection + ensemble regression)."""
         table = self.feature_tables[name]
         onset = self._crack_onset_cycle(name)
         below = sorted(c for c in table["cycle"].unique() if c < onset)
@@ -122,7 +88,6 @@ class Angler3rdPlacePipeline:
             rows.extend(ensemble_predict(self.ensembles[name], at_or_above).to_dict("records"))
         return pd.DataFrame(rows).sort_values("cycle").reset_index(drop=True)
 
-    # --------------------------------------------------------- Paris' Law (Sec 4)
     def _pick_donor(self) -> str:
         if self.donor_specimen:
             return self.donor_specimen
@@ -164,7 +129,6 @@ class Angler3rdPlacePipeline:
         preds = self.paris_fits["T8"].predict(PREDICTION_CYCLES["T8"])
         return pd.DataFrame({"cycle": PREDICTION_CYCLES["T8"], "estimated_crack_mm": preds})
 
-    # -------------------------------------------------------------- run/all
     def run(self) -> dict[str, pd.DataFrame]:
         self.build_feature_tables()
         self.fit_ensembles()
