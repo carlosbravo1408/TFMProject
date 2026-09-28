@@ -1,30 +1,3 @@
-"""Crack length prediction via the "trans-fitting" method (Section 3.2).
-
-Pipeline:
-  1. Candidate functions are fit to a training specimen's post-initiation
-     crack-growth curve a(N) (Section 3.2.1/3.2.2); SSE and DFE rank them.
-  2. The fitted curve's parameters become a Bayesian *prior*. Given the
-     target specimen's known/estimated crack length(s), a regularized
-     (MAP) refit "translocates" the curve to match the target while staying
-     close to the trained shape (Section 3.2.3, Eq. 17).
-  3. Multiple translocated curves (one per reference training specimen) are
-     averaged, and the anchor set grows one predicted cycle at a time
-     ("sequential updating", Section 3.2.4); the final prediction for each
-     target cycle is the average of every value predicted for it before it
-     became an anchor itself.
-
-Implementation notes (not specified verbatim in the paper, chosen for
-numerical stability and documented here):
-  - Cycle counts (O(1e4-1e5)) are internally rescaled to ``t = N / 1e4``
-    before evaluating candidate functions; this is required for the
-    Exp1+Gaussian1 form (Eq. 14) whose Gaussian term has *unit* variance
-    in ``N`` and would otherwise underflow to exactly zero.
-  - Regularization is implemented as extra pseudo-residuals
-    ``sqrt(lambda) * (theta - prior)`` appended to the least-squares
-    residual vector (standard Tikhonov-via-least_squares trick), solved
-    with ``scipy.optimize.least_squares`` (trust-region-reflective, 'trf'),
-    matching the paper's stated trust-region algorithm.
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -34,20 +7,13 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import least_squares
 
+# In raw cycles the unit-variance Gaussian term of Eq. 14 underflows to zero.
 CYCLE_SCALE = 1e4
 
 
 def _t(N: np.ndarray) -> np.ndarray:
     return np.asarray(N, dtype=float) / CYCLE_SCALE
 
-
-# ---------------------------------------------------------------------------
-# Candidate functions (MATLAB Curve Fitting Toolbox naming, as used in the
-# paper's Table 4: Poly1, Poly2, Exp1, Exp2, Gaussian1, Gaussian2, Power1,
-# Power2, and the custom Exp1+Gaussian1 of Eq. 14). Parameter counts were
-# cross-checked against the paper's DFE = L - P values in Table 4 (L=7 for
-# both T3 and T4's post-initiation data).
-# ---------------------------------------------------------------------------
 
 def _poly1(N, a1, a2):
     return a1 * _t(N) + a2
@@ -85,7 +51,6 @@ def _power2(N, a1, a2, a3):
 
 
 def _exp_gaussian1(N, a1, a2, a3, a4, a5):
-    """Eq. 14: theta1*exp(-(N-theta2)^2) + theta3*exp(theta4*N) + theta5."""
     t = _t(N)
     return a1 * np.exp(-((t - a2) ** 2)) + a3 * np.exp(a4 * t) + a5
 
@@ -169,9 +134,6 @@ def fit_regularized(
     prior: np.ndarray | None = None,
     max_nfev: int = 20000,
 ) -> np.ndarray:
-    """Regularized nonlinear least squares (Eq. 16 / Eq. 17):
-    minimize sum((a_fit(N) - a)^2) + lam * sum((theta - prior)^2).
-    """
     prior_vec = np.zeros(n_params) if prior is None else np.asarray(prior, dtype=float)
     sqrt_lam = np.sqrt(lam)
 
@@ -185,7 +147,6 @@ def fit_regularized(
 
 
 def goodness_of_fit_table(N: np.ndarray, a: np.ndarray, lam: float = 1e-4) -> pd.DataFrame:
-    """Reproduces the SSE/DFE goodness-of-fit comparison of Table 4."""
     N = np.asarray(N, dtype=float)
     a = np.asarray(a, dtype=float)
     rows = []
@@ -204,17 +165,11 @@ def goodness_of_fit_table(N: np.ndarray, a: np.ndarray, lam: float = 1e-4) -> pd
 
 
 def select_candidate(table: pd.DataFrame, min_dfe: int = 2) -> pd.Series:
-    """Lowest-SSE candidate among those with DFE >= min_dfe (excludes
-    over-fit models such as Gaussian2, matching Section 3.2.1's reasoning)."""
     valid = table[table["dfe"] >= min_dfe]
     return valid.loc[valid["sse"].idxmin()]
 
 
 class TransFitCurve:
-    """One reference training curve (a candidate function fit to one
-    training specimen), which can be "translocated" to a target specimen's
-    known anchor points via MAP refitting (Section 3.2.3)."""
-
     def __init__(self, candidate: Candidate, prior_theta: np.ndarray):
         self.candidate = candidate
         self.prior_theta = np.asarray(prior_theta, dtype=float)
@@ -251,20 +206,6 @@ def sequential_trans_fit(
     target_cycles: list[float],
     lam: float,
 ) -> tuple[dict[float, float], list[dict[float, float]]]:
-    """Sequential-updating trans-fitting prediction (Section 3.2.4).
-
-    At each iteration, every reference curve is translocated using the
-    current anchor set, predictions for all still-unanchored target cycles
-    are averaged across curves, the *first* remaining target cycle is then
-    "locked in" as a new anchor using that averaged prediction, and the
-    process repeats. The final prediction for each target cycle is the
-    average of every value predicted for it while it was still unanchored
-    -- this reproduces the paper's Tables 7 and 11 exactly.
-
-    Returns ``(final_predictions, iteration_tables)`` where
-    ``iteration_tables[k]`` is the k-th average trans-fitting curve's
-    predictions (one entry per cycle still remaining at that iteration).
-    """
     anchors = list(initial_anchors)
     remaining = list(target_cycles)
     contributions: dict[float, list[float]] = {c: [] for c in target_cycles}

@@ -1,25 +1,3 @@
-"""Standalone script (does not modify the notebook).
-
-Evaluates the notebook's method on all 8 specimens and fills the official
-PHM2019 scoring spreadsheet (m=10 monotonicity-bug already fixed) with real
-data + the model's own estimates/predictions, producing a genuine,
-computable Penalty Score per specimen:
-
-- T1-T6 (training): the SVR estimator of Section 5 (``PAPER_BEST_PARAMS``:
-  RBF kernel, C=100, gamma=1.0), evaluated in-sample -- the same
-  model/estimates already shown in the notebook.
-- T7 (validation, constant loading): the full estimate-then-predict
-  pipeline of notebook Section 7.2 (SVR estimation + trans-fitting
-  prediction with sequential updating, lambda=30000, calibrated in
-  Section 7.1 against the paper's own Table 7 values).
-- T8 (validation, variable loading): the full pipeline of notebook
-  Section 8.3 (same as T7, plus the Eq. 24 variable-loading cycle
-  transform; lambda=2000, calibrated in Section 8.3 against Table 11;
-  baseline_override=50000 per the paper's documented exception).
-
-Usage:
-    python3 evaluate_training_and_fill_excel.py
-"""
 from __future__ import annotations
 
 from pathlib import Path
@@ -42,9 +20,6 @@ DATA_ROOT = SCRIPT_DIR.parent / "PHMDC2019_Data"
 SOURCE_XLSX = SCRIPT_DIR / "PHM2019_ScoringSpreadsheet_m10_fixed.xlsx"
 OUTPUT_XLSX = SCRIPT_DIR / "PHM2019_ScoringSpreadsheet_T1_T8_evaluated.xlsx"
 
-# Column groups of the official template (T1-T6 unchanged from the original
-# file; T7/T8 don't exist in the original -- it only ships T1-T6 as a
-# training self-check -- so they're appended in the next free columns).
 CALC_GROUPS = {
     "T1": ("A", "B", "C"), "T2": ("D", "E", "F"), "T3": ("G", "H", "I"),
     "T4": ("J", "K", "L"), "T5": ("M", "N", "O"), "T6": ("P", "Q", "R"),
@@ -56,14 +31,11 @@ SCORE_GROUPS = {
     "T7": ("P", "Q"), "T8": ("R", "S"),
 }
 
-# lambda values calibrated in the notebook (Sections 7.1 / 8.3) against the
-# paper's own published Table 7 / Table 11 predictions.
 T7_LAM_TRANSLOCATE = 30000.0
 T8_LAM_TRANSLOCATE = 2000.0
 
 
 def evaluate_training_specimens() -> pd.DataFrame:
-    """In-sample SVR estimates for T1-T6 (notebook Section 5)."""
     trained = train_estimator(DATA_ROOT)
     print(f"RMSE de entrenamiento (modelo del notebook, Seccion 5, C=100 gamma=1.0): "
           f"{trained.train_rmse:.3f} mm")
@@ -76,9 +48,6 @@ def evaluate_training_specimens() -> pd.DataFrame:
 
 
 def evaluate_validation_specimens(trained) -> dict[str, pd.DataFrame]:
-    """Full estimate-then-predict pipeline for T7 and T8 (notebook
-    Sections 7.2 / 8.3), returning a cycle/estimated/true table per
-    specimen (estimation + prediction points combined)."""
     results = {}
 
     t7_specimens = load_all(DATA_ROOT, TRAINING_SPECIMENS + ["T7"])

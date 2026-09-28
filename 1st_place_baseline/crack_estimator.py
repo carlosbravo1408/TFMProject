@@ -1,10 +1,3 @@
-"""Crack length estimation from wave-signal features via Support Vector
-Regression (Section 3.1.3 of the paper).
-
-The paper reports an RBF kernel with kernel parameter (gamma) = 1.0 and
-regularization parameter C = 100.0, selected through a grid search, giving
-RMSE = 1.65 mm on the training specimens.
-"""
 from __future__ import annotations
 
 import numpy as np
@@ -24,9 +17,6 @@ def build_feature_table(
     baseline_overrides: dict[str, int] | None = None,
     extractor: FeatureExtractor | None = None,
 ) -> pd.DataFrame:
-    """Build one row per labeled cycle across all given specimens:
-    [specimen, cycle, rms, std, orthogonality, mag_300khz, crack_length_mm].
-    """
     baseline_overrides = baseline_overrides or {}
     extractor = extractor or FeatureExtractor()
     rows = []
@@ -48,8 +38,6 @@ def build_feature_table(
 
 
 class CrackLengthEstimator:
-    """Thin wrapper around :class:`sklearn.svm.SVR` matching Section 3.1.3."""
-
     def __init__(self, C: float = 100.0, gamma: float = 1.0, kernel: str = "rbf",
                  epsilon: float = 0.1):
         self.model = SVR(kernel=kernel, C=C, gamma=gamma, epsilon=epsilon)
@@ -71,10 +59,6 @@ def grid_search(
     groups: np.ndarray,
     param_grid: dict | None = None,
 ) -> GridSearchCV:
-    """Grid search over SVR hyper-parameters (Section 3.1.3), using
-    leave-one-specimen-out cross-validation so the search reflects
-    generalization to an unseen specimen, as in the validation setting.
-    """
     param_grid = param_grid or {
         "C": [1, 10, 50, 100, 200, 500],
         "gamma": [0.01, 0.1, 0.5, 1.0, 2.0, 5.0],
