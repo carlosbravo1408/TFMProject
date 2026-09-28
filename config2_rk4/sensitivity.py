@@ -1,18 +1,3 @@
-"""Barrido del exponente de Wheeler y verificación de que el retardo es constante.
-
-Por qué existe este módulo
---------------------------
-El barrido de sensibilidad se había ejecutado *ad hoc* y sus cifras quedaron en
-`results/sensibilidad_wheeler.csv` sin código que las regenerase. Al cambiar la
-configuración del estimador quedaron obsoletas y no había forma de rehacerlas.
-
-Además contiene la comprobación que reclasifica el componente (c). Se reporta
-antes que el barrido porque **cambia lo que el barrido significa**: si el factor
-de retardo no depende de la longitud de grieta, el barrido de ``p`` no explora
-intensidades de un efecto de historia, sino recalibraciones del coeficiente.
-
-Ejecutar:  python -m config2_rk4.sensitivity
-"""
 from __future__ import annotations
 
 import numpy as np
@@ -31,17 +16,12 @@ from .retardation import (YIELD_STRENGTH_MPA, block_rate_with_retardation, k_max
 
 RESULTS = __file__.rsplit("/", 1)[0] + "/results"
 
-# Barrido del exponente de Wheeler. El intervalo cubre el publicado para otras
-# aleaciones de aluminio: Sheu, Song y Hwang (1995, Eng. Fract. Mech., "Shaping
-# exponent in Wheeler model under a single overload") calibran el exponente sobre
-# ensayos de sobrecarga unica y obtienen 0,94-2,19 en 5083-O y 1,36-1,98 en
-# 6061-T651. No hay valor publicado para el 2024-T3. Se recorre como cota de
-# sensibilidad, nunca para elegir p.
+# Covers the range Sheu, Song & Hwang (1995) report for aluminium alloys (0.94-2.19
+# in 5083-O, 1.36-1.98 in 6061-T651); none is published for 2024-T3.
 EXPONENTES_P = (0.0, 1.0, 1.43, 2.0, 2.5, 3.0, 3.5)
 
 
 def diagnostico_phi(longitudes_mm=(2.0, 3.0, 4.0, 5.0, 8.0, 15.0), p: float = 1.43):
-    """¿Depende el retardo de la longitud de grieta? (debería, si es Wheeler)."""
     curve = load_curve("T8")
     bloque = np.asarray(curve.load_block, dtype=float)
     i_ol = int(np.argmax(bloque[:, 1]))
@@ -61,7 +41,6 @@ def diagnostico_phi(longitudes_mm=(2.0, 3.0, 4.0, 5.0, 8.0, 15.0), p: float = 1.
 
 
 def equivalencia_con_coeficiente(a0_mm, C, m, curve, p: float = 1.43):
-    """Integrar con retardo == integrar con ``C * factor``. Devuelve la diferencia."""
     objetivos = np.asarray(curve.cycles[2:]) - curve.cycles[1]
     bloque = curve.load_block
     factor = float(block_rate_with_retardation(a0_mm / 1000.0, 1.0, m, bloque, p)
@@ -72,7 +51,6 @@ def equivalencia_con_coeficiente(a0_mm, C, m, curve, p: float = 1.43):
 
 
 def barrido(n_seeds: int = 5) -> pd.DataFrame:
-    """Penalización de T7/T8 en función de ``p``, con el estimador vigente."""
     cfg = Config(**ABLATION["Configuración 1 (1D-CNN + PINN)"])
     batches = build_specimen_batches(load_labels(), cfg.m_exponent)
     modelos = train_ensemble(cfg, batches, [n for n in TRAIN_POOL if n in batches],
@@ -126,8 +104,7 @@ def main() -> None:
     print("1. ¿ES DINÁMICO EL RETARDO? (si lo fuera, phi dependería de la grieta)")
     phi = diagnostico_phi()
     print(phi.round(4).to_string(index=False))
-    # Comparación con tolerancia, no ``nunique()``: la dispersión que queda es
-    # ruido de coma flotante, y contar valores distintos la leería como señal.
+    # Tolerance rather than nunique(): the remaining spread is floating-point noise.
     disp = float((phi["phi"].max() - phi["phi"].min()) / phi["phi"].mean())
     print(f"\n   phi = {phi['phi'].mean():.4f} en TODO el rango de 2 a 15 mm "
           f"(dispersión relativa {disp:.1e}, es decir ruido de coma flotante).")
