@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-# Las cuatro combinaciones: (motor de extrapolación, modo de resumir el latente).
+# (extrapolation engine, latent summary)
 COMBINACIONES = {
     "Config 1  (a+b)":     ("analítica", "media"),
     "Config 2  (a+b+c)":   ("paso a paso", "media"),
@@ -14,7 +14,6 @@ MOTORES = ("analítica", "paso a paso", "ponderado")
 
 
 def tabla_contrastes(detalle: dict, especimen: str) -> pd.DataFrame:
-    """Penalización de cada combinación, dispuesta en las dos decisiones."""
     filas: dict[str, dict[str, float]] = {}
     for etiqueta, (motor, resumen) in COMBINACIONES.items():
         filas.setdefault(motor, {})[resumen] = detalle[etiqueta][especimen]["penalizacion"]
@@ -22,13 +21,8 @@ def tabla_contrastes(detalle: dict, especimen: str) -> pd.DataFrame:
 
 
 def aportaciones(detalle: dict, especimen: str) -> pd.DataFrame:
-    """Aportación de cada componente y aportación conjunta, en penalización.
-
-    Con dos decisiones binarias, la aportación de una de ellas es la media de sus
-    dos contrastes simples, y la aportación conjunta es la mitad de la diferencia
-    entre esos dos contrastes. Signo negativo significa mejora, porque la
-    penalización baja.
-    """
+    # Each component's effect is the mean of its two simple contrasts; the joint effect
+    # is half their difference. Negative means the penalty drops.
     t = tabla_contrastes(detalle, especimen)
     c_media = t.loc["paso a paso", "media"] - t.loc["analítica", "media"]
     c_ponderado = t.loc["paso a paso", "ponderado"] - t.loc["analítica", "ponderado"]
