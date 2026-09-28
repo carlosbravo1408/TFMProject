@@ -1,22 +1,3 @@
-"""¿Resisten las constantes publicadas del 2024-T3 el criterio de selección sin fuga?
-
-``hyperparameter_sources`` mostró que el ajuste de Walker de la FAA para chapa de
-2024-T3 (Forman et al., 2005, DOT/FAA/AR-05/15) **pierde en T7** (169,45 frente a
-12,01) pero **gana en T8** (12,77 frente a 8631,76). Adoptarlo *por* su resultado en
-T8 sería elegir con un espécimen de validación: fuga. Aquí se somete al mismo
-criterio con el que se eligió el exponente —minimax del peor fold de entrenamiento
-sobre la banda de ±0,3 dex del coeficiente— **sin cargar T7 ni T8**.
-
-Variantes, todas con la configuración de ``select_prognosis.BASE``:
-
-``Identificado, m = 2,00 / cabeza``   control; debe reproducir el resultado que
-                                      ``select_prognosis.buscar_exponente`` da a m = 2,00.
-``FAA / cabeza``                      la cabeza física parte del *prior* de la FAA y lo
-                                      ajusta por espécimen.
-``FAA / fijo``                        el coeficiente publicado tal cual, sin adaptar.
-
-Ejecutar:  python -m config1_cnn_pinn.robustez_literatura
-"""
 from __future__ import annotations
 
 import numpy as np
@@ -35,13 +16,6 @@ VARIANTES = {
 
 
 def robustez_constantes(n_seeds: int = 3, etiquetas=None, verbose: bool = True):
-    """Somete cada procedencia al criterio sin fuga. Devuelve ``(resumen, detalle)``.
-
-    No escribe ni lee ficheros. El control de reproducibilidad frente a
-    ``select_prognosis`` se obtiene comparando la fila ``Identificado, m = 2,00``
-    de este resumen con la salida de ``buscar_exponente`` en la misma sesión,
-    no leyendo un CSV de una ejecucion anterior.
-    """
     etiquetas = load_labels() if etiquetas is None else etiquetas
     resumen, detalle = [], []
     for nombre, extra in VARIANTES.items():
@@ -62,7 +36,7 @@ def robustez_constantes(n_seeds: int = 3, etiquetas=None, verbose: bool = True):
         if "log_c_prior" in extra:
             coeficientes["fijo"] = {f: (*c[:3], extra["log_c_prior"]) for f, c in cache.items()}
         for coef, cch in coeficientes.items():
-            r = robustez(cch, m, "cabeza")   # «cabeza» usa el log C que trae la caché
+            r = robustez(cch, m, "cabeza")
             nominal = r[r["delta_log10C"] == 0.0].iloc[0]
             resumen.append({"procedencia": nombre, "coeficiente": coef, "m": round(m, 3),
                             "media_nominal": nominal["media"],
@@ -80,7 +54,6 @@ def robustez_constantes(n_seeds: int = 3, etiquetas=None, verbose: bool = True):
 
 
 def main(n_seeds: int = 3) -> None:
-    """Atajo de linea de comandos. El notebook llama a ``robustez_constantes``."""
     torch.set_num_threads(4)
     RESULTS.mkdir(exist_ok=True)
     tabla, detalle = robustez_constantes(n_seeds=n_seeds)

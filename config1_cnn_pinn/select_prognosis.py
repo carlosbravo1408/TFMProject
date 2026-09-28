@@ -1,46 +1,3 @@
-"""Tercera etapa de selección: el motor de extrapolación (exponente y coeficiente).
-
-Qué pregunta responde
----------------------
-Arreglada el ancla (``select_weighting``), lo que queda de la penalización es la
-mitad de prognosis. Dos decisiones la gobiernan y ninguna se había comparado
-bajo un criterio libre de fuga.
-
-**1. El exponente.** ``physics_calibration`` dejó dos candidatos, ambos elegidos
-sin mirar T7/T8: *m* = 2,25 (minimax de prognosis en entrenamiento) y *m* = 2,00
-(a un 7 % del óptimo). La diferencia no es de precisión sino **estructural**:
-con *p* = 1 − *m*/2, la solución cerrada es
-
-    a(N) = [a0^p + p·k·N]^(1/p)
-
-y para *m* > 2 se tiene *p* < 0, de modo que el corchete **cruza cero en tiempo
-finito** y la grieta diverge a infinito. Para *m* = 2 exactamente la solución
-degenera en a0·exp(k·N): crece sin cota pero **nunca en tiempo finito**. Es el
-mismo tipo de argumento estructural con el que la auditoría eligió la
-normalización: se prefiere la forma que no puede producir un artefacto, no la
-que puntúa mejor.
-
-**2. De dónde sale el coeficiente.** Tres fuentes, todas disponibles en
-inferencia:
-
-``cabeza``   el escalar que identifica la cabeza física del PINN (lo actual).
-``anclas``   mínimos cuadrados de log10 C sobre las propias estimaciones de la
-             red en los ciclos con señal. No usa ninguna verdad de campo.
-``prior``    el valor poblacional de T1/T3/T4/T6, sin mirar el espécimen.
-
-Lo que NO se puede arreglar, y conviene tener medido
-----------------------------------------------------
-La brecha del coeficiente de T8 es de 0,374 dex y de los tres mecanismos físicos
-disponibles, los dos no incluidos suman ~0,09: espectro variable (−0,046, ya
-dentro de Δσ_eq), retardo de Wheeler (−0,054) y cierre de Elber/Schijve con S_op fijado por la sobrecarga
-(−0,039). La causa es que T8 **se frena 1,74×** entre su ventana observada y la
-ciega, cuando Paris exige acelerar: ninguna *C* constante ajusta las dos. Por eso
-el objetivo realista en T8 no es acertar, es **dejar de diverger**.
-
-**T7 y T8 no se cargan.**
-
-Ejecutar:  python -m config1_cnn_pinn.select_prognosis
-"""
 from __future__ import annotations
 
 import json
@@ -65,23 +22,8 @@ BASE = dict(epochs=600, dropout=0.3, weight_decay=1e-3,
 EXPONENTES = (2.00, 2.25)
 FUENTES = ("cabeza", "anclas", "prior")
 
-# Criterio: minimax del peor fold **sobre toda la banda de incertidumbre del
-# coeficiente** (+-0,3 dex, la sigma del prior de la cabeza física), no en el
-# coeficiente nominal.
-#
-# Por qué no en el nominal. Puntuar suponiendo que el coeficiente es correcto
-# supone justamente lo que falla en un espécimen de un régimen de carga no
-# visto, que es la condición de despliegue que el certamen impone. El nominal
-# elige m = 2,25 (22,01 frente a 41,04); el minimax sobre la banda elige
-# m = 2,00 (138,42 frente a 720,43, y cero puntos en el tope frente a dos).
-#
-# Procedencia de la idea, dicha explícitamente. La *pregunta* se planteó tras
-# ver que T8 divergía. La *justificación* no depende de T8: la singularidad en
-# tiempo finito de m > 2 estaba documentada en ``physics_calibration/priors.py``
-# y en la bitácora antes de esta sesión, la banda +-0,3 dex es la sigma del
-# prior fijada mucho antes, y la medida se toma sobre T1/T3/T4/T6. Es el mismo
-# caso que el punto 5 de ``AUDITORIA_FUGA.md`` y se resuelve igual: admisible,
-# con el matiz documentado.
+# Worst fold over the +/-0.3 dex coefficient band (the prior's sigma), not at the
+# nominal coefficient: for m > 2 a slightly high C diverges in finite time.
 CRITERIO = "peor_fold_banda"
 
 
@@ -91,23 +33,17 @@ def coeficiente(fuente: str, anclas_c, anclas_a, log_c_cabeza, m, d_sigma) -> fl
     if fuente == "prior":
         return priors.RECOMMENDED_LOG10_C
     if fuente == "anclas":
-        # Sobre las estimaciones de la red, no sobre la verdad de campo.
+        # From the network's estimates, not the ground truth.
         return fit_log_c(anclas_c, anclas_a, m, d_sigma)
     raise ValueError(fuente)
 
 
 def entrega(cyc_obs, est_obs, real_obs, log_c_cabeza, nombre, m, fuente,
             cota_mm: float = 20.0):
-    """Entrega completa de un espécimen bajo el presupuesto de 2 anclas.
-
-    ``cota_mm`` acota la longitud de grieta que la extrapolación puede
-    devolver. El valor por defecto, 20 mm, es el tope numérico que impide que
-    una trayectoria divergente desborde la pérdida durante el entrenamiento, y
-    reproduce el comportamiento anterior. ``cota_extrapolacion`` lo barre.
-    """
     curve = load_curve(nombre)
     d_sigma = equivalent_stress_range(curve.load_block, m)
-    n_obs = n_observed_nonzero("T7")            # el presupuesto, no datos de T7
+    # The protocol's budget; no T7 data is read.
+    n_obs = n_observed_nonzero("T7")
 
     nz = real_obs > 0
     anclas_c, anclas_a = cyc_obs[nz][:n_obs], est_obs[nz][:n_obs]
@@ -133,27 +69,6 @@ def entrega(cyc_obs, est_obs, real_obs, log_c_cabeza, nombre, m, fuente,
 
 def robustez(cache, m, fuente, deltas=(-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3),
              cotas_por_fold=None):
-    """Minimax de la penalización cuando el coeficiente identificado se equivoca.
-
-    Por qué esta etapa y no sólo la anterior
-    ----------------------------------------
-    La comparación de exponentes con el coeficiente que la red acierta no puede
-    distinguir las dos formas cerradas, porque ambas son razonables cuando *C*
-    es correcto. Lo que las separa es **cómo fallan**: para *m* > 2 el exponente
-    *p* = 1 − *m*/2 es negativo y el corchete cruza cero en tiempo finito, de
-    modo que un *C* algo alto no produce un error algo mayor sino una grieta
-    infinita. Para *m* = 2 el mismo error produce una exponencial con una
-    constante algo mayor: acotado.
-
-    Ningún fold de entrenamiento tiene un error de coeficiente lo bastante
-    grande para excitar ese modo, así que la etapa anterior es ciega a él. Aquí
-    se excita a propósito, perturbando log10 C dentro de **la incertidumbre que
-    el propio modelo declara**: el *prior* de la cabeza física tiene σ = 0,3 dex,
-    así que ±0,3 es su banda nominal, no una cifra elegida a conveniencia.
-
-    Sigue sin cargarse T7 ni T8: la perturbación se aplica sobre folds de
-    entrenamiento.
-    """
     filas = []
     for d in deltas:
         pen, topes = [], 0
@@ -169,11 +84,6 @@ def robustez(cache, m, fuente, deltas=(-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3),
 
 
 def buscar_exponente(n_seeds: int = 3, etiquetas=None, verbose: bool = True):
-    """Compara exponente y fuente del coeficiente.
-
-    Devuelve ``(tabla_nominal, robustez_banda, elegido)``. No escribe ni lee
-    ficheros: el notebook la invoca y decide qué guardar.
-    """
     etiquetas = load_labels() if etiquetas is None else etiquetas
     filas, caches = [], {}
     for m in EXPONENTES:
@@ -227,7 +137,6 @@ def buscar_exponente(n_seeds: int = 3, etiquetas=None, verbose: bool = True):
 
 
 def main(n_seeds: int = 3) -> None:
-    """Atajo de linea de comandos. El notebook llama a ``buscar_exponente``."""
     torch.set_num_threads(4)
     RESULTS.mkdir(exist_ok=True)
     tabla, rob, elegido = buscar_exponente(n_seeds=n_seeds)

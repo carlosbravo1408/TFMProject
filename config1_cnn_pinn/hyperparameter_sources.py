@@ -1,47 +1,3 @@
-"""¿Sirven los hiperparámetros de literatura, o hacía falta identificarlos?
-
-Este es el experimento que cierra el encargo original: construir la
-Configuración 1 **sobre cada procedencia posible de los hiperparámetros de la
-ecuación física** y comparar, en vez de dar por hecho que la identificación
-heurística era necesaria.
-
-Cuatro procedencias:
-
-``identificado``
-    m = 2,00 y log10 C = −8,425, identificados por metaheurísticos (evolución
-    diferencial, tras compararla con recocido simulado, ACO_R, VNS y PSO) sobre
-    las curvas de T1/T3/T4/T6 en ``physics_calibration/``.
-
-``rao``
-    La ventana genérica de metales que usa el 3.er puesto del certamen,
-    C ∈ [1e-13, 1e-11] y m ∈ [2, 4] (tras Li, Wang & Gong, 2012). Es lo más
-    cercano a un "baseline de literatura" que el propio certamen ofrece. Se toma
-    el centro geométrico: m = 3, C = 1e-12.
-
-``dourado``
-    C = 5,008e-10, m = 3,859 para Al **2024-T3** en aire (Dourado & Viana, PHM
-    Conf. 2019, adaptado de cupones de Menan & Henaff, 2010). Es el único par
-    publicado para *esta* aleación en todo el corpus revisado. Las unidades no
-    son recuperables del artículo, lo que ya es motivo de reserva.
-
-``metals``
-    C = 5,75e-8, m = 3,09 para AA 2024-**T4** en probeta CT con R = −1
-    (*Metals* 13(8):1134, 2023). Temple y geometría distintos.
-
-``faa``
-    Ajuste de Walker para chapa de 2024-T3 desnuda y chapada, orientación L-T
-    (Forman et al., 2005, DOT/FAA/AR-05/15, fig. 3, material M2EA11AB1):
-    da/dN = C·[ΔK/(1−R)^(1−m)]^n con C = 0,167e-8 in/ciclo, n = 3,273 y
-    m+ = 0,618 (ΔK en ksi·√in), ajustado con datos a R = 0; 0,5 y 0,7.
-    **Unidades explícitas**: es la prueba limpia que el par de Dourado & Viana
-    no permite. Se convierte a la forma de Paris del módulo (SI, Y = 1) a la
-    razón de tensiones de los especímenes, R = 0,0476.
-
-Todo lo demás — arquitectura, pérdida, protocolo, semillas — es idéntico entre
-variantes, de modo que la única diferencia es de dónde salen m y C.
-
-Ejecutar:  python -m config1_cnn_pinn.hyperparameter_sources
-"""
 from __future__ import annotations
 
 import json
@@ -56,17 +12,10 @@ from .data import build_specimen_batches, load_labels
 from .evaluate import ABLATION, REFERENCES, build_submission
 from .train import Config, RESULTS, TRAIN_POOL, train_ensemble
 
-# Capacidad y pesos de pérdida seleccionados sobre los folds de entrenamiento;
-# se mantienen fijos para que la única variable sea la procedencia de m y C.
+# Fixed, so the only variable is where m and C come from.
 BASE = dict(ABLATION["Configuración 1 (1D-CNN + PINN)"])
 
 def identify_log_c(m: float) -> float:
-    """log10 C medio sobre los especímenes de ENTRENAMIENTO, al exponente ``m``.
-
-    Se reidentifica para cada exponente porque C y m se desplazan juntos sobre
-    la cresta log-log: un coeficiente citado a un exponente distinto del suyo es
-    sencillamente incorrecto. Sólo entran T1/T3/T4/T6 — nunca T7 ni T8.
-    """
     from physics_calibration.data import CALIBRATION_SPECIMENS, load_curve
     from physics_calibration.models import LAWS
     from physics_calibration.pooled import fit_coefficient_only
@@ -78,16 +27,13 @@ def identify_log_c(m: float) -> float:
     return float(np.mean(valores))
 
 
-R_ESPECIMENES = 0.0476          # T1–T7; T8 oscila entre 0,0476 y 0,0530
+# T1-T7; T8 ranges from 0.0476 to 0.0530.
+R_ESPECIMENES = 0.0476
 MPA_SQRT_M_POR_KSI_SQRT_IN = 6.894757 * math.sqrt(0.0254)
 
 
 def walker_faa_a_paris_si(c_in: float, n: float, m_plus: float, r: float) -> tuple[float, float]:
-    """Walker de la FAA (in/ciclo, ksi·√in) → Paris del módulo (m/ciclo, MPa·√m) a R fijo.
-
-    da/dN = C·[ΔK/(1−R)^(1−m)]^n  ⇒  da/dN = C'·ΔK^n  con
-    C' = 0,0254 · C · (6,894757·√0,0254)^(−n) · (1−R)^(−n·(1−m)).
-    """
+    # FAA Walker da/dN = C [dK / (1-R)^(1-m)]^n at fixed R becomes C' dK^n in SI.
     c_si = 0.0254 * c_in * MPA_SQRT_M_POR_KSI_SQRT_IN ** (-n) * (1.0 - r) ** (-n * (1.0 - m_plus))
     return n, math.log10(c_si)
 
@@ -95,15 +41,9 @@ def walker_faa_a_paris_si(c_in: float, n: float, m_plus: float, r: float) -> tup
 M_FAA, LOG_C_FAA = walker_faa_a_paris_si(0.167e-8, 3.273, 0.618, R_ESPECIMENES)
 
 SOURCES = {
-    # Dos exponentes, ambos elegidos SIN mirar T7/T8:
-    #   2,25 = minimax de prognosis sobre los folds de entrenamiento;
-    #   2,00 = queda a un 7 % de ese óptimo y es el único valor del entorno con
-    #          solución cerrada exponencial: sin singularidad y monótona
-    #          creciente de forma incondicional. Se comparan los dos en vez de
-    #          escoger uno por conveniencia numérica a posteriori.
     "Identificado, m = 2,25 (minimax en entrenamiento)": {
         "m": 2.25,
-        "log_c": None,      # se identifica sobre entrenamiento al ejecutar
+        "log_c": None,
         "procedencia": "Este trabajo, physics_calibration/",
     },
     "Identificado, m = 2,00 (forma cerrada no singular)": {
@@ -150,13 +90,6 @@ def run_source(name: str, spec: dict, n_seeds: int = 5, verbose: bool = True):
 
 
 def comparar_procedencias(fuentes=None, n_seeds: int = 5, verbose: bool = True):
-    """Construye la Configuracion 1 sobre cada procedencia de *m* y *C*.
-
-    Devuelve ``(tabla, detalle)``. No escribe ni lee ficheros: la version
-    anterior mezclaba la tabla con el CSV de una ejecucion previa cuando se
-    filtraba por subconjunto, lo que hacia que el resultado dependiera de que
-    hubiera corrido antes. Ahora lo que se ejecuta es lo que se ve.
-    """
     fuentes = SOURCES if fuentes is None else fuentes
     rows, detalle = [], {}
     for name, spec in fuentes.items():
@@ -182,7 +115,6 @@ def comparar_procedencias(fuentes=None, n_seeds: int = 5, verbose: bool = True):
 
 
 def main() -> None:
-    """Atajo de linea de comandos. El notebook llama a ``comparar_procedencias``."""
     import sys
 
     torch.set_num_threads(4)

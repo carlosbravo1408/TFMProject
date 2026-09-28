@@ -1,46 +1,3 @@
-"""Búsqueda de los pesos de la pérdida por evolución diferencial.
-
-Por qué no basta una rejilla
-----------------------------
-Los pesos de la pérdida se habían fijado con una rejilla gruesa de tres
-valores, 0, 1 y 3, elegidos a ojo. Esa rejilla falló dos veces seguidas: el
-óptimo del peso físico resultó estar en 20, casi siete veces por encima de su
-extremo superior, y hubo que extenderla dos veces a mano para encontrarlo.
-
-Hay tres razones por las que una rejilla no sirve aquí, y las tres están
-medidas:
-
-* **Los pesos están acoplados.** El término que retiene al coeficiente ayuda
-  cuando el residuo físico actúa con peso moderado y estorba cuando actúa con
-  peso fuerte, de modo que explorarlos por separado no puede ver el óptimo
-  conjunto.
-* **La superficie no es suave.** En el barrido del peso físico, 10 puntúa peor
-  que 6 y 320 mejor que 160.
-* **El recorrido útil abarca órdenes de magnitud.** De 0,1 a 300 en el peso
-  físico, de 3 a 200 en el del ancla. Una rejilla que cubra eso con resolución
-  suficiente es más cara que la búsqueda.
-
-Se emplea la evolución diferencial del módulo ``physics_calibration``, que es
-la que ganó la comparativa de seis algoritmos de aquella etapa, de modo que la
-elección del optimizador no introduce un grado de libertad nuevo.
-
-Criterio y protección contra el ruido
--------------------------------------
-El objetivo es el mismo criterio libre de fuga que el resto del trabajo: el
-peor *fold* de entrenamiento bajo el protocolo completo del certamen, evaluado
-sobre toda la banda de incertidumbre del coeficiente, ±0,3 dex, y con la cota
-de entrega recalculada en cada *fold* excluyendo el espécimen puntuado. **T7 y
-T8 no se cargan en ningún momento.**
-
-Cada candidato se evalúa con varias semillas, porque la dispersión entre
-semillas de una misma configuración es del orden de la diferencia entre
-configuraciones distintas. Sin eso, la búsqueda optimizaría el ruido.
-
-El óptimo que encuentre **debe verificarse** con tandas de semillas
-independientes antes de adoptarse: ``verificar`` hace esa comprobación.
-
-Ejecutar:  python -m config1_cnn_pinn.busqueda_pesos
-"""
 from __future__ import annotations
 
 import json
@@ -57,25 +14,22 @@ from .evaluate import ABLATION, build_submission
 from .select_prognosis import robustez
 from .train import Config, LOSO_FOLDS, RESULTS, TRAIN_POOL, train_ensemble
 
-# Variables de la búsqueda, en log10. El recorrido de cada una cubre los
-# órdenes de magnitud en los que el barrido manual mostró actividad.
+# log10 bounds covering the orders of magnitude where the manual sweep was active.
 VARIABLES = [
-    ("lambda_physics",     -1.0, 2.5),    # 0,1  a 316
-    ("lambda_log_c_prior", -2.0, 1.0),    # 0,01 a 10
-    ("lambda_monotonic",   -2.0, 1.0),    # 0,01 a 10
-    ("anchor_weight",       0.5, 2.3),    # 3,2  a 200
+    ("lambda_physics",     -1.0, 2.5),
+    ("lambda_log_c_prior", -2.0, 1.0),
+    ("lambda_monotonic",   -2.0, 1.0),
+    ("anchor_weight",       0.5, 2.3),
 ]
 LIMITES = [(b, c) for _, b, c in VARIABLES]
 REGLA_COTA = "segunda mayor"
 
 
 def descodificar(x) -> dict:
-    """Vector en log10 -> ajustes de ``Config``."""
     return {nombre: float(10.0 ** v) for (nombre, _, _), v in zip(VARIABLES, x)}
 
 
 def _base() -> dict:
-    """Configuración de partida: todo salvo los pesos que se buscan."""
     base = dict(ABLATION["Configuración 1 (1D-CNN + PINN)"])
     for nombre, _, _ in VARIABLES:
         base.pop(nombre, None)
@@ -84,7 +38,6 @@ def _base() -> dict:
 
 
 def construir_objetivo(n_seeds: int = 2, etiquetas=None, registro=None):
-    """Objetivo: peor fold sobre la banda, con la cota excluyendo cada fold."""
     etiquetas = load_labels() if etiquetas is None else etiquetas
     maximos = maximos_por_especimen([n for n in TRAIN_POOL])
     cotas = {f: cota_de_regla(REGLA_COTA, maximos, excluir=f) for f in LOSO_FOLDS}
@@ -104,7 +57,8 @@ def construir_objetivo(n_seeds: int = 2, etiquetas=None, registro=None):
                 r = robustez(cache, cfg.m_exponent, "cabeza", cotas_por_fold=cotas)
                 valor = float(r["peor_fold"].max())
                 media = float(r["media"].mean())
-            except Exception as exc:                      # una configuración puede divergir
+            # A candidate configuration can diverge.
+            except Exception as exc:
                 valor, media = float("inf"), float("inf")
                 print(f"    descartada: {exc}", flush=True)
             historial.append({**pesos, "peor_fold_banda": valor,
@@ -123,12 +77,6 @@ def construir_objetivo(n_seeds: int = 2, etiquetas=None, registro=None):
 
 
 def verificar(pesos: dict, n_tandas: int = 3, n_seeds: int = 5, etiquetas=None):
-    """Repite el óptimo sobre tandas independientes y lo entrega en T7/T8.
-
-    La búsqueda puede haber encontrado una combinación afortunada para las
-    semillas con las que se evaluó. Esta comprobación la repite con semillas
-    distintas; sólo si la mejora sobrevive tiene sentido adoptarla.
-    """
     etiquetas = load_labels() if etiquetas is None else etiquetas
     filas = []
     for etiqueta, extra in (("óptimo de la búsqueda", pesos),

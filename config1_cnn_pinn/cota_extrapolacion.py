@@ -1,45 +1,3 @@
-"""¿Hasta dónde puede crecer una grieta extrapolada? Calibración de la cota.
-
-Qué pregunta responde
----------------------
-La extrapolación de Paris es monótona creciente y sin cota superior, de modo
-que un coeficiente algo alto no produce un error algo mayor, sino una grieta
-arbitrariamente larga. El módulo de física ya recorta esa trayectoria en 20 mm,
-pero ese valor **no se eligió para la entrega**: se eligió para que la pérdida
-no desborde durante el entrenamiento, con el criterio explícito de ser tan
-holgado que nunca tocase una curva razonable. Para lo que sí es un tope de
-entrega, el criterio correcto es el contrario: el mayor valor que el fenómeno
-produce de verdad.
-
-Este módulo separa los dos usos y calibra el segundo sobre los especímenes de
-entrenamiento, con el mismo criterio libre de fuga que el resto del trabajo.
-
-La corrección de circularidad
------------------------------
-La regla natural, «la cota es la grieta más larga observada en entrenamiento»,
-vale 7.46 mm y procede de T1. Evaluarla sobre el *fold* T1 sería circular: la
-cota conocería la respuesta del espécimen que se está puntuando. Por eso, en
-cada *fold*, la cota se **recalcula excluyendo ese fold**, igual que se excluyen
-sus ondas del entrenamiento. Para T1 la cota honesta es 7.24 mm, la de T4.
-
-Al aplicarla a T7 y T8 la exclusión no hace falta: ninguno de los dos es un
-espécimen de entrenamiento, así que la cota se calcula con T1 a T6 completos.
-
-Dos barridos complementarios
-----------------------------
-``absoluto``   recorre valores fijos de 4 a 20 mm. Describe la forma de la
-               curva y dónde está el óptimo, pero **no es adoptable**: elegir
-               el mínimo de esa curva sería fijar un número mirando el
-               resultado.
-``por regla``  evalúa reglas que derivan la cota de los datos disponibles en
-               cada fold. Es la única forma adoptable, porque la misma regla
-               puede aplicarse a T7 y T8 sin haberlos mirado.
-
-Todo se evalúa sobre la banda de incertidumbre del coeficiente, ±0.3 dex, que
-es el criterio con el que se eligieron el exponente y el peso de la pérdida.
-
-Ejecutar:  python -m config1_cnn_pinn.cota_extrapolacion
-"""
 from __future__ import annotations
 
 import json
@@ -71,22 +29,16 @@ REGLAS = {
 
 
 def maximos_por_especimen(nombres) -> dict:
-    """Grieta final medida en cada espécimen, en mm."""
     return {n: float(load_curve(n).crack_mm.max()) for n in nombres}
 
 
 def cota_de_regla(regla, maximos: dict, excluir=None) -> float:
-    """Aplica ``regla`` a los máximos disponibles, excluyendo un espécimen.
-
-    ``excluir`` es lo que corrige la circularidad: al puntuar el fold T1, la
-    cota no puede haber visto la grieta final de T1.
-    """
+    # Excluding the scored fold keeps the bound from knowing its answer.
     valores = [v for n, v in maximos.items() if n != excluir]
     return float(REGLAS[regla](valores))
 
 
 def entrenar_folds(cfg: Config, n_seeds: int = 3, etiquetas=None, verbose: bool = True):
-    """Estimaciones por fold. Se entrena una sola vez y luego sólo cambia la cota."""
     etiquetas = load_labels() if etiquetas is None else etiquetas
     lotes = {k: v for k, v in build_specimen_batches(etiquetas, cfg.m_exponent).items()
              if k not in ("T7", "T8")}
@@ -102,7 +54,6 @@ def entrenar_folds(cfg: Config, n_seeds: int = 3, etiquetas=None, verbose: bool 
 
 
 def barrido_absoluto(cache, m: float, cotas=ABSOLUTAS) -> pd.DataFrame:
-    """Cada cota fija, idéntica en todos los folds."""
     filas = []
     for cota in cotas:
         r = robustez(cache, m, "cabeza", cotas_por_fold={f: cota for f in LOSO_FOLDS})
@@ -119,7 +70,6 @@ def barrido_absoluto(cache, m: float, cotas=ABSOLUTAS) -> pd.DataFrame:
 
 
 def barrido_por_regla(cache, m: float, maximos: dict) -> pd.DataFrame:
-    """Cada regla, con la cota recalculada en cada fold excluyendo ese fold."""
     filas = []
     for regla in REGLAS:
         cotas = {f: cota_de_regla(regla, maximos, excluir=f) for f in LOSO_FOLDS}

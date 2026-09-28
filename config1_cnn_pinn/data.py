@@ -1,20 +1,3 @@
-"""Tensor dataset, augmentation and specimen-aware splits for Configuration 1.
-
-With 87 labelled waveforms, every design choice here is about not wasting any
-of them and about not letting the network memorise them:
-
-* **Waveforms are cached in memory as tensors.** The whole corpus is ~3 MB, so
-  the whole training loop runs off RAM and an epoch costs milliseconds.
-* **Batches are whole specimens.** The physics residual is defined between
-  consecutive cycles of the same specimen, and the coefficient head pools over
-  a specimen, so a batch that splits a specimen would silently compute both on
-  partial information. Sampling by specimen makes both terms exact.
-* **Augmentation is physically conservative.** Trigger jitter (a shift of a few
-  samples) and additive noise are things the acquisition chain genuinely does.
-  Time warping or large shifts are not: the time of flight *is* the damage
-  signal, and augmenting it away would destroy the very feature the encoder
-  needs to find.
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -35,34 +18,22 @@ def load_labels(root=DEFAULT_ROOT) -> dict[str, pd.DataFrame]:
 
 @dataclass
 class SpecimenBatch:
-    """Every labelled waveform of one specimen, ready for the model.
-
-    ``a_prev`` and ``log_dn`` carry the **sequential context**: the crack length
-    at the specimen's previous labelled cycle and the (log) cycle gap since it.
-    They are what turns a per-waveform regression into a sequential estimator,
-    and they are the single biggest lever available on this dataset — a
-    the single biggest lever available on this dataset. The 2nd-place entry uses
-    the same idea, listing ``prev_crack`` among its five optimal features.
-
-    At training time ``a_prev`` is the *measured* previous crack (teacher
-    forcing, with noise — see :func:`augment_previous`). At inference nothing of
-    the sort is available for T7/T8, so the estimator is run **recursively** on
-    its own previous output.
-    """
-
     name: str
-    x: torch.Tensor           # (n, 2, window)
-    crack_mm: torch.Tensor    # (n,)
-    cycles: torch.Tensor      # (n,)
-    a_prev: torch.Tensor      # (n,) crack at the previous labelled cycle, 0 if none
-    log_dn: torch.Tensor      # (n,) log10(1 + cycles since that measurement)
-    dn: torch.Tensor          # (n,) cycles since that measurement (lineal, 0 si no hay)
-    features: torch.Tensor    # (n, F) rasgos escalares clásicos
-    norm_mm: float            # final measured crack, the challenge normaliser
-    d_sigma_eq: float         # block-equivalent stress range, MPa
-    pair_from: torch.Tensor   # indices into x, earlier cycle of each pair
-    pair_to: torch.Tensor     # indices into x, later cycle of each pair
-    pair_dn: torch.Tensor     # cycle gap of each pair
+    x: torch.Tensor
+    crack_mm: torch.Tensor
+    cycles: torch.Tensor
+    # Crack at the previous non-zero label, 0 if none.
+    a_prev: torch.Tensor
+    # log10(1 + cycles since that label).
+    log_dn: torch.Tensor
+    dn: torch.Tensor
+    features: torch.Tensor
+    norm_mm: float
+    # MPa
+    d_sigma_eq: float
+    pair_from: torch.Tensor
+    pair_to: torch.Tensor
+    pair_dn: torch.Tensor
 
     def to(self, device):
         for f in ("x", "crack_mm", "cycles", "a_prev", "log_dn", "dn", "features",
@@ -72,14 +43,7 @@ class SpecimenBatch:
 
 
 def _consecutive_pairs(cycles: np.ndarray, cracks: np.ndarray):
-    """Index pairs of consecutive *distinct* cycles with a non-zero crack.
-
-    Pairs are built on cycles, not on waveforms: the two repetitions of a
-    measurement share a cycle, so their averaged estimate is what the physics
-    residual should act on. Zero-crack cycles are excluded because the growth
-    law describes propagation, and a zero label only means the crack was below
-    the optical detection threshold.
-    """
+    # Pairs of distinct cycles: both repetitions of a measurement share one.
     order = np.argsort(cycles)
     unique_cycles = []
     for i in order:
@@ -105,12 +69,6 @@ def build_specimen_batches(
     root=None,
     max_cycle: dict[str, int] | None = None,
 ) -> dict[str, SpecimenBatch]:
-    """Assemble one :class:`SpecimenBatch` per specimen.
-
-    ``max_cycle`` optionally truncates a specimen to the cycles at or below a
-    given value — used to reproduce the challenge condition in which the
-    validation specimens stop having signals partway through.
-    """
     from physics_calibration.data import load_curve
     from .physics import equivalent_stress_range
 
@@ -128,13 +86,8 @@ def build_specimen_batches(
         cycles = np.array([s.cycle for s in rows], dtype=np.float64)
         curve = load_curve(name)
 
-        # Contexto secuencial para el estimador recursivo.
-        # El "anterior" es el último ciclo con grieta **detectada** (no nula).
-        # Los ciclos de grieta cero no aportan contexto: la ley de crecimiento
-        # describe propagación, y una etiqueta cero sólo dice que la grieta
-        # estaba por debajo del umbral óptico. La inferencia aplica el mismo
-        # criterio (ver ``train.evaluate_batch``), de modo que entrenamiento e
-        # inferencia ven exactamente la misma definición de ΔN.
+        # Context is the last non-zero label: a zero label only means the crack was below
+        # the optical threshold. Inference uses the same definition.
         crack_at = {float(c): float(a) for c, a in zip(curve.cycles, curve.crack_mm)}
         labelled = sorted(crack_at)
         a_prev, log_dn, dn = [], [], []
@@ -168,29 +121,17 @@ def build_specimen_batches(
 
 
 def augment_previous(a_prev: torch.Tensor, generator: torch.Generator, noise: float = 0.4):
-    """Perturba el contexto ``a_prev`` durante el entrenamiento.
-
-    Mitiga el **sesgo de exposición**: en entrenamiento el estimador ve la
-    grieta anterior *medida*, pero en inferencia sólo dispone de su propia
-    estimación previa, que arrastra error. Entrenar con ``a_prev`` ruidoso lo
-    obliga a ser robusto a esa deriva. En el control con Random Forest bajó el
-    error LOSO recursivo de 0,955 a 0,870 mm.
-    """
+    # Exposure bias: at inference a_prev is the model's own previous estimate.
     ruido = noise * torch.randn(a_prev.shape, generator=generator, device=a_prev.device)
     return torch.clamp(a_prev + ruido, min=0.0)
 
 
 def augment(x: torch.Tensor, generator: torch.Generator, shift: int = 10, noise: float = 0.05):
-    """Trigger jitter + additive noise, both physically plausible.
-
-    ``shift`` is +/- 10 samples = +/- 0.5 us at 20 MHz, an order of magnitude
-    below the time-of-flight changes the crack produces, so it models
-    acquisition jitter without erasing the damage signature.
-    """
+    # +/-10 samples = +/-0.5 us, an order of magnitude below the time-of-flight
+    # change the crack produces.
     n, _, length = x.shape
     offsets = torch.randint(-shift, shift + 1, (n, 1), generator=generator, device=x.device)
-    # Vectorised circular shift: build the gather index once instead of looping
-    # over the batch with torch.roll (which dominated the epoch time).
+    # A single gather index instead of torch.roll per sample, which dominated the epoch time.
     idx = (torch.arange(length, device=x.device).unsqueeze(0) - offsets) % length
     out = torch.gather(x, 2, idx.unsqueeze(1).expand(-1, x.shape[1], -1))
     return out + noise * torch.randn(out.shape, generator=generator, device=x.device)

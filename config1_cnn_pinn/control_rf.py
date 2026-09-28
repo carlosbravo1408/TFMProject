@@ -1,37 +1,3 @@
-"""Control de referencia: Random Forest sobre rasgos escalares diseñados.
-
-Por qué existe este módulo
---------------------------
-Los *docstrings* del paquete citan un «control con Random Forest» como vara de
-medir del codificador convolucional, con **cinco cifras distintas y ninguna
-reproducible**: 1,72 / 1,39 / 1,09 mm (`CLAUDE.md`), 0,835 mm
-(`signals.scalar_features`), 1,56 → 0,69 mm (`data.py`), 0,69 vs 0,87 mm
-(`train.py`) y 0,359 mm en T7 (`GUIA_INTERPRETACION.md`). No había código que
-las produjera. Este módulo lo aporta, para que la afirmación «los rasgos
-diseñados baten a la 1D-CNN» —que contradice la premisa (a) del TFM— pueda
-confirmarse o descartarse con una medida.
-
-Qué mide, y bajo qué protocolo
-------------------------------
-Exactamente los mismos rasgos que consume la cabeza de la red
-(``signals.scalar_features``), sobre el mismo preprocesado **posterior a la
-auditoría** (normalización con ancla a 2 mm). Dos protocolos, separados porque
-responden a preguntas distintas:
-
-``loso``       deja fuera un espécimen de entrenamiento y entrena con el resto.
-               Comparable con ``train.loso_cross_validation``.
-``certamen``   entrena con T1–T6 y estima T7/T8 en los ciclos que conservan
-               señal. Comparable con la mitad de *estimación* de la entrega.
-
-El rasgo ``a_prev`` (grieta estimada en el ciclo anterior) se alimenta de forma
-**recursiva**, con la propia salida del modelo y no con la verdad de campo: en
-T7/T8 no existe ninguna grieta medida que inyectar, así que evaluar con la
-verdad daría una cifra optimista irreproducible bajo el protocolo del certamen.
-
-El control NO hace prognosis: sólo estima donde hay señal. Compararlo con la
-penalización total de una configuración sería comparar media tarea con la
-tarea entera.
-"""
 from __future__ import annotations
 
 import numpy as np
@@ -44,19 +10,16 @@ from .train import TRAIN_POOL
 
 SEED = 0
 N_TREES = 200
-MAX_DEPTH = 4          # 89 ondas: la profundidad es el regularizador que manda
+# With 89 waveforms, depth is the dominant regulariser.
+MAX_DEPTH = 4
 
 
 def _tabla(labels) -> pd.DataFrame:
-    """Una fila por (espécimen, ciclo, repetición) con rasgos y etiqueta."""
     filas = []
     for nombre, df in labels.items():
         etiquetas = dict(zip(df["cycle"].to_numpy(), df["crack_length_mm"].to_numpy()))
         for ciclo in S.signal_cycles(name=nombre):
-            # Misma lista de exclusiones que consume la red (T8 @ 40000, el
-            # registro que no correlaciona con ningún otro de su espécimen).
-            # Sin ella la comparación no sería de una sola variable: el control
-            # vería un registro que la 1D-CNN no.
+            # Same exclusions as the network, so the comparison has a single variable.
             if ciclo not in etiquetas or (nombre, ciclo) in S.EXCLUDED_RECORDS:
                 continue
             for rep in S.available_repetitions(S.DEFAULT_ROOT, nombre, ciclo):
@@ -69,12 +32,6 @@ def _tabla(labels) -> pd.DataFrame:
 
 
 def _ajustar(tabla: pd.DataFrame, nombres) -> RandomForestRegressor:
-    """Entrena con ``a_prev`` tomado de la verdad de campo del ciclo anterior.
-
-    En entrenamiento sí se dispone de la verdad, y usarla es lo estándar
-    (*teacher forcing*); la asimetría con la evaluación recursiva es
-    justamente lo que el protocolo del certamen impone.
-    """
     sub = tabla[tabla["especimen"].isin(nombres)]
     X, y = [], []
     for nombre, grupo in sub.groupby("especimen"):
@@ -92,7 +49,6 @@ def _ajustar(tabla: pd.DataFrame, nombres) -> RandomForestRegressor:
 
 
 def _estimar(modelo, tabla: pd.DataFrame, nombre: str):
-    """Estimación recursiva por ciclo, forzada monótona (la grieta no decrece)."""
     grupo = tabla[tabla["especimen"] == nombre].sort_values(["ciclo", "rep"])
     ciclos, est, real, previa = [], [], [], 0.0
     for ciclo, ciclo_grupo in grupo.groupby("ciclo", sort=True):
@@ -117,7 +73,6 @@ def loso(tabla: pd.DataFrame, folds=("T1", "T3", "T4", "T6")) -> pd.DataFrame:
 
 
 def certamen(tabla: pd.DataFrame) -> pd.DataFrame:
-    """Estimación en T7/T8 con el modelo entrenado en todo T1–T6."""
     modelo = _ajustar(tabla, list(TRAIN_POOL))
     filas = []
     for nombre in ("T7", "T8"):
