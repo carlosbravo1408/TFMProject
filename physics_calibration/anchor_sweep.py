@@ -1,25 +1,3 @@
-"""How much sensor information does the physics module need to stop diverging?
-
-Stage D of ``calibrate.py`` calibrates the coefficient on the two crack
-measurements whose cycles still have Lamb-wave signals, then predicts the rest
-blind. On T8 every law diverges under that budget — and that is a real
-property of the data, not a bug: T8's crack grows at 2.7e-4 mm/cycle between
-its two pre-cutoff points and at 5.5e-5 mm/cycle a few thousand cycles later,
-so any law calibrated on the early pair over-predicts by design.
-
-It is also why no winning entry actually did this. Kong et al. (2020, Sec.
-3.3.3) explicitly say "three datasets are not enough to acquire parameters of
-an accurate model, as the variance of the parameters is too large", and add
-two synthetic points by linear regression before fitting Walker; Rao et al.
-(2021, Sec. 4.3.1) append an anchor at the largest crack seen across T1-T6.
-Both injected an end-of-life anchor that the raw signal cutoff does not give.
-
-This module sweeps the anchor budget instead of fixing it, which turns the
-question into the design number the TFM actually needs: how far the 1D-CNN has
-to keep feeding the PINN before the multi-step predictor becomes stable.
-
-Run after ``calibrate.py``:  python -m physics_calibration.anchor_sweep
-"""
 from __future__ import annotations
 
 import json

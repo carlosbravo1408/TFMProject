@@ -1,40 +1,3 @@
-"""Driver: identify Paris/Walker/Forman hyper-parameters for the PHM 2019
-2024-T3 riveted lap joints by metaheuristic search.
-
-Context: no reviewed source publishes fracture-mechanics constants for these
-specimens. Youn et al. (2020, 1st place) abandoned physics for exactly that
-reason ("it is difficult to predict crack length using those physics-based
-models without given information, such as the shape of the initial crack,
-specimen geometry, and material properties"); Kong et al. (2020, 2nd place)
-state outright that "the constants C0, gamma and m could not be determined
-because they depend on the material properties of the specimen" and fit them
-by genetic algorithm without publishing the result; Rao et al. (2021, 3rd
-place) fall back on the generic metallic window C in [1e-13, 1e-11],
-m in [2, 4]. The constants therefore have to be identified here.
-
-Stages
-------
-A  Algorithm benchmark, per specimen, full parameter vector. All five
-   metaheuristics, identical evaluation budget, N seeds: makes the choice of
-   optimiser an experimental result. Reported without local polish, so it
-   compares the global searches themselves.
-B  Pooled identification with the coefficients projected out
-   (:class:`ProfiledPooledProblem`). Shared exponents are material constants,
-   one coefficient per specimen. Same five algorithms and budget, so the
-   benchmark is repeated in the well-conditioned formulation.
-C  Profile likelihood over m: how well half a decade of dK really pins the
-   exponent, instead of quoting a spurious four-digit optimum.
-D  Leakage-free transfer. Stage-B exponents frozen; only the coefficient is
-   calibrated, on the first three non-zero measurements of the target
-   specimen — the information available before the Lamb-wave signals stop —
-   and the rest of the curve is predicted and scored with the official
-   penalty. This is the pure-physics floor the TFM's hybrid must beat.
-E  Model-free check: ordinary least squares of log10(da/dN) on log10(dK) over
-   finite differences pooled across all specimens, with a confidence interval
-   on m. Independent of every modelling choice in stages A-D.
-
-Run:  python -m physics_calibration.calibrate [--quick]
-"""
 from __future__ import annotations
 
 import argparse
@@ -55,24 +18,15 @@ from .pooled import ProfiledPooledProblem, fit_coefficient_only, profile_exponen
 
 RESULTS = Path(__file__).resolve().parent / "results"
 
-# The three classical laws under the plain-plate idealisation (Y = 1) that the
-# PHM 2019 entries used, and the same laws under the fastener-hole geometry
-# surrogate that the dataset's own damage description calls for.
 STUDY_LAWS = ("paris", "walker", "walker_closure", "forman", "paris_hole", "walker_hole", "forman_hole")
 
-# Stage A repeats every law x specimen x algorithm x seed at full budget, so
-# it is restricted to three representative laws: the 2-parameter reference
-# (paris), a 3-parameter one (walker) and a 4-parameter one with the geometry
-# surrogate (paris_hole). That spans the dimensionalities the comparison is
-# meant to probe without a four-hour sweep whose extra rows say nothing new.
+# Stage A runs every law x specimen x algorithm x seed at full budget; these
+# three cover the 2, 3 and 4-parameter cases.
 BENCHMARK_LAWS = ("paris", "walker", "paris_hole")
 
-# Specimens with >= 4 non-zero measurements. T2 and T5 have two each and
-# cannot constrain a 2-4 parameter law at all.
+# T2 and T5 have only two non-zero measurements each.
 FITTABLE = ("T1", "T3", "T4", "T6", "T7", "T8")
 
-# Published penalty scores of the three winning entries, for context in the
-# Stage-D table (Youn et al. 2020; Kong et al. 2020; Rao et al. 2021).
 WINNER_SCORES = {"1st (Youn, SVR+trans-fitting)": 7.36,
                  "2nd (Kong, RF+PF / Walker+MC)": 7.63,
                  "3rd (Rao, linear ens.+Paris)": 16.14}
@@ -105,13 +59,6 @@ def stage_a_algorithm_benchmark(curves, seeds, max_evals, laws=BENCHMARK_LAWS) -
 
 
 def stage_b_pooled(curves, seeds, max_evals, laws=STUDY_LAWS, loss="rmse"):
-    """Pooled fit on the training specimens, coefficients projected out.
-
-    The evaluation budget is deliberately smaller than Stage A's: the search
-    is 1-4 dimensional here instead of 2-5, and each evaluation internally
-    runs the coefficient grid, so a budget-matched comparison would be
-    misleading rather than fair.
-    """
     train = tuple(curves[s] for s in CALIBRATION_SPECIMENS)
     runs, best = [], {}
     for law_name in laws:
@@ -157,22 +104,6 @@ def stage_c_profile(curves, law_name, max_evals):
 
 
 def stage_d_transfer(curves, best_b, laws=STUDY_LAWS):
-    """Freeze the pooled exponents, calibrate only the coefficient, predict.
-
-    The anchor budget is the challenge's own. The released validation
-    specimens stop having Lamb-wave signal files partway through — T7 after
-    cycle 47022, T8 after 76931 — which leaves exactly two non-zero crack
-    measurements to calibrate on and 4 (T7) resp. 5 (T8) to predict blind. The
-    same two-point budget is applied to the training specimens, which have
-    signals throughout, so that every specimen is evaluated under an identical
-    protocol and T1/T3/T4/T6 act as a cross-check of it.
-
-    The T7+T8 penalty produced here is *not* directly comparable with the
-    published 7.36 / 7.63 / 16.14: those are whole-pipeline scores in which
-    the early cycles were estimated from the Lamb waves, whereas this is
-    physics alone with no signal information at any point. It is the floor the
-    TFM's hybrid has to improve on, not a like-for-like ranking.
-    """
     rows = []
     for law_name in laws:
         law = LAWS[law_name]
@@ -193,8 +124,6 @@ def stage_d_transfer(curves, best_b, laws=STUDY_LAWS):
                     "phm_penalty_holdout": float(
                         phm_penalty(pred[None, out], true[out], curve.final_crack_mm)[0]
                     ),
-                    # A trajectory that ends beyond twice the specimen's final
-                    # measured crack has run away, not merely over-predicted.
                     "runaway": bool(pred[-1] > 2.0 * curve.final_crack_mm),
                     "pred_mm": np.round(pred, 3).tolist(), "true_mm": true.tolist(),
                 }
@@ -203,7 +132,6 @@ def stage_d_transfer(curves, best_b, laws=STUDY_LAWS):
 
 
 def stage_e_loglog(curves) -> dict:
-    """OLS of log10(da/dN) on log10(dK) over pooled finite differences."""
     df = pd.concat(
         [empirical_growth_rates(c) for c in curves.values() if len(c.crack_mm) > 2]
     )
@@ -256,9 +184,7 @@ def main() -> None:
         t0 = time.perf_counter()
         a = stage_a_algorithm_benchmark(curves, seeds, args.evals)
         a.to_csv(RESULTS / "stage_a_algorithm_benchmark.csv", index=False)
-        # Absolute RMSE mixes specimens of different difficulty, so the
-        # comparison is on the gap to the best result any algorithm reached on
-        # that (law, specimen) — 0.0 means "found the best known optimum".
+        # Absolute RMSE mixes specimens of different difficulty.
         a["gap_mm"] = a["objective_rmse_mm"] - a.groupby(["law", "specimen"])[
             "objective_rmse_mm"].transform("min")
         print(

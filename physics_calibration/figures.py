@@ -1,12 +1,3 @@
-"""Figures for the fracture-parameter identification chapter of the TFM.
-
-Run after ``python -m physics_calibration.calibrate``:
-
-    python -m physics_calibration.figures
-
-Writes PNG + PDF into ``physics_calibration/results/figures/``. Labels are in
-Spanish, to drop straight into the document.
-"""
 from __future__ import annotations
 
 import json
@@ -38,7 +29,6 @@ def _save(fig, name: str) -> None:
 
 
 def fig_growth_curves() -> None:
-    """Measured crack-growth curves of the eight specimens."""
     curves = load_curves(ALL_SPECIMENS)
     fig, ax = plt.subplots(figsize=(7, 4.5))
     for name, c in curves.items():
@@ -53,7 +43,6 @@ def fig_growth_curves() -> None:
 
 
 def fig_loglog() -> None:
-    """da/dN vs dK with the pooled Paris regression and its scatter."""
     path = RESULTS / "stage_e_loglog.json"
     if not path.is_file():
         return
@@ -79,7 +68,6 @@ def fig_loglog() -> None:
 
 
 def fig_algorithm_benchmark() -> None:
-    """Distribution of the optimality gap per metaheuristic."""
     path = RESULTS / "stage_a_algorithm_benchmark.csv"
     if not path.is_file():
         return
@@ -109,7 +97,6 @@ def fig_algorithm_benchmark() -> None:
 
 
 def fig_profile_m() -> None:
-    """Profile likelihood over the Paris exponent."""
     path = RESULTS / "stage_c_profile_m.json"
     if not path.is_file():
         return
@@ -133,13 +120,6 @@ def fig_profile_m() -> None:
 
 
 def fig_transfer() -> None:
-    """How the blind prognosis depends on the anchor budget, on T7 and T8.
-
-    Plotting one curve per law at a fixed budget hides the actual result: with
-    two anchors every law diverges on T8, so the panel would come out empty.
-    What matters is how many crack estimates the integrator needs, so the
-    sweep is over the anchor budget with the law held at ``paris``.
-    """
     from .models import LAWS
     from .pooled import fit_coefficient_only
 

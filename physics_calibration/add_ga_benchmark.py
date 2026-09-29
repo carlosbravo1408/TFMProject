@@ -1,14 +1,3 @@
-"""Añade el algoritmo genético al banco de comparación ya registrado.
-
-El GA se incorporó después de la primera ejecución de ``calibrate.py``, al
-detectar que era el algoritmo que ambos papers del certamen usaron realmente
-para ajustar los parámetros de fractura. Reejecutar las 900 optimizaciones de
-los otros cinco algoritmos no aportaría nada: se ejecutaron con las mismas
-semillas, el mismo presupuesto y la misma rejilla, de modo que basta con
-correr las del GA y anexarlas.
-
-Ejecutar:  python -m physics_calibration.add_ga_benchmark
-"""
 from __future__ import annotations
 
 import time

@@ -1,24 +1,3 @@
-"""Hierarchical (pooled) identification across specimens.
-
-A single specimen cannot identify a growth law. ``C`` and ``m`` are tied by the
-log-log ridge ``log10 C ~ log10(da/dN) - m*log10(dK)``, and each PHM 2019
-specimen only spans dK ~ 5-15 MPa*sqrt(m) in 5-7 measurements: fitting them
-freely gives an excellent RMSE at an ``m`` that is essentially arbitrary, which
-is useless as a physics prior for the PINN.
-
-The pooled fit resolves this the way fracture mechanics does: the *exponents*
-(``m``, ``gamma``, ``Kc``) are material constants shared by every specimen of
-the same alloy and joint geometry, while the *coefficient* (``C`` / ``C0``)
-absorbs specimen-to-specimen scatter (rivet fit-up, local geometry, crack
-initiation site). One search vector therefore carries
-
-    [ shared exponents ... , log10 C_1, log10 C_2, ..., log10 C_S ]
-
-and the objective is the mean per-specimen loss. This is exactly the structure
-the TFM's PINN needs: the shared exponents become fixed physics, and the
-per-specimen ``C`` becomes the single scalar the 1D-CNN + attention encoder has
-to regress from the Lamb-wave history.
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -39,7 +18,6 @@ class PooledProblem:
 
     @property
     def shared_names(self) -> tuple[str, ...]:
-        """Law parameters other than the leading coefficient."""
         return self.law.param_names[1:]
 
     @property
@@ -52,18 +30,15 @@ class PooledProblem:
         return tuple(shared_bounds) + tuple(coeff_bounds for _ in self.curves)
 
     def split(self, x: np.ndarray):
-        """(n, d) search matrix -> (shared (n, k), per-specimen log10 C (n, S))."""
         x = np.atleast_2d(np.asarray(x, dtype=float))
         k = len(self.shared_names)
         return x[:, :k], x[:, k:]
 
     def specimen_vectors(self, x: np.ndarray, i: int) -> np.ndarray:
-        """Rebuild the law's own search vector for specimen ``i``."""
         shared, coeffs = self.split(x)
         return np.column_stack([coeffs[:, i], shared])
 
     def per_specimen_losses(self, x: np.ndarray) -> np.ndarray:
-        """(n_candidates, n_specimens) losses under ``self.loss``."""
         out = np.empty((len(np.atleast_2d(x)), len(self.curves)))
         for i, curve in enumerate(self.curves):
             xi = self.specimen_vectors(x, i)
@@ -90,7 +65,6 @@ class PooledProblem:
         return f
 
     def describe(self, x: np.ndarray) -> dict:
-        """Named physical parameters for one pooled solution."""
         shared, coeffs = self.split(np.atleast_2d(x))
         result = {"shared": {}, "coefficient": {}}
         for j, name in enumerate(self.shared_names):
@@ -104,20 +78,6 @@ class PooledProblem:
 
 @dataclass(frozen=True)
 class ProfiledPooledProblem:
-    """The pooled problem with the per-specimen coefficients projected out.
-
-    :class:`PooledProblem` searches ``1 + S`` variables at once, and its
-    landscape turns out to be multimodal enough that independent runs of the
-    same metaheuristic land on visibly different optima. But the problem is
-    *separable*: for any fixed set of exponents, each specimen's coefficient
-    can be found on its own, and the loss is unimodal in ``log10 C`` (crack
-    length is monotone in the coefficient). Projecting the coefficients out by
-    a vectorised grid search — the classical variable-projection trick —
-    leaves the metaheuristics with only the 1-3 shared exponents to explore,
-    which is where they converge reliably and where comparing them is
-    meaningful.
-    """
-
     law: GrowthLaw
     curves: tuple[CrackCurve, ...]
     loss: str = "rmse"
@@ -147,7 +107,6 @@ class ProfiledPooledProblem:
         return np.where(np.isfinite(val), val, _LARGE)
 
     def _best_coefficient(self, shared: np.ndarray, curve: CrackCurve):
-        """(n,) best log10 C and (n,) loss for each row of ``shared``."""
         n = len(shared)
         lo, hi = self.law.bounds[0]
         centre = np.full(n, 0.5 * (lo + hi))
@@ -156,7 +115,7 @@ class ProfiledPooledProblem:
         best_v = np.full(n, np.inf)
         for _ in range(self.refinements):
             offsets = np.linspace(-half, half, self.grid)
-            cand = np.clip(centre[:, None] + offsets[None, :], lo, hi)  # (n, G)
+            cand = np.clip(centre[:, None] + offsets[None, :], lo, hi)
             x = np.column_stack(
                 [cand.reshape(-1), np.repeat(shared, self.grid, axis=0)]
             )
@@ -170,11 +129,10 @@ class ProfiledPooledProblem:
             best_v = np.where(improved, val[rows, j], best_v)
             best_c = np.where(improved, cand[rows, j], best_c)
             centre = best_c
-            half = 2.0 * (2 * half / (self.grid - 1))  # zoom to +/- 2 grid steps
+            half = 2.0 * (2 * half / (self.grid - 1))
         return best_c, best_v
 
     def per_specimen(self, shared: np.ndarray):
-        """(n, S) losses and (n, S) log10 coefficients."""
         shared = np.atleast_2d(np.asarray(shared, dtype=float))
         n, s = len(shared), len(self.curves)
         losses = np.empty((n, s))
@@ -216,18 +174,6 @@ def fit_coefficient_only(
     max_step: float = 200.0,
     grid: int = 3001,
 ) -> tuple[float, np.ndarray]:
-    """Identify only the leading coefficient of ``law`` for one specimen,
-    holding the shared exponents fixed.
-
-    This is the transfer step: exponents identified on the training specimens
-    are frozen as material constants, and the single remaining degree of
-    freedom is calibrated on the first ``n_points`` measurements of a new
-    specimen — the information a prognosis model actually has before the Lamb
-    wave signals stop. A dense 1-D grid search over log10 C is used because
-    with one variable it is both exhaustive and cheaper than any heuristic.
-
-    Returns ``(log10_C, predictions_mm_at_all_cycles)``.
-    """
     lo, hi = law.bounds[0]
     log_c = np.linspace(lo, hi, grid)
     x = np.column_stack([log_c, np.tile(np.asarray(shared, float), (grid, 1))])
@@ -252,13 +198,6 @@ def profile_exponent(
     values: np.ndarray | None = None,
     **opt_kwargs,
 ) -> list[dict]:
-    """Profile likelihood over one shared exponent.
-
-    For each fixed value of the exponent (``index`` into ``shared_names``) the
-    remaining parameters are re-optimised. The resulting curve shows how flat
-    the identification really is — the honest way to report ``m`` when the
-    available dK span is only half a decade.
-    """
     if values is None:
         lo, hi = problem.law.bounds[index + 1]
         values = np.linspace(lo, hi, 15)

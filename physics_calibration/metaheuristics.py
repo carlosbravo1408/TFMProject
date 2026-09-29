@@ -1,34 +1,3 @@
-"""Self-contained metaheuristics for the fracture-parameter identification.
-
-The identification problem is a low-dimensional (2-4 variables) but strongly
-ill-conditioned continuous fit: ``C`` and ``m`` are almost perfectly
-anti-correlated along the log-log Paris line, so gradient/simplex methods
-either stall on the ridge or land wherever they were initialised. That is
-exactly the regime metaheuristics are meant for, and the reason the two PHM
-2019 entries that fitted Paris/Walker at all (Kong et al., 2020; Rao et al.,
-2021) both reached for evolutionary search.
-
-Five families are implemented so the choice of optimiser is an experimental
-result rather than an assumption:
-
-``sa``     Simulated Annealing with a geometric cooling schedule and adaptive
-           Gaussian step (Kirkpatrick, Gelatt & Vecchi, 1983).
-``acor``   Continuous Ant Colony Optimisation, ACO_R: a solution archive whose
-           ranked entries define a Gaussian kernel PDF per dimension
-           (Socha & Dorigo, 2008).
-``vns``    Variable Neighbourhood Search: shaking over a ladder of increasing
-           neighbourhood radii plus a bounded local descent
-           (Mladenovic & Hansen, 1997).
-``de``     Differential Evolution, rand/1/bin (Storn & Price, 1997).
-``pso``    Particle Swarm Optimisation with inertia damping
-           (Kennedy & Eberhart, 1995).
-
-All of them share one interface: the objective ``f`` takes an array of shape
-``(n, d)`` and returns ``(n,)``, so every algorithm evaluates a whole
-population per call and the vectorised RK4 integrator does the heavy lifting.
-Every algorithm receives the *same* evaluation budget, which is what makes the
-comparison in ``calibrate.py`` fair.
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -52,8 +21,6 @@ def _prepare(bounds):
 
 
 class _Budget:
-    """Counts objective evaluations and records the incumbent best."""
-
     def __init__(self, f, max_evals: int):
         self.f = f
         self.max_evals = max_evals
@@ -91,7 +58,6 @@ def _result(budget: _Budget, algorithm: str, seed: int) -> OptimizeResult:
 
 
 def _pad(vals: np.ndarray, n: int) -> np.ndarray:
-    """Re-expand a budget-truncated evaluation back to the requested size."""
     if len(vals) == n:
         return vals
     out = np.full(n, np.inf)
@@ -99,17 +65,10 @@ def _pad(vals: np.ndarray, n: int) -> np.ndarray:
     return out
 
 
-# --------------------------------------------------------------------------
-# Simulated Annealing
-# --------------------------------------------------------------------------
 def simulated_annealing(
     f, bounds, seed: int = 0, max_evals: int = 20000,
     n_chains: int = 12, t0: float = 1.0, t_end: float = 1e-4, step0: float = 0.35,
 ) -> OptimizeResult:
-    """Parallel-chain SA. ``n_chains`` independent Markov chains are advanced
-    together so each iteration is one vectorised objective call; the
-    temperature follows a geometric schedule from ``t0`` to ``t_end`` and the
-    proposal width shrinks with it (fraction of the box side)."""
     rng = np.random.default_rng(seed)
     lo, hi = _prepare(bounds)
     d = len(lo)
@@ -128,8 +87,7 @@ def simulated_annealing(
         scale = step0 * (temp / t0) ** 0.5
         cand = np.clip(x + rng.normal(0.0, scale, (n_chains, d)) * span, lo, hi)
         fc = _pad(budget(cand), n_chains)
-        # Objectives are positive errors; normalise the Metropolis exponent by
-        # the incumbent scale so the schedule is problem-independent.
+        # Normalising by the incumbent makes the schedule problem-independent.
         scale_f = max(abs(budget.best_f), 1e-12)
         delta = (fc - fx) / scale_f
         accept = (delta <= 0) | (rng.random(n_chains) < np.exp(-np.clip(delta, 0, 50) / temp))
@@ -139,19 +97,10 @@ def simulated_annealing(
     return _result(budget, "sa", seed)
 
 
-# --------------------------------------------------------------------------
-# ACO_R -- continuous ant colony optimisation
-# --------------------------------------------------------------------------
 def aco_r(
     f, bounds, seed: int = 0, max_evals: int = 20000,
     archive_size: int = 20, n_ants: int = 20, q: float = 0.1, xi: float = 0.85,
 ) -> OptimizeResult:
-    """Socha & Dorigo's ACO_R. The pheromone model is an archive of the
-    ``archive_size`` best solutions found so far; each ant samples every
-    dimension from a Gaussian kernel whose components are the archive entries,
-    weighted by rank (``q`` controls elitism) and with a width proportional to
-    the archive's spread in that dimension (``xi`` is the evaporation-like
-    speed factor)."""
     rng = np.random.default_rng(seed)
     lo, hi = _prepare(bounds)
     d = len(lo)
@@ -169,8 +118,7 @@ def aco_r(
     while not budget.exhausted:
         chosen = rng.choice(archive_size, size=n_ants, p=p)
         mu = archive[chosen]
-        # Per-dimension width: mean absolute distance from the chosen solution
-        # to all archive members (Socha & Dorigo, Eq. 10).
+        # Socha & Dorigo, Eq. 10.
         sigma = xi * np.abs(archive[None, :, :] - archive[chosen][:, None, :]).sum(axis=1) / (archive_size - 1)
         sigma = np.maximum(sigma, 1e-9 * (hi - lo))
         ants = np.clip(rng.normal(mu, sigma), lo, hi)
@@ -183,17 +131,10 @@ def aco_r(
     return _result(budget, "acor", seed)
 
 
-# --------------------------------------------------------------------------
-# Variable Neighbourhood Search
-# --------------------------------------------------------------------------
 def vns(
     f, bounds, seed: int = 0, max_evals: int = 20000,
     k_max: int = 6, n_local: int = 12, radii=(0.02, 0.05, 0.1, 0.2, 0.35, 0.6),
 ) -> OptimizeResult:
-    """Basic VNS with a geometric ladder of neighbourhood radii (fractions of
-    the box side). Each shake is followed by a bounded stochastic local
-    descent of ``n_local``-sized batches at the smallest radius; a strict
-    improvement resets the ladder to k = 0, otherwise the search widens."""
     rng = np.random.default_rng(seed)
     lo, hi = _prepare(bounds)
     d = len(lo)
@@ -208,7 +149,6 @@ def vns(
         k = 0
         while k < len(radii) and not budget.exhausted:
             shaken = np.clip(x + rng.normal(0.0, radii[k], d) * span, lo, hi)
-            # Local descent around the shaken point.
             y, fy = shaken, float(_pad(budget(shaken[None, :]), 1)[0])
             step = radii[0]
             stall = 0
@@ -229,9 +169,6 @@ def vns(
     return _result(budget, "vns", seed)
 
 
-# --------------------------------------------------------------------------
-# Differential Evolution (bio-inspired, rand/1/bin)
-# --------------------------------------------------------------------------
 def differential_evolution(
     f, bounds, seed: int = 0, max_evals: int = 20000,
     pop_size: int = 40, F: float = 0.7, CR: float = 0.9,
@@ -258,9 +195,6 @@ def differential_evolution(
     return _result(budget, "de", seed)
 
 
-# --------------------------------------------------------------------------
-# Particle Swarm Optimisation (bio-inspired)
-# --------------------------------------------------------------------------
 def pso(
     f, bounds, seed: int = 0, max_evals: int = 20000,
     swarm_size: int = 40, w0: float = 0.9, w_end: float = 0.4, c1: float = 1.5, c2: float = 1.5,
@@ -295,32 +229,12 @@ def pso(
     return _result(budget, "pso", seed)
 
 
-# --------------------------------------------------------------------------
-# Real-coded Genetic Algorithm
-# --------------------------------------------------------------------------
 def genetic_algorithm(
     f, bounds, seed: int = 0, max_evals: int = 20000,
     pop_size: int = 40, n_elite: int = 2, tournament: int = 3,
     p_crossover: float = 0.9, eta_c: float = 15.0,
     p_mutation: float | None = None, eta_m: float = 20.0,
 ) -> OptimizeResult:
-    """Real-coded GA: tournament selection, SBX crossover, polynomial mutation.
-
-    Included because it is the algorithm the state of the art actually used:
-    both PHM 2019 entries that fitted fracture parameters at all reached for a
-    genetic algorithm — Kong et al. (2020) estimate their four Walker
-    parameters with "generic [sic] algorithm-based optimization" (their Eq. 12),
-    and Rao et al. (2020) state that "the Genetic Algorithm (GA) is proposed to
-    obtain the optimal" material parameters. Benchmarking against DE, PSO,
-    ACO_R, SA and VNS without a GA in the set would leave the comparison unable
-    to answer the only question that matters for the TFM: *is the optimiser
-    chosen here better than the one the published work used?*
-
-    Deliberately a **real-coded** GA (SBX + polynomial mutation, Deb &
-    Agrawal's operators) rather than a binary-coded one: the search variables
-    are continuous physical parameters, and binary encoding would add a
-    discretisation artefact that neither paper describes.
-    """
     rng = np.random.default_rng(seed)
     lo, hi = _prepare(bounds)
     d = len(lo)
@@ -338,7 +252,6 @@ def genetic_algorithm(
         return pop[winners]
 
     while not budget.exhausted:
-        # Elitism: the best individuals survive untouched.
         elite_idx = np.argsort(fit)[:n_elite]
         elite, elite_fit = pop[elite_idx].copy(), fit[elite_idx].copy()
 
@@ -346,14 +259,12 @@ def genetic_algorithm(
         p1 = tournament_select(n_children)
         p2 = tournament_select(n_children)
 
-        # --- SBX crossover (Deb & Agrawal, 1995) ---
         u = rng.random((n_children, d))
         beta = np.where(u <= 0.5, (2 * u) ** (1 / (eta_c + 1)),
                         (1 / (2 * (1 - u))) ** (1 / (eta_c + 1)))
         do_cx = (rng.random((n_children, 1)) < p_crossover)
         children = np.where(do_cx, 0.5 * ((1 + beta) * p1 + (1 - beta) * p2), p1)
 
-        # --- Polynomial mutation ---
         u = rng.random((n_children, d))
         delta = np.where(u < 0.5, (2 * u) ** (1 / (eta_m + 1)) - 1.0,
                          1.0 - (2 * (1 - u)) ** (1 / (eta_m + 1)))
@@ -380,14 +291,6 @@ ALGORITHMS = {
 
 
 def polish(f, x0, bounds, max_iter: int = 4000) -> tuple[np.ndarray, float]:
-    """Bounded Nelder-Mead refinement of a metaheuristic's incumbent.
-
-    Global search locates the basin; along the near-degenerate log C / m ridge
-    the last two digits then come from a local simplex. Applied identically to
-    every algorithm wherever a *best* parameter set is wanted (Stages B-D), and
-    deliberately *not* applied in the Stage-A benchmark, which compares the
-    global searches themselves.
-    """
     from scipy.optimize import minimize
 
     lo, hi = _prepare(bounds)
