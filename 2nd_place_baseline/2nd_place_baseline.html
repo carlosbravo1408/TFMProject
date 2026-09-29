@@ -7922,7 +7922,7 @@ documentan una por una en el apartado 8.</p>
              <span class="n">ha</span><span class="o">=</span><span class="s2">"right"</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">"bottom"</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">"bold"</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">fig</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">referencias_phm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tabla_comparativa</span><span class="p">,</span> <span class="n">desviacion</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">src.referencias_phm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tabla_comparativa</span><span class="p">,</span> <span class="n">desviacion</span>
 </pre></div>
 </div>
 </div>
@@ -8422,7 +8422,7 @@ especímenes de entrenamiento, y el resto son decisiones de implementación sin 
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Búsqueda en rejilla: 9.8 s
+<pre>Búsqueda en rejilla: 7.9 s
 Óptimo: profundidad máxima = 2, árboles = 25, métrica = 1.100
 Error por partición (un espécimen fuera cada vez):
    T1: 1.096 mm
@@ -8494,7 +8494,7 @@ Error por partición (un espécimen fuera cada vez):
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Pipeline completo (estimación + física de T7 y T8): 27.0 s
+<pre>Pipeline completo (estimación + física de T7 y T8): 27.1 s
 </pre>
 </div>
 </div>
@@ -9460,7 +9460,7 @@ pesos <code>i²</code> son lectura de esta réplica. Las cotas <code>C0 ∈ [10�
 enuncia como una incertidumbre, aquí está implementado como un desplazamiento con signo que el
 optimizador ajusta, que no es lo mismo.</li>
 </ol>
-<p>Dos desviaciones más, menores pero que conviene no ocultar. El factor de monotonía se implementa como
+<p>Dos desviaciones más, de menor alcance. El factor de monotonía se implementa como
 <code>1 + 10*|x_i - x_(i-1)|</code>, con valor absoluto, mientras que la Ec. 3 impresa daría <code>1 + 10*(x_i - x_(i-1))</code> con diferencia negativa, es decir un factor menor que 1 que premiaría la no monotonía; el
 valor absoluto es la lectura correcta y coincide con la hoja oficial del certamen. Y la optimización
 usa evolución diferencial, que el artículo llama algoritmo genético: es evolutiva, pero muta por
@@ -9845,7 +9845,7 @@ establece es hasta qué punto esa etapa del método depende de un preprocesado q
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Búsqueda exhaustiva de rasgos: 33.9 min
+<pre>Búsqueda exhaustiva de rasgos: 26.3 min
 
 Subconjuntos evaluados: 210   PM menor es mejor
    mejor      PM 0.8598   max_energy, dtw_residual_energy, xcorr_lag, phase_delay, dtw_distance, prev_crack
@@ -10208,7 +10208,7 @@ Ciclos por bloque: derivado 1000, en el código 1000
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=91e5100b">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=caf0ae3f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
