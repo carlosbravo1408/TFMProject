@@ -41,12 +41,12 @@ def walker_faa_a_paris_si(c_in: float, n: float, m_plus: float, r: float) -> tup
 M_FAA, LOG_C_FAA = walker_faa_a_paris_si(0.167e-8, 3.273, 0.618, R_ESPECIMENES)
 
 SOURCES = {
-    "Identificado, m = 2,25 (minimax en entrenamiento)": {
+    "Identificado, m = 2.25 (minimax en entrenamiento)": {
         "m": 2.25,
         "log_c": None,
         "procedencia": "Este trabajo, physics_calibration/",
     },
-    "Identificado, m = 2,00 (forma cerrada no singular)": {
+    "Identificado, m = 2.00 (forma cerrada no singular)": {
         "m": 2.00,
         "log_c": None,
         "procedencia": "Este trabajo, criterio estructural",
@@ -64,7 +64,7 @@ SOURCES = {
     "Literatura — FAA FCGD, Walker 2024-T3 chapa (Forman et al., 2005)": {
         "m": M_FAA,
         "log_c": LOG_C_FAA,
-        "procedencia": "DOT/FAA/AR-05/15, fig. 3 (M2EA11AB1), convertido a SI con R = 0,0476",
+        "procedencia": "DOT/FAA/AR-05/15, fig. 3 (M2EA11AB1), convertido a SI con R = 0.0476",
     },
     "Literatura — Metals 2023 (AA 2024-T4, CT, R=-1)": {
         "m": 3.09,

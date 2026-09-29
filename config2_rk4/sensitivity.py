@@ -118,14 +118,14 @@ def main() -> None:
     factor, dif, _, _ = equivalencia_con_coeficiente(aa[-1], 10.0 ** log_c,
                                                      cfg.m_exponent, curve)
     print(f"\n2. EQUIVALENCIA CON UNA RECALIBRACIÓN DEL COEFICIENTE")
-    print(f"   retardo p=1,43  ==  C x {factor:.5f}  (= {np.log10(factor):+.4f} dex)")
+    print(f"   retardo p=1.43  ==  C x {factor:.5f}  (= {np.log10(factor):+.4f} dex)")
     print(f"   diferencia máxima entre ambas curvas: {dif:.4f} mm")
     brecha = abs(log_c - fit_log_c(curve.cycles, curve.crack_mm, cfg.m_exponent,
                                    equivalent_stress_range(curve.load_block, cfg.m_exponent)))
     print(f"   brecha de coeficiente de T8: {brecha:.3f} dex "
           f"-> el retardo cubre el {100 * abs(np.log10(factor)) / brecha:.0f} %")
 
-    print("\n3. SENSIBILIDAD AL EXPONENTE p (barrido 1,0-3,5; ver nota de EXPONENTES_P)")
+    print("\n3. SENSIBILIDAD AL EXPONENTE p (barrido 1.0-3.5; ver nota de EXPONENTES_P)")
     print(tabla.to_string(index=False))
     tabla.to_csv(salida / "sensibilidad_wheeler.csv", index=False)
     print(f"\n-> {salida}")

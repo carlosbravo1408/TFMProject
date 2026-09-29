@@ -10,7 +10,7 @@ from .select_prognosis import BASE, robustez
 from .train import Config, LOSO_FOLDS, RESULTS, TRAIN_POOL, evaluate_ensemble, train_ensemble
 
 VARIANTES = {
-    "Identificado, m = 2,00": dict(m_exponent=2.00),
+    "Identificado, m = 2.00": dict(m_exponent=2.00),
     "FAA 2024-T3 chapa (Forman et al., 2005)": dict(m_exponent=M_FAA, log_c_prior=LOG_C_FAA),
 }
 
@@ -60,7 +60,7 @@ def main(n_seeds: int = 3) -> None:
     detalle.to_csv(RESULTS / "robustez_literatura_detalle.csv", index=False)
     tabla.to_csv(RESULTS / "robustez_literatura.csv", index=False)
     print("\n" + "=" * 100)
-    print("CRITERIO SIN FUGA — minimax del peor fold de entrenamiento sobre la banda ±0,3 dex")
+    print("CRITERIO SIN FUGA — minimax del peor fold de entrenamiento sobre la banda ±0.3 dex")
     print("=" * 100)
     print(tabla.round(2).to_string(index=False))
 

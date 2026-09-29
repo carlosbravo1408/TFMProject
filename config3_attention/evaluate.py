@@ -54,7 +54,7 @@ def main() -> None:
     print("CONFIGURACIÓN 3 frente a CONFIGURACIÓN 1 — única diferencia: cómo se resume la secuencia")
     print("=" * 105)
     print(tabla.to_string(index=False))
-    print("\n  Objetivo heredado del diagnóstico: |Δlog10C| de T8 por debajo de 0,11")
+    print("\n  Objetivo heredado del diagnóstico: |Δlog10C| de T8 por debajo de 0.11")
     tabla.to_csv(RESULTS / "config3_vs_config1.csv", index=False)
     (RESULTS / "entregas.json").write_text(json.dumps(detalle, indent=2, default=str))
 

@@ -35,6 +35,7 @@ def guardar(nombre: str, cfg, modelos, segundos: float | None = None,
         "entrenados_sobre": list(entrenados_sobre) if entrenados_sobre else None,
         "notas": notas,
         "pesos": [_estado(m) for m in modelos],
+        "historiales": [getattr(m, "history_terms", None) for m in modelos],
     }, ruta)
     return ruta
 
@@ -45,10 +46,13 @@ def cargar(nombre: str):
     registro = torch.load(ruta_de(nombre), map_location="cpu", weights_only=False)
     cfg = Config(**registro["config"])
     modelos = []
-    for estado in registro["pesos"]:
+    historiales = registro.get("historiales") or [None] * len(registro["pesos"])
+    for estado, historial in zip(registro["pesos"], historiales):
         m = build_model(cfg, n_features=registro["n_features"])
         m.load_state_dict(estado)
         m.eval()
+        if historial is not None:
+            m.history_terms = historial
         modelos.append(m)
     return modelos, registro.get("segundos"), registro
 

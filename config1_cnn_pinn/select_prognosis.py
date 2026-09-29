@@ -151,7 +151,7 @@ def main(n_seeds: int = 3) -> None:
     for m, r in rob.groupby("m"):
         print(f"\n  m = {m}")
         print(r.round(2).to_string(index=False))
-        print(f"    peor caso sobre toda la banda +-0,3 dex: {r['peor_fold'].max():.2f}"
+        print(f"    peor caso sobre toda la banda ±0.3 dex: {r['peor_fold'].max():.2f}"
               f"   puntos en el tope: {int(r['puntos_en_tope'].sum())}")
     rob.to_csv(RESULTS / "robustez_exponente.csv", index=False)
 

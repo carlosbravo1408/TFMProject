@@ -101,7 +101,7 @@ def main(max_evals: int = 160, pop_size: int = 16, n_seeds: int = 2, seed: int =
     RESULTS.mkdir(exist_ok=True)
     print(f"Evolución diferencial sobre {len(VARIABLES)} pesos, "
           f"{max_evals} evaluaciones de {n_seeds} semillas cada una.")
-    print("Criterio: peor fold de entrenamiento sobre la banda de ±0,3 dex. "
+    print("Criterio: peor fold de entrenamiento sobre la banda de ±0.3 dex. "
           "T7 y T8 no se cargan.\n")
 
     f, historial = construir_objetivo(n_seeds=n_seeds)
