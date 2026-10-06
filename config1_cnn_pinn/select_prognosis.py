@@ -10,16 +10,15 @@ from physics_calibration.data import load_curve
 from physics_calibration.objectives import phm_penalty
 from .data import build_specimen_batches, load_labels
 from .evaluate import n_observed_nonzero
-from .physics import equivalent_stress_range, fit_log_c, propagate_mm
+from .physics import equivalent_stress_range, fit_log_c, pooled_log_c, propagate_mm
 from .train import (Config, LOSO_FOLDS, RESULTS, TRAIN_POOL, evaluate_ensemble,
                     train_ensemble)
-from physics_calibration import priors
 
 BASE = dict(epochs=600, dropout=0.3, weight_decay=1e-3,
             lambda_physics=1.0, lambda_log_c_prior=1.0, data_loss="asym",
             data_weight="anchor", anchor_weight=48.0)
 
-EXPONENTES = (2.00, 2.25)
+EXPONENTES = (2.00, 2.25, 2.50)
 FUENTES = ("cabeza", "anclas", "prior")
 
 # Worst fold over the +/-0.3 dex coefficient band (the prior's sigma), not at the
@@ -31,7 +30,7 @@ def coeficiente(fuente: str, anclas_c, anclas_a, log_c_cabeza, m, d_sigma) -> fl
     if fuente == "cabeza":
         return log_c_cabeza
     if fuente == "prior":
-        return priors.RECOMMENDED_LOG10_C
+        return pooled_log_c(m)
     if fuente == "anclas":
         # From the network's estimates, not the ground truth.
         return fit_log_c(anclas_c, anclas_a, m, d_sigma)
@@ -83,10 +82,11 @@ def robustez(cache, m, fuente, deltas=(-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3),
     return pd.DataFrame(filas)
 
 
-def buscar_exponente(n_seeds: int = 3, etiquetas=None, verbose: bool = True):
+def buscar_exponente(n_seeds: int = 3, etiquetas=None, verbose: bool = True,
+                     exponentes=EXPONENTES):
     etiquetas = load_labels() if etiquetas is None else etiquetas
     filas, caches = [], {}
-    for m in EXPONENTES:
+    for m in exponentes:
         cfg = Config(**{**BASE, "m_exponent": m})
         batches = {k: v for k, v in build_specimen_batches(etiquetas, m).items()
                    if k not in ("T7", "T8")}
@@ -119,7 +119,7 @@ def buscar_exponente(n_seeds: int = 3, etiquetas=None, verbose: bool = True):
     tabla = pd.DataFrame(filas).sort_values("peor_fold").reset_index(drop=True)
 
     robustas = []
-    for m in EXPONENTES:
+    for m in exponentes:
         r = robustez(caches[m], m, "cabeza")
         r.insert(0, "m", m)
         robustas.append(r)

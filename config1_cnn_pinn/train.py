@@ -40,8 +40,14 @@ class Config:
     # Fractions, not epochs: an absolute warm-up silently disables physics on short runs.
     physics_warmup_frac: float = 0.25
     physics_ramp_frac: float = 0.15
+    # Absolute warm-up, required with early stopping: a fraction of a large epoch cap
+    # would keep physics off until after the run has already stopped.
+    physics_warmup_epochs: int | None = None
+    physics_ramp_epochs: int | None = None
+    # "cosine" decays over cfg.epochs; "plateau" halves the rate when validation stalls.
+    scheduler: str = "cosine"
+    lr_patience: int = 100
     epochs: int = 600
-    # Early stopping off by default: measured, it makes the challenge score worse.
     patience: int | None = None
     min_delta: float = 0.0
     restore_best: bool = True
@@ -191,7 +197,14 @@ def _val_data_loss(model, batches, val_names, cfg) -> float:
     return parts["data"] / len(val_names)
 
 
-def train_one(cfg: Config, batches, train_names, val_names=(), verbose=False):
+def _val_score(model, batches, name, cfg) -> tuple[float, float]:
+    from .evaluate import build_submission, n_observed_nonzero
+    sub = build_submission([model], batches, cfg, name, n_observed=n_observed_nonzero("T7"))
+    return sub["penalizacion"], sub["rmse_mm"]
+
+
+def train_one(cfg: Config, batches, train_names, val_names=(), verbose=False,
+              score_every: int = 0):
     torch.manual_seed(cfg.seed)
     gen = torch.Generator().manual_seed(cfg.seed + 1)
     model = build_model(cfg, n_features=batches[train_names[0]].features.shape[1])
@@ -201,17 +214,26 @@ def train_one(cfg: Config, batches, train_names, val_names=(), verbose=False):
     model.feature_std.copy_(todos.std(dim=0).clamp(min=1e-6))
     model.physics_weight = 0.0
     opt = torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
-    sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=cfg.epochs)
+    # Logging the held-out loss never alters training: eval mode draws no random numbers.
+    registrar = bool(val_names)
+    vigilar = registrar and cfg.patience is not None
+    plateau = cfg.scheduler == "plateau"
+    if plateau and not registrar:
+        raise ValueError("scheduler='plateau' needs a validation specimen")
+    sched = (torch.optim.lr_scheduler.ReduceLROnPlateau(opt, factor=0.5, patience=cfg.lr_patience)
+             if plateau else torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=cfg.epochs))
+    if cfg.physics_warmup_epochs is not None:
+        start, ramp = cfg.physics_warmup_epochs, max(1.0, cfg.physics_ramp_epochs or 1)
+    else:
+        start = cfg.physics_warmup_frac * cfg.epochs
+        ramp = max(1.0, cfg.physics_ramp_frac * cfg.epochs)
 
     history, history_terms = [], []
-    vigilar = bool(val_names) and cfg.patience is not None
     mejor_val, mejor_epoca, mejor_estado = float("inf"), -1, None
     order = np.arange(len(train_names))
     rng = np.random.default_rng(cfg.seed + 2)
     for epoch in range(cfg.epochs):
         model.train()
-        start = cfg.physics_warmup_frac * cfg.epochs
-        ramp = max(1.0, cfg.physics_ramp_frac * cfg.epochs)
         model.physics_weight = float(np.clip((epoch - start) / ramp, 0.0, 1.0))
         lr_epoch = float(opt.param_groups[0]["lr"])
         # One step per specimen: full-batch leaves too few gradient steps, and the
@@ -230,14 +252,23 @@ def train_one(cfg: Config, batches, train_names, val_names=(), verbose=False):
             epoch_loss += float(loss)
             for k in epoch_parts:
                 epoch_parts[k] += parts[k]
-        sched.step()
         epoch_loss /= len(order)
         if verbose and epoch % 200 == 0:
             print(f"    epoch {epoch:4d}  loss {epoch_loss:.4f}  "
                   f"data {epoch_parts['data'] / len(order):.4f}  "
                   f"fis {epoch_parts['physics'] / len(order):.4f}")
         history.append(epoch_loss)
-        val_loss = _val_data_loss(model, batches, val_names, cfg) if vigilar else float("nan")
+        val_loss = _val_data_loss(model, batches, val_names, cfg) if registrar else float("nan")
+        val_pen = val_rmse = float("nan")
+        if registrar and score_every and (epoch % score_every == 0 or epoch == cfg.epochs - 1):
+            val_pen, val_rmse = _val_score(model, batches, val_names[0], cfg)
+        # The teacher-forced data loss bottoms out within ten epochs by copying the previous
+        # crack, so when the official penalty is scored it is the one that decides.
+        criterio = val_pen if score_every else val_loss
+        if not plateau:
+            sched.step()
+        elif not np.isnan(criterio):
+            sched.step(criterio)
         history_terms.append({
             "epoch": epoch,
             "total": epoch_loss,
@@ -245,10 +276,12 @@ def train_one(cfg: Config, batches, train_names, val_names=(), verbose=False):
             "physics_weight": float(model.physics_weight),
             "lr": lr_epoch,
             "val_data": val_loss,
+            "val_penalizacion": val_pen,
+            "val_rmse_mm": val_rmse,
         })
-        if vigilar:
-            if val_loss < mejor_val - cfg.min_delta:
-                mejor_val, mejor_epoca = val_loss, epoch
+        if vigilar and not np.isnan(criterio):
+            if criterio < mejor_val - cfg.min_delta:
+                mejor_val, mejor_epoca = criterio, epoch
                 mejor_estado = {k: v.detach().clone() for k, v in model.state_dict().items()}
             elif epoch - mejor_epoca >= cfg.patience:
                 if verbose:
@@ -267,18 +300,23 @@ def train_one(cfg: Config, batches, train_names, val_names=(), verbose=False):
     return model
 
 
-def train_ensemble(cfg: Config, batches, train_names, n_seeds: int = 1, verbose=False):
+def train_ensemble(cfg: Config, batches, train_names, n_seeds: int = 1, verbose=False,
+                   monitor: str | None = None, score_every: int = 0):
     models = []
     rotar = cfg.patience is not None and len(train_names) >= 3
     for k in range(n_seeds):
         sub = Config(**{**asdict(cfg), "seed": cfg.seed + 100 * k})
         if rotar:
             # Seed k holds out a different specimen, so the ensemble sees all the data.
-            val = [train_names[k % len(train_names)]]
+            # T2 and T5 carry 3-4 waveforms: too few to decide when to stop.
+            vigilantes = [n for n in train_names if n in LOSO_FOLDS] or list(train_names)
+            val = [vigilantes[k % len(vigilantes)]]
             entrena = [n for n in train_names if n not in val]
         else:
-            val, entrena = [], list(train_names)
-        models.append(train_one(sub, batches, entrena, val, verbose=verbose and k == 0))
+            # A monitored specimen is only scored, never trained on.
+            val, entrena = ([monitor] if monitor else []), list(train_names)
+        models.append(train_one(sub, batches, entrena, val, verbose=verbose and k == 0,
+                                score_every=score_every))
     return models
 
 
