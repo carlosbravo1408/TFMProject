@@ -156,7 +156,7 @@ a.equipo:hover{border-color:#A63C0A;box-shadow:0 2px 10px rgba(77,27,6,.08);colo
 
       <figure class="anim">
         <video class="auto" src="../media/video/web_1_2_a_onda_grieta.mp4" muted loop playsinline preload="metadata" aria-label="La onda que delata la grieta"></video>
-        <figcaption>Misma onda, sin grieta y con grieta.</figcaption>
+        <figcaption>El mismo camino de T4, del emisor 4 al receptor 9, sin grieta y con 7.24 mm de grieta. En el paquete directo la señal pierde un 62% de amplitud, mientras que el retraso es de apenas 0.3 µs. Esquema de la junta no a escala.</figcaption>
       </figure>
 
       <h3>Las cifras del conjunto</h3>
@@ -195,7 +195,7 @@ a.equipo:hover{border-color:#A63C0A;box-shadow:0 2px 10px rgba(77,27,6,.08);colo
 
       <figure class="anim">
         <video class="auto" src="../media/video/web_1_2_b_corte.mp4" muted loop playsinline preload="metadata" aria-label="El corte de la señal"></video>
-        <figcaption>Dónde termina la estimación y empieza la prognosis.</figcaption>
+        <figcaption>Curva medida de T7 punto a punto: hasta el ciclo 47022 cada medida tiene su onda; a partir de ahí no hay señal y la grieta hay que predecirla.</figcaption>
       </figure>
 
       <h3>Peculiaridades que hubo que resolver en este dataset limitado</h3>
@@ -232,7 +232,7 @@ a.equipo:hover{border-color:#A63C0A;box-shadow:0 2px 10px rgba(77,27,6,.08);colo
       <p>Vale 2 cuando la grieta es nula y 12 cuando alcanza su longitud final. El mismo error cuesta seis veces más al final de la vida de la probeta que al principio, que es justo cuando una grieta es peligrosa.</p>
       <figure class="anim">
         <video class="auto" src="../media/video/web_1_3_a_factor_temporal.mp4" muted loop playsinline preload="metadata" aria-label="El factor temporal"></video>
-        <figcaption>El mismo error, al principio y al final.</figcaption>
+        <figcaption>Un mismo error recorre la curva de T7: el factor temporal T = 2 + 10x vale 2 con la grieta nula y 12 al alcanzar la longitud final.</figcaption>
       </figure>
 
       <h3>Factor de exactitud: subestimar cuesta más que sobreestimar</h3>
@@ -240,7 +240,7 @@ a.equipo:hover{border-color:#A63C0A;box-shadow:0 2px 10px rgba(77,27,6,.08);colo
       <p>Es el corazón de la regla. El error se castiga de forma exponencial y, además, asimétrica: si la grieta entregada es más corta que la real, el divisor es 0.2; si es más larga, 0.5. Con un error de 0.1 (un 10% de la longitud final), quedarse corto cuesta exp(0.5) - 1 = 0.65, mientras que pasarse cuesta exp(0.2) - 1 = 0.22, casi tres veces menos. La lógica es operativa: declarar una grieta más pequeña de lo que es resulta mucho más peligroso que declararla más grande.</p>
       <figure class="anim">
         <video class="auto" src="../media/video/web_1_3_b_asimetria.mp4" muted loop playsinline preload="metadata" aria-label="La asimetría"></video>
-        <figcaption>Pasarse frente a quedarse corto.</figcaption>
+        <figcaption>Factor de exactitud frente al error: la rama de subestimar (s = 0.2) crece mucho más deprisa que la de sobreestimar (s = 0.5). Con un error de 0.1, quedarse corto cuesta casi el triple.</figcaption>
       </figure>
 
       <h3>Factor de monotonía: una grieta, una vez propagada, nunca encoge</h3>
@@ -248,7 +248,7 @@ a.equipo:hover{border-color:#A63C0A;box-shadow:0 2px 10px rgba(77,27,6,.08);colo
       <p>Una grieta por fatiga no puede cerrarse. Si la secuencia entregada retrocede, la multa de ese punto se multiplica en proporción al tamaño del retroceso. Mientras la secuencia crece, este factor vale 1 y no hace nada.</p>
       <figure class="anim">
         <video class="auto" src="../media/video/web_1_3_c_monotonia.mp4" muted loop playsinline preload="metadata" aria-label="La monotonía"></video>
-        <figcaption>El castigo por retroceder.</figcaption>
+        <figcaption>Una entrega que retrocede en un punto: el factor de monotonía multiplica la multa de ese punto por 1 + 10·Δ, donde Δ es lo que retrocede.</figcaption>
       </figure>
       <p>Junto a la penalización se informa también del error medio en milímetros (RMSE), que es la métrica habitual en la literatura y permite comparar con trabajos que no usan la regla del certamen.</p>
     </div>

@@ -174,7 +174,7 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
         <p>Esa misma semejanza obliga a tener cuidado al validar. Si una repetición quedara en entrenamiento y la otra en validación, la red estaría examinándose con una copia casi exacta de algo que ya ha visto. Por eso la validación separa siempre probetas completas, nunca ciclos sueltos. La única excepción al uso de ambas es el registro sano de referencia, para el que se toma siempre la primera repetición.</p>
         <figure class="anim">
         <video class="auto" src="../media/video/web_4_1_a_repeticiones.mp4" muted loop playsinline preload="metadata" aria-label="Dos repeticiones, una etiqueta"></video>
-        <figcaption>Dos ondas casi gemelas que cuentan como dos ejemplos.</figcaption>
+        <figcaption>Las dos repeticiones de un mismo ciclo, signal_1 y signal_2, solo difieren en el ruido: la red las usa como dos ejemplos con la misma etiqueta de grieta.</figcaption>
       </figure>
       </div>
 
@@ -197,7 +197,7 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
       <p>Al final del cuarto bloque, cada una de las 9 posiciones resume 399 muestras de la onda original, unos 20 µs, y posiciones consecutivas distan 6.4 µs. Es decir, la red acaba mirando la onda en tramos solapados de unos 20 µs, pero nadie los ha definido a mano: salen solos del tamaño de los filtros y de los pasos.</p>
       <figure class="anim">
         <video class="auto" src="../media/video/web_4_1_b_convolucion.mp4" muted loop playsinline preload="metadata" aria-label="Una convolución con paso"></video>
-        <figcaption>Un filtro recorre la onda de cuatro en cuatro.</figcaption>
+        <figcaption>Un filtro del primer bloque recorre los dos canales de la onda avanzando de 4 en 4 muestras: de 1100 posiciones deja 275 valores.</figcaption>
       </figure>
 
       <h3 id="c1-filtros">Los filtros del primer bloque: de dónde salen</h3>
@@ -206,7 +206,7 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
       <p>Conviene poner su tamaño en perspectiva. Quince muestras a 20 MHz son 0.75 µs, mientras que un periodo completo de la portadora de 200 kHz dura 5 µs, es decir, 100 muestras. Un filtro del primer bloque, por tanto, no ve ni siquiera una oscilación entera: responde a rasgos muy locales de la forma, como pendientes y curvaturas, y a cómo se combinan los dos canales. Los patrones de escala más larga, del tamaño del paquete S0, se construyen en los bloques siguientes.</p>
       <figure class="anim">
         <video class="auto" src="../media/video/web_4_1_c_filtros.mp4" muted loop playsinline preload="metadata" aria-label="Lo que aprendió el primer bloque"></video>
-        <figcaption>De pesos aleatorios a filtros aprendidos.</figcaption>
+        <figcaption>Los 8 filtros del primer bloque, de 2 × 15 pesos: empiezan al azar y el entrenamiento los ajusta hasta sus valores finales.</figcaption>
       </figure>
       
 
@@ -215,21 +215,21 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
       <p>Los dos canales de entrada no dan dos filas, porque cada filtro los combina en una sola suma. Lo que decide el número de filas es el número de filtros. Con los 8 filtros del primer bloque, la onda de 2 × 1100 se convierte en un mapa de 8 × 275: ocho filas, una por patrón, y 275 posiciones a lo largo de la onda.</p>
       <figure class="anim">
         <video class="auto" src="../media/video/web_4_1_j_mapa.mp4" muted loop playsinline preload="metadata" aria-label="Ocho filtros, un mapa"></video>
-        <figcaption>De la onda de 2 × 1100 al mapa de 8 × 275.</figcaption>
+        <figcaption>Cada filtro deja una fila de 275 valores, y los 8 filtros del primer bloque convierten la onda de 2 × 1100 en un mapa de activación de 8 × 275.</figcaption>
       </figure>
       <p>A partir de aquí, cada bloque repite la misma operación sobre el mapa del bloque anterior, que trata como si fuera una señal con tantos canales como filas. Los filtros del segundo bloque son matrices de 8 × 9, porque abarcan las 8 filas del mapa anterior y 9 posiciones; hay 16 y avanzan de cuatro en cuatro, así que dejan un mapa de 16 × 69. El tercero, con 24 filtros de 16 × 7, deja 24 × 18. El cuarto, con 32 filtros de 24 × 5 y paso 2, deja 32 × 9.</p>
       <p class="ui" style="font-size: 17px; text-align: center; margin: 22px 0"><strong>2 × 1100 → 8 × 275 → 16 × 69 → 24 × 18 → 32 × 9</strong></p>
       <p>En cada bloque hay más filas y menos posiciones. Las filas son patrones cada vez más elaborados, porque combinan los del bloque anterior. Las posiciones son cada vez menos y más anchas: al final, cada una de las 9 abarca unos 20 µs de la onda original.</p>
       <figure class="anim">
         <video class="auto" src="../media/video/web_4_1_k_bloques.mp4" muted loop playsinline preload="metadata" aria-label="La cadena de bloques"></video>
-        <figcaption>Cuatro bloques, cada vez más filas y menos posiciones.</figcaption>
+        <figcaption>Los cuatro bloques convolucionales en cadena: de 2 × 1100 a 8 × 275, 16 × 69, 24 × 18 y 32 × 9, con más filtros y menos posiciones en cada paso.</figcaption>
       </figure>
 
       <h3>Del mapa a un resumen de 32 números</h3>
       <p>Tras el cuarto bloque quedan 32 mapas de 9 posiciones. Cada mapa se resume con dos estadísticos complementarios: su promedio y su máximo. El promedio refleja la atenuación global de la onda; el máximo, la amplitud del eco disperso más intenso. Como hay 32 mapas y de cada uno salen dos números, el resultado son 32 × 2 = 64 valores. Esos 64 números pasan por una capa lineal que los comprime en un vector de 32 componentes, la representación latente o huella de la onda. Durante el entrenamiento, una fracción de sus componentes se apaga al azar (dropout del 30%) para que la red no dependa de ninguna en exclusiva.</p>
       <figure class="anim">
         <video class="auto" src="../media/video/web_4_1_d_resumen.mp4" muted loop playsinline preload="metadata" aria-label="Promedio y máximo"></video>
-        <figcaption>Nueve posiciones se convierten en dos números.</figcaption>
+        <figcaption>Cada uno de los 32 mapas del cuarto bloque se resume en su promedio y su máximo; juntos forman un vector de 32 × 2 = 64 valores.</figcaption>
       </figure>
 
       <h3 id="c1-estimacion">La cabeza de estimación: una grieta que solo puede crecer</h3>
@@ -247,7 +247,7 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
       <p>El resultado es que la secuencia estimada nunca puede decrecer. La monotonía que exige el certamen no se impone después con un parche: está garantizada por construcción. Se probaron otras dos formas, y las dos fallaban. Predecir la grieta absoluta hacía que la red ignorase el contexto y se estancase en un valor constante. Predecir una velocidad y multiplicarla por los ciclos transcurridos amplificaba cualquier error por un factor que en este conjunto va de 0.5 a 36.</p>
       <figure class="anim">
         <video class="auto" src="../media/video/web_4_1_e_incremental.mp4" muted loop playsinline preload="metadata" aria-label="La salida incremental"></video>
-        <figcaption>Una escalera que solo sube.</figcaption>
+        <figcaption>La salida lineal de la cabeza puede ser negativa, pero tras softplus el incremento siempre es positivo: la grieta estimada no puede encoger.</figcaption>
       </figure>
 
       <h3 id="c1-coeficiente">La cabeza del coeficiente: un número por probeta</h3>
@@ -258,7 +258,7 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
       <div class="eq">\[a(N)=a_0\,e^{k\,\Delta N},\qquad k=C\,\pi\,\Delta\sigma_{eq}^{2}\]</div>
       <figure class="anim">
         <video class="auto" src="../media/video/web_4_1_f_coeficiente.mp4" muted loop playsinline preload="metadata" aria-label="De las huellas al coeficiente"></video>
-        <figcaption>Promediar, acotar y obtener C.</figcaption>
+        <figcaption>Las huellas de todas las ondas de una probeta se promedian; la cabeza del coeficiente da un valor u, y log10 C = -8.4264 + tanh(u) queda a menos de una década del valor calibrado.</figcaption>
       </figure>
 
       <h3 id="c1-perdida">La función de pérdida: cuatro exigencias a la vez</h3>
@@ -280,7 +280,7 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
       <p>Hay un último ajuste, quizá el que más influye en el resultado final: las dos primeras medidas de grieta no nula de cada probeta pesan 48 veces más que el resto. Son los puntos desde los que el protocolo obliga a extrapolar, de modo que acertar en ellos importa más que acertar en cualquier otro.</p>
       <figure class="anim">
         <video class="auto" src="../media/video/web_4_1_g_calentamiento.mp4" muted loop playsinline preload="metadata" aria-label="La física entra tarde"></video>
-        <figcaption>El peso del término físico a lo largo de las épocas.</figcaption>
+        <figcaption>Pérdida total del primer modelo a lo largo del entrenamiento: el término físico entra en la época 151 y su peso crece hasta el valor pleno.</figcaption>
       </figure>
 
       <h3 id="c1-entrenamiento">Cómo se entrena y cómo predice</h3>
@@ -322,7 +322,7 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
       </figure>
       <figure class="anim">
         <video class="auto" src="../media/video/web_4_1_i_aumento.mp4" muted loop playsinline preload="metadata" aria-label="La misma onda, nunca igual"></video>
-        <figcaption>Una onda perturbada en tres épocas distintas.</figcaption>
+        <figcaption>La misma onda de T4 en tres épocas: cada vez se desplaza al azar hasta ±0.5 µs y recibe un ruido del 5%, y la forma del paquete se conserva.</figcaption>
       </figure>
       <p>Para comprobar que el entrenamiento generaliza, el mismo modelo se entrenó cuatro veces dejando fuera cada vez una probeta distinta (T1, T3, T4 o T6) y midiendo la penalización oficial sobre ella cada cinco épocas. T7 y T8 no participan en esta validación.</p>
       <figure class="fig">
@@ -337,7 +337,7 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
       <p>A la hora de predecir, la estimación es recursiva: la grieta previa que recibe la red es su propia estimación del ciclo anterior, porque en T7 y T8 no hay ninguna medida disponible. Cuando se acaba la señal, la ley de Paris toma el relevo desde la última estimación, con el coeficiente que ha calculado la red, y la grieta entregada nunca supera la cota de 7.24 mm.</p>
       <figure class="anim">
         <video class="auto" src="../media/video/web_4_1_h_relevo.mp4" muted loop playsinline preload="metadata" aria-label="El relevo"></video>
-        <figcaption>La red entrega el testigo a la ley física.</figcaption>
+        <figcaption>Curva de T7: mientras hay señal, la red estima la grieta; tras la última onda, la ley de Paris proyecta el resto de la curva.</figcaption>
       </figure>
 
       <h3 id="c1-resultados">Qué consigue</h3>

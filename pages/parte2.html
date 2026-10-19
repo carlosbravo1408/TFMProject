@@ -131,11 +131,11 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
       </figure>
       <figure class="anim">
         <video class="auto" src="../media/video/web_2_1_filtro.mp4" muted loop playsinline preload="metadata" aria-label="El filtro en frecuencia"></video>
-        <figcaption>Lo que queda fuera de la banda desaparece.</figcaption>
+        <figcaption>Espectro del registro antes y después del filtro paso banda de 100 a 400 kHz: lo que queda fuera de la banda es ruido y desaparece.</figcaption>
       </figure>
       <figure class="anim">
         <video class="auto" src="../media/video/web_2_1_b_fase_nula.mp4" muted loop playsinline preload="metadata" aria-label="Fase nula"></video>
-        <figcaption>Filtrar en un sentido frente a filtrar en los dos.</figcaption>
+        <figcaption>Filtrar en un solo sentido retrasa la onda; filtrar ida y vuelta, con fase nula, la deja en su sitio, y con ella el tiempo de llegada que importa para detectar la grieta.</figcaption>
       </figure>
     </div>
   </section>
@@ -158,7 +158,7 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
       <p>Hay un matiz honesto que contar: medido sobre las ocho probetas, el desajuste real nunca supera una muestra, es decir, 0.05 µs. Los registros ya venían prácticamente alineados. El paso se conserva como salvaguarda, por si otro conjunto de datos no tuviera tanta suerte.</p>
       <figure class="anim">
         <video class="auto" src="../media/video/web_2_2_correlacion.mp4" muted loop playsinline preload="metadata" aria-label="Alinear por correlación"></video>
-        <figcaption>Deslizar hasta que encajan.</figcaption>
+        <figcaption>Correlación cruzada entre el canal del actuador y el del registro de referencia: el pico indica cuántas muestras hay que desplazar el registro para alinearlo. El desfase está exagerado para que se vea.</figcaption>
       </figure>
       
     </div>
@@ -181,7 +181,7 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
       </figure>
       <figure class="anim">
         <video class="auto" src="../media/video/web_2_3_ventaneo.mp4" muted loop playsinline preload="metadata" aria-label="Recortar el modo s0"></video>
-        <figcaption>De 4000 a 1100 muestras.</figcaption>
+        <figcaption>Del registro de 4000 muestras se conserva la ventana de 90 a 145 µs, 1100 muestras: la llegada del modo S0 con algo de margen, sin los ecos y la reverberación posteriores.</figcaption>
       </figure>
     </div>
   </section>
@@ -215,7 +215,7 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
 
       <figure class="anim">
         <video class="auto" src="../media/video/web_2_4_diferencia.mp4" muted loop playsinline preload="metadata" aria-label="Restar el registro sano"></video>
-        <figcaption>Onda actual menos onda sana.</figcaption>
+        <figcaption>Onda estandarizada de T4 con 4.06 mm de grieta menos su registro sano: lo común se cancela y queda solo lo que ha cambiado.</figcaption>
       </figure>
     </div>
   </section>
@@ -238,7 +238,7 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
       </div>
       <figure class="anim">
         <video class="auto" src="../media/video/web_2_5_a_estandarizacion.mp4" muted loop playsinline preload="metadata" aria-label="Misma escala para todas las ondas"></video>
-        <figcaption>Estandarizar dos ondas sin daño.</figcaption>
+        <figcaption>Registros sin daño de T5 y T6, con amplitudes distintas por el pegado de cada transductor. Al estandarizarlos quedan en la misma escala y su forma no cambia.</figcaption>
       </figure>
       <h3>Por qué no basta con estandarizar</h3>
       <p>Igualar la amplitud de las ondas no iguala el tamaño de sus diferencias. Con la grieta en 2 mm, el valor eficaz del canal diferencial va de 0.30 en T4 a 1.57 en T1, porque cada probeta está instrumentada sobre un camino distinto. Sin corregirlo, la red leería esa amplitud como longitud de grieta y se equivocaría de forma sistemática ante una probeta nueva.</p>
@@ -253,7 +253,7 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
       <p>La estandarización es una práctica estándar. La normalización por probeta, en cambio, es una aportación de este trabajo: ni los métodos del certamen ni el resto de la literatura revisada reescalan las señales entre probetas; se limitan a referirlas al registro sano de cada una.</p>
       <figure class="anim">
         <video class="auto" src="../media/video/web_2_5_b_normalizacion.mp4" muted loop playsinline preload="metadata" aria-label="Las ocho curvas se encuentran"></video>
-        <figcaption>Dividir cada probeta por su valor a 2 mm.</figcaption>
+        <figcaption>Valor eficaz del canal diferencial frente a la grieta en las ocho probetas. Al dividir cada curva por su valor a 2 mm, la dispersión entre 2 y 2.5 mm pasa de un factor 5.9 a un factor 1.1.</figcaption>
       </figure>
       
       <a class="cuaderno" href="../tratamiento_senal/tratamiento_senal.html" target="_blank" rel="noopener">

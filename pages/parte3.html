@@ -138,7 +138,7 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
 
       <figure class="anim">
         <video class="auto" src="../media/video/web_3_1_coeficiente.mp4" muted loop playsinline preload="metadata" aria-label="Qué hace el coeficiente c"></video>
-        <figcaption>Subir C adelanta la rotura.</figcaption>
+        <figcaption>Ley de Paris con m = 2.00 fijo sobre las medidas de T4: al subir log10 C la curva despega antes y la rotura se adelanta.</figcaption>
       </figure>
     </div>
   </section>
@@ -151,7 +151,7 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
       <p>La manera natural de calibrar es por prueba y error: se propone un par (C, m), se integra la ley ciclo a ciclo con la carga real de la probeta, se compara la curva resultante con las medidas y se repite hasta minimizar el error. No hay una fórmula directa para el óptimo, porque cada evaluación exige integrar decenas de miles de ciclos y el error tiene varios mínimos locales. Para estos casos se usan algoritmos metaheurísticos: estrategias de búsqueda inspiradas en la naturaleza que no necesitan derivadas.</p>
       <p>Kong et al. y Rao et al. usaron un algoritmo genético, pero ninguno explica por qué ese y no otro. Esa pregunta abierta motivó una comparación: si el algoritmo genético es la elección habitual, ¿es también la mejor?</p>
 
-      <h3>Una comparación justa</h3>
+      <h3>¿Una comparación justa?</h3>
       <p>Se implementaron seis algoritmos y se les dio exactamente las mismas condiciones: la misma función de error, los mismos límites de búsqueda, las mismas semillas y el mismo presupuesto, contado en evaluaciones de la función y no en iteraciones, porque una iteración de cada algoritmo no cuesta lo mismo. Un contador detiene cada ejecución en cuanto agota sus 20000 evaluaciones.</p>
       <div class="tabla">
         <table>
@@ -195,7 +195,7 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
       </figure>
       <figure class="anim">
         <video class="auto" src="../media/video/web_3_2_poblacion.mp4" muted loop playsinline preload="metadata" aria-label="La población encuentra la cresta"></video>
-        <figcaption>La evolución diferencial sobre el mapa de error.</figcaption>
+        <figcaption>Mapa de error de T1 en el plano (log10 C, m): la población de la evolución diferencial se estira a lo largo de la cresta oscura. Al final, las 60 búsquedas (6 algoritmos × 10 semillas) caen todas en la franja.</figcaption>
       </figure>
 
       <h3>La lección que deja la comparación</h3>
@@ -262,11 +262,11 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
       <p>Se eligió m = 2.00 con un criterio llamado minimax: entre los candidatos, quedarse con el que tiene el peor caso menos malo. Gana en las tres columnas, y la diferencia se agranda justo cuando el coeficiente se equivoca por exceso. Hay una razón matemática detrás: con m = 2, la ley de Paris da una grieta que crece de forma exponencial, rápida pero siempre finita. Con cualquier exponente mayor que 2, la solución diverge, es decir, predice una grieta infinita en un número finito de ciclos. Un coeficiente algo alto con m = 2.5 no produce un error mayor, produce una predicción que se escapa. Para un módulo que debe proyectar la ley miles de ciclos por delante, esa propiedad es decisiva.</p>
       <figure class="anim">
         <video class="auto" src="../media/video/web_3_3_a_minimax.mp4" muted loop playsinline preload="metadata" aria-label="El criterio minimax"></video>
-        <figcaption>Quedarse con el peor caso menos malo.</figcaption>
+        <figcaption>Para cada exponente, la penalización del peor pliegue con C desplazado ±0.3 décadas. Se elige el exponente cuyo peor caso es el menor: m = 2.00.</figcaption>
       </figure>
       <figure class="anim">
         <video class="auto" src="../media/video/web_3_3_b_escapar.mp4" muted loop playsinline preload="metadata" aria-label="Crecer frente a escaparse"></video>
-        <figcaption>M = 2 frente a m = 3 desde el mismo punto.</figcaption>
+        <figcaption>Misma grieta inicial y C 0.3 décadas por encima del recalibrado: con m = 2 la grieta sigue creciendo de forma razonable; con m = 3 se dispara hacia una grieta infinita.</figcaption>
       </figure>
 
       <h3>Y con el exponente fijo, el coeficiente</h3>

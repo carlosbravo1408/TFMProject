@@ -136,7 +136,7 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
       <div class="eq">\[a_{n+1}=a_n+\frac{h}{6}\left(k_1+2k_2+2k_3+k_4\right)\]</div>
       <figure class="anim">
         <video class="auto" src="../media/video/web_4_2_a_integracion.mp4" muted loop playsinline preload="metadata" aria-label="Fórmula cerrada frente a integración"></video>
-        <figcaption>Dos caminos que llegan al mismo sitio.</figcaption>
+        <figcaption>Un bloque de carga de T8 integrado tramo a tramo con RK4 frente a la fórmula cerrada: los dos caminos llegan al mismo punto al cerrar el bloque.</figcaption>
       </figure>
     </div>
   </section>
@@ -153,7 +153,7 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
       <p>Aquí a<sub>ol</sub> es la grieta en el momento de la sobrecarga, r<sub>ol</sub> la zona plástica que generó, y p el único parámetro del modelo. Tampoco p puede calibrarse con estos datos, así que se adoptó p = 1.43, un valor dentro de los intervalos publicados por Sheu et al. (1995) para las aleaciones de aluminio 5083-O y 6061-T651. Para el 2024-T3 no hay ninguno publicado.</p>
       <figure class="anim">
         <video class="auto" src="../media/video/web_4_2_b_zona_plastica.mp4" muted loop playsinline preload="metadata" aria-label="La zona plástica frena la grieta"></video>
-        <figcaption>Dentro de la zona, más despacio.</figcaption>
+        <figcaption>Esquema del retardo de Wheeler: mientras la zona plástica del ciclo en curso queda dentro de la que dejó la sobrecarga, la grieta avanza más despacio.</figcaption>
       </figure>
     </div>
   </section>
@@ -192,7 +192,7 @@ a{color:#A63C0A}a:hover{color:#4D1B06}
       </figure>
       <figure class="anim">
         <video class="auto" src="../media/video/web_4_2_c_techo_retardo.mp4" muted loop playsinline preload="metadata" aria-label="El techo del retardo"></video>
-        <figcaption>Aunque medio bloque se detenga, el otro medio sigue.</figcaption>
+        <figcaption>Un bloque de carga de T8: aunque el retardo anulara por completo los ciclos de 90 MPa, el desplazamiento equivalente de log10 C se quedaría en -0.255 décadas, lejos de lo que necesita T8.</figcaption>
       </figure>
       
       <a class="cuaderno" href="../config2_rk4/configuracion2.html" target="_blank" rel="noopener">
