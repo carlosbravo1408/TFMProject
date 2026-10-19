@@ -36,7 +36,7 @@ Penalización oficial del certamen: adimensional, menor es mejor.
 
 ## Arquitectura
 
-![Arquitectura del modelo](docs/img/arquitectura.png)
+![Arquitectura del modelo](media/img/arquitectura.png)
 
 Los componentes (a) y (b) están presentes en las cuatro configuraciones. El (c) y el (d) son
 opcionales y cada uno sustituye una pieza del módulo físico, lo que permite el estudio de ablación.
@@ -45,22 +45,22 @@ opcionales y cada uno sustituye una pieza del módulo físico, lo que permite el
 
 **Curvas entregadas frente a la longitud medida, con las tres referencias del certamen.**
 
-![Comparación con las referencias](docs/img/frente_referencias.png)
+![Comparación con las referencias](media/img/frente_referencias.png)
 
 **Efecto del coeficiente en T8.** Con el coeficiente adecuado la misma red entregaría un resultado
 seis veces mejor; el estimador no es la causa del error.
 
-![Coeficiente de T8](docs/img/coeficiente_t8.png)
+![Coeficiente de T8](media/img/coeficiente_t8.png)
 
 **Normalización del canal diferencial por espécimen.** Reduce la dispersión entre probetas en la
 banda de 2 a 2.5 mm de un factor 5.9 a un factor 1.1.
 
-![Normalización por espécimen](docs/img/normalizacion_especimen.png)
+![Normalización por espécimen](media/img/normalizacion_especimen.png)
 
 **Convergencia de los seis algoritmos metaheurísticos.** Sobre la formulación directa el algoritmo
 decide el resultado; con proyección de variables esa diferencia desaparece.
 
-![Convergencia de los metaheurísticos](docs/img/convergencia_metaheuristicos.png)
+![Convergencia de los metaheurísticos](media/img/convergencia_metaheuristicos.png)
 
 ## Cuadernos
 
