@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parte 3: la ley física</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#ffffff}
+a{color:#A63C0A}a:hover{color:#4D1B06}
+.pg{font-family:'Source Serif 4',Georgia,serif;color:#262626;background:#ffffff}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px}
+.ui{font-family:'IBM Plex Sans',system-ui,sans-serif}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+.pg p{font-size:19px;line-height:1.65;margin:0 0 18px}
+.pg h2{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:30px;line-height:1.2;margin:0 0 18px;color:#1f1f1d}
+.pg h3{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:22px;line-height:1.25;margin:28px 0 12px;color:#1f1f1d}
+.sec{padding:56px 0;border-top:1px solid #e6e6e2}
+.kicker{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.06em;color:#5f5f5a;text-transform:uppercase;margin-bottom:8px;display:block}
+.nav{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid #d9d9d5;background:#fafaf8}
+.nav ul{display:flex;flex-wrap:wrap;gap:8px 20px;list-style:none;margin:0;padding:0;font-size:15px}
+.logo{width:120px;height:36px;background:#ececE8;border:1px dashed #b9b9b3;display:flex;align-items:center;justify-content:center;font-size:12px;color:#5f5f5a}
+.fig{margin:26px 0;display:flex;flex-direction:column;gap:10px}
+.fig img{width:100%;height:auto;display:block;border:1px solid #e0e0dc;border-radius:4px;background:#fff}
+.fig figcaption{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#4a4a46}
+.anim{margin:28px 0;border:2px dashed #C2470D;border-radius:8px;background:repeating-linear-gradient(45deg,#fff3ec 0 12px,#fffaf6 12px 24px);padding:22px;display:flex;flex-direction:column;gap:12px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#3a1604}
+.anim .rot{font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:.06em;color:#A63C0A;font-weight:600}
+.anim h4{margin:0;font-size:19px;color:#4D1B06}
+.anim p{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.55;margin:0;color:#3a1604}
+.anim dl{display:grid;grid-template-columns:140px minmax(0,1fr);gap:6px 14px;margin:0;font-size:14.5px;line-height:1.5}
+.anim dt{font-weight:600;color:#7a2d08}
+.anim dd{margin:0}
+.anim .lienzo{aspect-ratio:16/9;max-height:300px;border:1px solid #e3b79f;border-radius:4px;background:#ffffffcc;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#A63C0A}
+.nota{font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.55;color:#6B2560;background:#faf3f8;border:1px dotted #b77aa9;border-radius:6px;padding:12px 14px;margin:18px 0}
+.tabla{overflow-x:auto;margin:22px 0}
+.tabla table{border-collapse:collapse;width:100%;min-width:560px;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px}
+.tabla th,.tabla td{border-bottom:1px solid #e0e0dc;padding:9px 10px;text-align:left;vertical-align:top}
+.tabla th{background:#f4f4f1;font-weight:600}
+.tabla td.n,.tabla th.n{text-align:right;font-variant-numeric:tabular-nums}
+.tabla caption{caption-side:bottom;text-align:left;font-size:14px;color:#4a4a46;padding-top:8px}
+.tabla tr.gana td{background:#f1f6ee;font-weight:600}
+.eq{font-size:17px;background:#f6f6f3;border:1px solid #e3e3df;border-radius:6px;padding:14px 18px;margin:16px 0;overflow-x:auto;text-align:center}
+.eq math{font-size:1.2em}
+.eq details{margin-top:10px;text-align:left}
+.eq summary{cursor:pointer;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:13px;color:#5f5f5a;min-height:28px}
+.eq code{display:block;white-space:pre-wrap;word-break:break-all;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#3b3b38;margin-top:6px}
+.toc{display:flex;flex-wrap:wrap;gap:8px 18px;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;margin-top:8px}
+.glosa{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:18px 0 24px}
+.glosa div{border:1px solid #d4d4d0;border-radius:8px;padding:14px;background:#fafaf8;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#3b3b38}
+.glosa b{display:block;font-family:'IBM Plex Mono',monospace;font-size:18px;color:#4D1B06;margin-bottom:4px}
+.embudo{display:flex;flex-direction:column;align-items:center;gap:0;margin:26px 0;font-family:'IBM Plex Sans',system-ui,sans-serif}
+.etapa{box-sizing:border-box;border:1px solid #c9c9c4;border-radius:10px;padding:14px 18px;background:#fafaf8;font-size:15px;line-height:1.5;display:flex;flex-direction:column;gap:8px}
+.etapa b{color:#4D1B06}
+.etapa .res{font-family:'IBM Plex Mono',monospace;font-size:13.5px;color:#4D1B06}
+.escala{position:relative;height:14px;border-radius:7px;background:#e6e6e2}
+.escala span{position:absolute;top:0;bottom:0;border-radius:7px;background:#C2470D}
+.escala i{position:absolute;top:-4px;width:4px;height:22px;border-radius:2px;background:#4D1B06}
+.cuello{width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:14px solid #c9c9c4;margin:6px 0}
+.salida{display:inline-flex;align-items:center;min-height:44px;padding:0 22px;border-radius:22px;background:#4D1B06;color:#ffffff;font-weight:600;font-size:16px}
+.ejes{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#5f5f5a}
+.cuaderno{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 20px;border:1px solid #d4d4d0;border-left:4px solid #4D1B06;border-radius:8px;padding:16px 20px;margin:30px 0 0;background:#fafaf8;font-family:'IBM Plex Sans',system-ui,sans-serif;text-decoration:none;color:#262626}
+.cuaderno:hover{border-color:#A63C0A;color:#262626}
+.cuaderno span{font-size:15px;line-height:1.45;color:#4a4a46}
+.cuaderno b{display:block;font-size:17px;color:#1f1f1d;margin-bottom:2px}
+.cuaderno em{font-style:normal;font-weight:600;font-size:15px;color:#A63C0A;white-space:nowrap}
+
+.anim{margin:30px 0;border:0;border-radius:0;background:none;padding:0;display:flex;flex-direction:column;gap:10px}
+.anim video{display:block;width:100%;height:auto;border:1px solid #e0e0dc;border-radius:4px;background:#ffffff}
+.anim figcaption{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#4a4a46}
+.eq{overflow-x:auto;overflow-y:hidden;margin:20px 0;font-size:1.1em}
+.logo{width:auto;height:36px;background:none;border:0;display:block}
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'\\[',right:'\\]',display:true}]})"></script>
+</head>
+<body>
+<div class="pg" style="width: 100%">
+  <header class="nav ui">
+    <div style="display: flex; gap: 14px; align-items: center">
+      <img class="logo" src="../media/img/Logo_VIU.png" alt="VIU">
+      <a href="../index.html" style="font-size: 17px; font-weight: 700; color: #262626; text-decoration: none">Grietas, ondas y física</a>
+    </div>
+    <ul>
+      <li><a href="parte1.html">1. El problema</a></li>
+      <li><a href="parte2.html">2. La señal</a></li>
+      <li><strong>3. La ley física</strong></li>
+      <li><a href="parte4.html">4. El modelo</a></li>
+      <li><a href="conclusiones.html">5. Conclusiones</a></li>
+      <li><a href="bibliografia.html">Bibliografía</a></li>
+    </ul>
+  </header>
+
+  <section style="padding: 60px 0 36px; background: #fafaf8">
+    <div class="wrap">
+      <span class="kicker">Parte 3</span>
+      <h1 class="ui" style="margin: 0 0 14px; font-size: 42px; line-height: 1.12; color: #1f1f1d">Un espacio de búsqueda acotado para la ley física</h1>
+      <p style="font-size: 21px; color: #3b3b38">Cuando la señal ultrasónica se acaba, el modelo depende en gran medida de una ecuación de la mecánica de fractura. Esa ecuación tiene dos constantes que nadie ha publicado para estas probetas. Esta parte cuenta cómo se encontraron, y por qué encontrarlas resultó ser más un problema de elegir que de buscar.</p>
+      <nav class="toc" aria-label="Contenido de la parte 3">
+        <a href="#p3-ley">3.1 Por qué hay que calibrar la ley</a>
+        <a href="#p3-algoritmos">3.2 Qué algoritmo busca mejor</a>
+        <a href="#p3-eleccion">3.3 Cómo se eligieron los parámetros</a>
+      </nav>
+    </div>
+  </section>
+
+  <section id="p3-ley" class="sec">
+    <div class="wrap">
+      <span class="kicker">3.1</span>
+      <h2>Por qué hay que calibrar la ley</h2>
+      <p>Desde los años sesenta se sabe que, en el tramo central de su vida, una grieta por fatiga crece siguiendo una regla sorprendentemente sencilla: la ley de Paris-Erdogan. Dice que la velocidad con la que avanza la grieta en cada ciclo depende de lo intensas que sean las tensiones en su punta, elevadas a una potencia.</p>
+      <div class="eq">\[\frac{da}{dN}=C\,(\Delta K)^{m},\qquad \Delta K=Y\,\Delta\sigma\,\sqrt{\pi a}\]</div>
+      <div class="glosa">
+        <div><b>a</b>Longitud de la grieta. Dentro de la ecuación va en metros.</div>
+        <div><b>N</b>Número de ciclos de carga acumulados.</div>
+        <div><b>da/dN</b>Velocidad de crecimiento: cuánto avanza la grieta por ciclo.</div>
+        <div><b>ΔK</b>Rango del factor de intensidad de tensiones: resume carga, geometría y tamaño de la grieta en un solo número.</div>
+        <div><b>Δσ</b>Rango de tensión del ciclo: la diferencia entre la tensión máxima y la mínima.</div>
+        <div><b>Y</b>Factor geométrico. Aquí vale 1, la idealización de placa infinita con grieta central.</div>
+        <div><b>C</b>Coeficiente del material: fija la escala de la velocidad. Es la constante que más varía.</div>
+        <div><b>m</b>Exponente del material: fija cuánto se acelera la grieta al crecer.</div>
+      </div>
+      <p>Fíjate en algo importante: como ΔK crece con la raíz de a, una grieta más larga crece más deprisa, que a su vez la hace más larga. Es un proceso que se acelera solo, y eso explica la forma de las curvas de la Parte 1: largo tiempo casi planas y, al final, un despegue brusco.</p>
+
+      <h3>Qué papel juega en el modelo</h3>
+      <p>En los ciclos que conservan señal, la red estima la grieta directamente desde la onda. En cuanto la señal desaparece, la única herramienta que queda es esta ecuación: se parte de la última grieta estimada y se integra la ley hacia delante con la carga conocida. Si C o m están mal, la proyección se desvía, y como el error en la parte final de la vida es el que más penaliza el certamen, la calidad de estas dos constantes pesa muchísimo en la nota.</p>
+
+      <h3>Por qué no se usaron valores publicados</h3>
+      <p>Porque no existen para estas probetas. Kong et al. declaran que sus constantes no pudieron determinarse y no publican las que ajustaron; Youn et al. descartan la vía física por ese motivo; y Rao et al. usan una ventana genérica para metales que, al reajustarla sobre sus propios datos publicados, da un error unas 27000 veces mayor que sin esa restricción. Los valores de la literatura para el 2024-T3 tampoco sirven directamente: unos no declaran sus unidades, y con este coeficiente un cambio de unidades mueve el número varios órdenes de magnitud; además son de probetas de laboratorio, no de una unión remachada.</p>
+
+      <h3>Por qué Paris-Erdogan y no Walker</h3>
+      <p>El segundo puesto usó la ecuación de Walker, que añade un tercer parámetro, γ, para tener en cuenta la tensión media del ciclo a través de la razón de tensiones R:</p>
+      <div class="eq">\[\frac{da}{dN}=C\left[\frac{\Delta K}{(1-R)^{1-\gamma}}\right]^{m},\qquad R=\frac{S_{min}}{S_{max}}\]</div>
+      <p>Pero en este conjunto R vale 0.0476 en T1 a T7 y apenas se mueve en T8 (de 0.0476 a 0.0530). Con R constante, cualquier valor de γ puede compensarse con otro valor de C que dibuja exactamente la misma curva: con los datos de calibración, mover γ entre 0 y 1 se compensa desplazando C menos de 0.043 décadas. Un parámetro que los datos no pueden distinguir solo añade ruido, así que se usó Paris-Erdogan.</p>
+
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_3_1_coeficiente.mp4" muted loop playsinline preload="metadata" aria-label="Qué hace el coeficiente c"></video>
+        <figcaption>Subir C adelanta la rotura.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="p3-algoritmos" class="sec">
+    <div class="wrap">
+      <span class="kicker">3.2</span>
+      <h2>Qué algoritmo busca mejor</h2>
+      <h3>El punto de partida</h3>
+      <p>La manera natural de calibrar es por prueba y error: se propone un par (C, m), se integra la ley ciclo a ciclo con la carga real de la probeta, se compara la curva resultante con las medidas y se repite hasta minimizar el error. No hay una fórmula directa para el óptimo, porque cada evaluación exige integrar decenas de miles de ciclos y el error tiene varios mínimos locales. Para estos casos se usan algoritmos metaheurísticos: estrategias de búsqueda inspiradas en la naturaleza que no necesitan derivadas.</p>
+      <p>Kong et al. y Rao et al. usaron un algoritmo genético, pero ninguno explica por qué ese y no otro. Esa pregunta abierta motivó una comparación: si el algoritmo genético es la elección habitual, ¿es también la mejor?</p>
+
+      <h3>Una comparación justa</h3>
+      <p>Se implementaron seis algoritmos y se les dio exactamente las mismas condiciones: la misma función de error, los mismos límites de búsqueda, las mismas semillas y el mismo presupuesto, contado en evaluaciones de la función y no en iteraciones, porque una iteración de cada algoritmo no cuesta lo mismo. Un contador detiene cada ejecución en cuanto agota sus 20000 evaluaciones.</p>
+      <div class="tabla">
+        <table>
+          <thead><tr><th>Algoritmo</th><th>Cómo busca, de manera muy resumida.</th></tr></thead>
+          <tbody>
+            <tr><td>Evolución diferencial</td><td>Crea candidatos sumando a una solución la diferencia entre otras dos de la población.</td></tr>
+            <tr><td>Colonia de hormigas continua</td><td>Guarda un archivo de buenas soluciones y muestrea alrededor de ellas, más cerca de las mejores.</td></tr>
+            <tr><td>Enjambre de partículas</td><td>Cada partícula se mueve atraída por su mejor posición y por la mejor del grupo.</td></tr>
+            <tr><td>Algoritmo genético</td><td>Selecciona progenitores, los cruza, muta a los hijos y conserva siempre a los mejores.</td></tr>
+            <tr><td>Recocido simulado</td><td>Acepta a veces soluciones peores, con una probabilidad que baja con la temperatura.</td></tr>
+            <tr><td>Búsqueda en entornos variables</td><td>Perturba la mejor solución con radios crecientes y luego refina localmente.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>El espacio de búsqueda</strong> fue amplio a propósito: log10 C entre -20 y -5, y m entre 1 y 8. Cada algoritmo se ejecutó 60 veces (seis probetas por diez semillas). Como las probetas tienen dificultades distintas, no se comparó el error bruto sino la brecha: cuánto se queda cada ejecución por encima del mejor resultado que cualquiera de los seis encontró en esa misma probeta. Brecha cero significa haber dado con el mejor óptimo conocido.</p>
+      <div class="tabla">
+        <table>
+          <thead><tr><th>Algoritmo</th><th class="n">Óptimos alcanzados (de 60)</th><th class="n">Brecha p90 (mm)</th><th class="n">Peor brecha (mm)</th><th class="n">Segundos por ejecución</th></tr></thead>
+          <tbody>
+            <tr class="gana"><td>Evolución diferencial</td><td class="n">60</td><td class="n">0.0000</td><td class="n">0.0000</td><td class="n">5.98</td></tr>
+            <tr><td>Colonia de hormigas continua</td><td class="n">54</td><td class="n">0.0000</td><td class="n">0.0002</td><td class="n">11.71</td></tr>
+            <tr><td>Enjambre de partículas</td><td class="n">49</td><td class="n">0.0004</td><td class="n">0.0105</td><td class="n">5.69</td></tr>
+            <tr><td>Algoritmo genético</td><td class="n">27</td><td class="n">0.0002</td><td class="n">0.0066</td><td class="n">5.95</td></tr>
+            <tr><td>Recocido simulado</td><td class="n">10</td><td class="n">0.0034</td><td class="n">0.0164</td><td class="n">18.50</td></tr>
+            <tr><td>Búsqueda en entornos variables</td><td class="n">0</td><td class="n">0.9583</td><td class="n">1.3506</td><td class="n">18.96</td></tr>
+          </tbody>
+          <caption>Comparativa sobre la formulación directa (C y m a la vez, una probeta), 20000 evaluaciones por ejecución. p90 es el percentil 90 de las brechas.</caption>
+        </table>
+      </div>
+      <figure class="fig">
+        <img src="../media/img/algoritmos_fiabilidad.png" alt="Barras de fiabilidad y coste de los seis algoritmos">
+        <figcaption>Fiabilidad y coste de los seis algoritmos. Izquierda: veces que cada uno llega al mejor óptimo (más a la derecha es mejor). Derecha: segundos por búsqueda (más a la izquierda es mejor). En rojo, el algoritmo genético que usaron los equipos del certamen.</figcaption>
+      </figure>
+
+      <h3>Por qué ganó la evolución diferencial</h3>
+      <p>La evolución diferencial encontró el mejor óptimo en sus 60 ejecuciones; el algoritmo genético, en 27, con un tiempo por ejecución casi idéntico. La explicación está en la forma del problema. Los pares (C, m) que ajustan bien no forman un punto, sino una línea estrecha y alargada: subir el exponente y bajar el coeficiente en la proporción justa produce casi la misma curva. En concreto, cada décima de exponente se compensa con 0.095 décadas de coeficiente.</p>
+      <p>La evolución diferencial construye sus pasos con diferencias entre soluciones de la propia población, de modo que, cuando la población se reparte a lo largo de esa línea, sus pasos se orientan solos en la dirección correcta. La búsqueda en entornos variables hace justo lo contrario: perturba con un radio fijo que no se adapta a una forma tan alargada, y por eso no alcanzó el óptimo en ninguna ejecución.</p>
+      <figure class="fig">
+        <img src="../media/img/cresta_parametros.png" alt="Mapa de error sobre el plano C, m con la cresta de soluciones">
+        <figcaption>El espacio de pares (C, m) compatibles con las medidas. Arriba, error de ajuste de T1 y punto final de cada ejecución, repartidos a lo largo de la cresta. Abajo, ajuste conjunto de T1, T3, T4 y T6 frente al exponente fijado y coeficiente que acompaña a cada exponente. Más oscuro, y más abajo en el perfil, es mejor.</figcaption>
+      </figure>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_3_2_poblacion.mp4" muted loop playsinline preload="metadata" aria-label="La población encuentra la cresta"></video>
+        <figcaption>La evolución diferencial sobre el mapa de error.</figcaption>
+      </figure>
+
+      <h3>La lección que deja la comparación</h3>
+      <p>Hay un giro final. Si se fija el exponente, el mejor coeficiente de cada probeta puede hallarse por separado con una búsqueda en rejilla sencilla, porque la grieta crece siempre más cuanto mayor es C y solo hay un mejor valor. Esta técnica, llamada proyección de variables, deja al algoritmo una única incógnita: el exponente común. Con ella, cinco de los seis algoritmos llegan a menos de un 1% del mejor resultado en solo 40 evaluaciones, frente a las 1174 que necesita la evolución diferencial y las 11962 del algoritmo genético en la formulación directa.</p>
+      <p>Es decir: plantear bien el problema importa más que elegir el algoritmo. Aun así, se adoptó la evolución diferencial por ser la más fiable en la formulación general.</p>
+      <figure class="fig">
+        <img src="../media/img/convergencia.png" alt="Curvas de convergencia de los seis algoritmos en las dos formulaciones">
+        <figcaption>Convergencia de los seis algoritmos. Arriba, formulación directa sobre T1 (20000 evaluaciones). Abajo, con proyección de variables sobre las cuatro probetas de calibración (1200 evaluaciones). Cada curva es la mediana de cinco semillas.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="p3-eleccion" class="sec">
+    <div class="wrap">
+      <span class="kicker">3.3</span>
+      <h2>Cómo se eligieron los parámetros</h2>
+      <p>El apartado anterior deja una conclusión incómoda: el algoritmo no entrega un par concreto, sino una familia de pares igual de buenos. Ajustando las cuatro probetas de calibración a la vez, cualquier exponente entre 1.40 y 3.15 reproduce las curvas con un error a menos de un 5% del mínimo, que es de 0.428 mm. El óptimo estricto está en m = 2.063, pero el error apenas cambia a su alrededor. Si el ajuste no sabe distinguir, hay que preguntar otra cosa: no qué exponente reproduce mejor lo ya medido, sino cuál predice mejor lo que falta.</p>
+      <div class="embudo" role="group" aria-label="Embudo de selección del exponente m">
+        <div class="etapa" style="width: 100%">
+          <div><b>Punto de partida. El espacio de búsqueda.</b> Todo lo que los algoritmos pueden explorar: m entre 1 y 8, y log10 C entre -20 y -5.</div>
+          <div class="escala" aria-hidden="true"><span style="left: 0%; width: 100%"></span></div>
+          <div class="ejes" aria-hidden="true"><span>m = 1</span><span>m = 8</span></div>
+          <span class="res">m ∈ [1, 8]</span>
+        </div>
+        <div class="cuello" aria-hidden="true"></div>
+        <div class="etapa" style="width: 88%">
+          <div><b>Filtro 1. El ajuste.</b> La búsqueda delimita el espacio compatible con las medidas: los exponentes que reproducen las curvas con un error a menos de un 5% del mínimo.</div>
+          <div class="escala" aria-hidden="true"><span style="left: 5.71%; width: 25%"></span></div>
+          <div class="ejes" aria-hidden="true"><span>m = 1</span><span>m = 8</span></div>
+          <span class="res">m ∈ [1.40, 3.15]</span>
+        </div>
+        <div class="cuello" aria-hidden="true"></div>
+        <div class="etapa" style="width: 74%">
+          <div><b>Filtro 2. Solo con la ley física.</b> Se barre m de 1 a 6, se recalibra C con las primeras medidas de cada probeta y se puntúan con la regla del certamen los puntos que quedan por predecir. Por encima de m = 3 la penalización se dispara varios órdenes de magnitud. El peor caso tiene su mínimo en m = 2.25, y los exponentes a menos de un 10% de él forman el espacio afinado.</div>
+          <div class="escala" aria-hidden="true"><span style="left: 14.29%; width: 7.14%"></span></div>
+          <div class="ejes" aria-hidden="true"><span>m = 1</span><span>m = 8</span></div>
+          <span class="res">m ∈ [2.00, 2.50]</span>
+        </div>
+        <div class="cuello" aria-hidden="true"></div>
+        <div class="etapa" style="width: 60%">
+          <div><b>Filtro 3. Con el modelo completo.</b> Red y física juntas, sobre los pliegues de entrenamiento, comparando 2.00, 2.25 y 2.50 con C nominal y desplazado hasta ±0.3 décadas. Gana el de peor caso menos malo.</div>
+          <div class="escala" aria-hidden="true"><i style="left: 14.29%"></i></div>
+          <div class="ejes" aria-hidden="true"><span>m = 1</span><span>m = 8</span></div>
+          <span class="res">m = 2.00</span>
+        </div>
+        <div class="cuello" aria-hidden="true"></div>
+        <span class="salida">m = 2.00 · log10 C = -8.4264</span>
+      </div>
+      <figure class="fig">
+        <img src="../media/img/barrido_exponente.png" alt="Penalización de la prognosis frente al exponente">
+        <figcaption>Penalización de la prognosis frente al exponente, en escala logarítmica. Arriba, probetas de calibración (el criterio); abajo, probetas de validación, solo como observación. Franja verde: espacio afinado, de 2.00 a 2.50. Franja gris: espacio compatible con el ajuste, de 1.40 a 3.15.</figcaption>
+      </figure>
+      <div class="tabla">
+        <table>
+          <thead><tr><th class="n">Exponente m</th><th class="n">Media, C nominal</th><th class="n">Peor pliegue, C nominal</th><th class="n">Peor pliegue, C ±0.3 décadas</th></tr></thead>
+          <tbody>
+            <tr class="gana"><td class="n">2.00</td><td class="n">14.15</td><td class="n">21.11</td><td class="n">510.42</td></tr>
+            <tr><td class="n">2.25</td><td class="n">16.52</td><td class="n">27.23</td><td class="n">972.40</td></tr>
+            <tr><td class="n">2.50</td><td class="n">19.34</td><td class="n">34.64</td><td class="n">1242.73</td></tr>
+          </tbody>
+          <caption>Elección del exponente con el modelo completo sobre los pliegues de entrenamiento. Penalización oficial, menor es mejor. El criterio es la última columna: el peor caso cuando el coeficiente se equivoca.</caption>
+        </table>
+      </div>
+      <p>Se eligió m = 2.00 con un criterio llamado minimax: entre los candidatos, quedarse con el que tiene el peor caso menos malo. Gana en las tres columnas, y la diferencia se agranda justo cuando el coeficiente se equivoca por exceso. Hay una razón matemática detrás: con m = 2, la ley de Paris da una grieta que crece de forma exponencial, rápida pero siempre finita. Con cualquier exponente mayor que 2, la solución diverge, es decir, predice una grieta infinita en un número finito de ciclos. Un coeficiente algo alto con m = 2.5 no produce un error mayor, produce una predicción que se escapa. Para un módulo que debe proyectar la ley miles de ciclos por delante, esa propiedad es decisiva.</p>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_3_3_a_minimax.mp4" muted loop playsinline preload="metadata" aria-label="El criterio minimax"></video>
+        <figcaption>Quedarse con el peor caso menos malo.</figcaption>
+      </figure>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_3_3_b_escapar.mp4" muted loop playsinline preload="metadata" aria-label="Crecer frente a escaparse"></video>
+        <figcaption>M = 2 frente a m = 3 desde el mismo punto.</figcaption>
+      </figure>
+
+      <h3>Y con el exponente fijo, el coeficiente</h3>
+      <p>Una vez fijado m, el coeficiente sí queda bien determinado: moverlo una décima de década empeora el ajuste con claridad. Se calibró en cada probeta por búsqueda en rejilla y se tomó la media.</p>
+      <div class="tabla">
+        <table>
+          <thead><tr><th>Probeta</th><th class="n">Medidas</th><th class="n">log10 C con m = 2.00</th></tr></thead>
+          <tbody>
+            <tr><td>T1</td><td class="n">6</td><td class="n">-8.4710</td></tr>
+            <tr><td>T3</td><td class="n">7</td><td class="n">-8.4325</td></tr>
+            <tr><td>T4</td><td class="n">7</td><td class="n">-8.4920</td></tr>
+            <tr><td>T6</td><td class="n">5</td><td class="n">-8.3100</td></tr>
+            <tr class="gana"><td>Media</td><td class="n"></td><td class="n">-8.4264</td></tr>
+          </tbody>
+          <caption>Coeficiente identificado en cada probeta de calibración. T2 y T5 no intervienen por tener solo dos medidas de grieta no nula; T7 y T8 se reservan para la evaluación.</caption>
+        </table>
+      </div>
+      <p>El resultado es log10 C = -8.4264, es decir, C = 3.75 · 10<sup>-9</sup> con la grieta en metros y la tensión en megapascales (da/dN en m/ciclo y ΔK en MPa·√m). La dispersión entre probetas es de solo 0.081 décadas, un factor 1.21. Esa dispersión tan pequeña es la que justifica la idea central del modelo: el coeficiente es una propiedad transferible entre probetas, y la red puede estimar el de una probeta nueva moviéndose poco alrededor de este valor.</p>
+      <p>De aquí salen los tres números que hereda la Parte 4: el exponente común, m = 2.00; el coeficiente poblacional, -8.4264; y la holgura con la que la red puede alejarse de él, una banda de ±1 década con una preferencia suave de 0.3 décadas, unas cuatro veces la dispersión medida.</p>
+      <p>Un último apunte: este C queda más de dos décadas por encima de los valores genéricos para metales. No es un error, sino la consecuencia de usar Y = 1. Al no modelar la concentración de tensiones del agujero ni la flexibilidad de la unión remachada, el coeficiente las absorbe.</p>
+      
+      <a class="cuaderno" href="../physics_calibration/hiperparametros.html" target="_blank" rel="noopener">
+        <span><b>Cuaderno: calibración de la ley física</b>La comparación de los seis algoritmos, el barrido del exponente y la elección final de m y C.</span>
+        <em>Abrir el cuaderno ↗</em>
+      </a>
+      <div class="ui" style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 30px; font-size: 16px">
+        <a href="parte2.html">Anterior: la señal</a>
+        <a href="parte4.html">Siguiente: el modelo</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  var videos = document.querySelectorAll("video.auto");
+  if (!("IntersectionObserver" in window)) {
+    videos.forEach(function (v) { v.play(); });
+    return;
+  }
+  var observador = new IntersectionObserver(function (entradas) {
+    entradas.forEach(function (e) {
+      if (e.isIntersecting) { e.target.play().catch(function () {}); }
+      else { e.target.pause(); }
+    });
+  }, { threshold: 0.5 });
+  videos.forEach(function (v) { observador.observe(v); });
+})();
+</script>
+</body>
+</html>

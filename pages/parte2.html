@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parte 2: la señal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#ffffff}
+a{color:#A63C0A}a:hover{color:#4D1B06}
+.pg{font-family:'Source Serif 4',Georgia,serif;color:#262626;background:#ffffff}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px}
+.ui{font-family:'IBM Plex Sans',system-ui,sans-serif}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+.pg p{font-size:19px;line-height:1.65;margin:0 0 18px}
+.pg h2{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:30px;line-height:1.2;margin:0 0 18px;color:#1f1f1d}
+.pg h3{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:22px;line-height:1.25;margin:28px 0 12px;color:#1f1f1d}
+.sec{padding:56px 0;border-top:1px solid #e6e6e2}
+.kicker{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.06em;color:#5f5f5a;text-transform:uppercase;margin-bottom:8px;display:block}
+.nav{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid #d9d9d5;background:#fafaf8}
+.nav ul{display:flex;flex-wrap:wrap;gap:8px 20px;list-style:none;margin:0;padding:0;font-size:15px}
+.logo{width:120px;height:36px;background:#ececE8;border:1px dashed #b9b9b3;display:flex;align-items:center;justify-content:center;font-size:12px;color:#5f5f5a}
+.fig{margin:26px 0;display:flex;flex-direction:column;gap:10px}
+.fig img{width:100%;height:auto;display:block;border:1px solid #e0e0dc;border-radius:4px;background:#fff}
+.fig figcaption{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#4a4a46}
+.fila{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.anim{margin:28px 0;border:2px dashed #C2470D;border-radius:8px;background:repeating-linear-gradient(45deg,#fff3ec 0 12px,#fffaf6 12px 24px);padding:22px;display:flex;flex-direction:column;gap:12px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#3a1604}
+.anim .rot{font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:.06em;color:#A63C0A;font-weight:600}
+.anim h4{margin:0;font-size:19px;color:#4D1B06}
+.anim p{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.55;margin:0;color:#3a1604}
+.anim dl{display:grid;grid-template-columns:140px minmax(0,1fr);gap:6px 14px;margin:0;font-size:14.5px;line-height:1.5}
+.anim dt{font-weight:600;color:#7a2d08}
+.anim dd{margin:0}
+.anim .lienzo{aspect-ratio:16/9;max-height:300px;border:1px solid #e3b79f;border-radius:4px;background:#ffffffcc;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#A63C0A}
+.nota{font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.55;color:#6B2560;background:#faf3f8;border:1px dotted #b77aa9;border-radius:6px;padding:12px 14px;margin:18px 0}
+.tabla{overflow-x:auto;margin:22px 0}
+.tabla table{border-collapse:collapse;width:100%;min-width:560px;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px}
+.tabla th,.tabla td{border-bottom:1px solid #e0e0dc;padding:9px 10px;text-align:left;vertical-align:top}
+.tabla th{background:#f4f4f1;font-weight:600}
+.toc{display:flex;flex-wrap:wrap;gap:8px 18px;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;margin-top:8px}
+.paso{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:18px 0 8px}
+.paso div{border:1px solid #d4d4d0;border-radius:8px;padding:14px;background:#fafaf8;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#3b3b38}
+.paso b{display:block;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:#5f5f5a;margin-bottom:4px}
+.cadena{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;margin:20px 0}
+.cadena a{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border:1px solid #c9c9c4;border-radius:22px;text-decoration:none;color:#262626;background:#fafaf8}
+.cadena span{color:#8a8a84}
+.aparte{border:1px solid #d4d4d0;border-radius:10px;background:#f7f7f4;padding:22px;margin:26px 0}
+.aparte h3{margin-top:0}
+.cuaderno{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 20px;border:1px solid #d4d4d0;border-left:4px solid #4D1B06;border-radius:8px;padding:16px 20px;margin:30px 0 0;background:#fafaf8;font-family:'IBM Plex Sans',system-ui,sans-serif;text-decoration:none;color:#262626}
+.cuaderno:hover{border-color:#A63C0A;color:#262626}
+.cuaderno span{font-size:15px;line-height:1.45;color:#4a4a46}
+.cuaderno b{display:block;font-size:17px;color:#1f1f1d;margin-bottom:2px}
+.cuaderno em{font-style:normal;font-weight:600;font-size:15px;color:#A63C0A;white-space:nowrap}
+
+.anim{margin:30px 0;border:0;border-radius:0;background:none;padding:0;display:flex;flex-direction:column;gap:10px}
+.anim video{display:block;width:100%;height:auto;border:1px solid #e0e0dc;border-radius:4px;background:#ffffff}
+.anim figcaption{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#4a4a46}
+.eq{overflow-x:auto;overflow-y:hidden;margin:20px 0;font-size:1.1em}
+.logo{width:auto;height:36px;background:none;border:0;display:block}
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'\\[',right:'\\]',display:true}]})"></script>
+</head>
+<body>
+<div class="pg" style="width: 100%">
+  <header class="nav ui">
+    <div style="display: flex; gap: 14px; align-items: center">
+      <img class="logo" src="../media/img/Logo_VIU.png" alt="VIU">
+      <a href="../index.html" style="font-size: 17px; font-weight: 700; color: #262626; text-decoration: none">Grietas, ondas y física</a>
+    </div>
+    <ul>
+      <li><a href="parte1.html">1. El problema</a></li>
+      <li><strong>2. La señal</strong></li>
+      <li><a href="parte3.html">3. La ley física</a></li>
+      <li><a href="parte4.html">4. El modelo</a></li>
+      <li><a href="conclusiones.html">5. Conclusiones</a></li>
+      <li><a href="bibliografia.html">Bibliografía</a></li>
+    </ul>
+  </header>
+
+  <section style="padding: 60px 0 36px; background: #fafaf8">
+    <div class="wrap">
+      <span class="kicker">Parte 2</span>
+      <h1 class="ui" style="margin: 0 0 14px; font-size: 42px; line-height: 1.12; color: #1f1f1d">Tratamiento de la señal</h1>
+      <p style="font-size: 21px; color: #3b3b38">Una red neuronal aprende de lo que le damos. Si le damos el registro tal como sale del sensor, aprenderá también el ruido, el pegado de cada pastilla y las rarezas de cada probeta. Esta parte explica, paso a paso, cómo se limpia la señal para que lo único que quede sea la huella de la grieta.</p>
+      <nav class="cadena" aria-label="Los cinco pasos">
+        <a href="#p2-filtro">1. Filtrado</a><span aria-hidden="true">→</span>
+        <a href="#p2-alineacion">2. Alineación</a><span aria-hidden="true">→</span>
+        <a href="#p2-ventaneo">3. Ventaneo</a><span aria-hidden="true">→</span>
+        <a href="#p2-diferencial">4. Canal diferencial</a><span aria-hidden="true">→</span>
+        <a href="#p2-normalizacion">5. Estandarización y normalización</a>
+      </nav>
+    </div>
+  </section>
+
+  <section id="p2-porque" class="sec">
+    <div class="wrap">
+      <span class="kicker">2.0</span>
+      <h2>Por qué la señal necesita tratamiento</h2>
+      <p>Cada registro dura 200 µs y contiene 4000 muestras. En ese intervalo pasan muchas cosas a la vez: el pulso eléctrico del emisor se cuela en el receptor, llega primero el paquete de onda que ha cruzado la zona de remaches y, detrás, una maraña de ecos que rebotan en los bordes de la chapa. Encima de todo eso hay ruido eléctrico.</p>
+      <p>La huella de la grieta, en cambio, es diminuta: un retraso de menos de un microsegundo y un ligero cambio de forma del primer paquete. Y hay un problema más serio todavía: dos probetas distintas, sin grieta ninguna, ya producen señales distintas, porque cada una tiene su propio par de sensores, a su propia distancia y con su propio pegado. Esa diferencia entre probetas es mayor que la que provoca la grieta. Si no se corrige, la red aprendería a reconocer probetas en lugar de grietas.</p>
+      <figure class="fig">
+        <img src="../media/img/registro_crudo.png" alt="Registro completo de un ciclo de T4, canal del actuador y canal del receptor">
+        <figcaption>Registro completo de un ciclo de T4. Arriba, el canal del actuador; abajo, el del receptor. La franja sombreada es la parte que, al final de los cinco pasos, recibirá la red.</figcaption>
+      </figure>
+      <p>Los cinco pasos que siguen atacan esos problemas uno a uno. Todas las figuras usan T4, la probeta más representativa del conjunto: ocho medidas bien repartidas, desde 0 hasta 7.24 mm, y señal en todos sus ciclos.</p>
+    </div>
+  </section>
+
+  <section id="p2-filtro" class="sec">
+    <div class="wrap">
+      <span class="kicker">Paso 1</span>
+      <h2>Filtrado: quedarse con la frecuencia que importa</h2>
+      <h3>Por qué es necesario</h3>
+      <p>El emisor lanza un tren de ondas centrado en 200 kHz. Todo lo que el receptor capta muy lejos de esa frecuencia no viene de la onda que nos interesa, sino de la electrónica de adquisición. Medido sobre la señal recibida, el contenido fuera de la banda de 100 a 400 kHz supone el 23.7% de la energía, y es ruido.</p>
+      <h3>Qué se hizo</h3>
+      <div class="paso">
+        <div><b>Tipo de filtro</b>Butterworth paso banda de cuarto orden, de 100 a 400 kHz: deja pasar la banda y atenúa lo demás sin ondulaciones.</div>
+        <div><b>Fase nula</b>Se aplica dos veces, hacia delante y hacia atrás, para que no desplace la onda en el tiempo.</div>
+        <div><b>Por qué importa la fase</b>El retraso de la onda es parte de la huella del daño. Un filtro que añadiera su propio retraso la contaminaría.</div>
+      </div>
+      <h3>De dónde viene la idea</h3>
+      <p>Filtrar es práctica común, y los tres métodos ganadores lo hacen con bandas equivalentes, entre 100 y 500 kHz o entre 150 y 350 kHz. La banda elegida aquí es intermedia entre ambas; lo que sí es una decisión propia es insistir en la fase nula.</p>
+      <figure class="fig">
+        <img src="../media/img/espectro_banda.png" alt="Espectro de la señal recibida con la banda de paso sombreada">
+        <figcaption>Contenido en frecuencia de la señal recibida (T4, ciclo 60200). La franja verde es la banda que se conserva y la línea roja, la frecuencia de excitación.</figcaption>
+      </figure>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_2_1_filtro.mp4" muted loop playsinline preload="metadata" aria-label="El filtro en frecuencia"></video>
+        <figcaption>Lo que queda fuera de la banda desaparece.</figcaption>
+      </figure>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_2_1_b_fase_nula.mp4" muted loop playsinline preload="metadata" aria-label="Fase nula"></video>
+        <figcaption>Filtrar en un sentido frente a filtrar en los dos.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="p2-alineacion" class="sec">
+    <div class="wrap">
+      <span class="kicker">Paso 2</span>
+      <h2>Alineación: que todos los relojes empiecen a la vez</h2>
+      <h3>Por qué hace falta</h3>
+      <p>El daño se manifiesta, entre otras cosas, como un retraso de la onda inferior a un microsegundo. El problema es que el sistema de adquisición tiene una incertidumbre de disparo del mismo orden: dos registros de la misma probeta pueden empezar a contar el tiempo con décimas de microsegundo de diferencia. Si no se corrige ese desfase, al comparar dos ondas mediríamos sobre todo el desajuste del reloj y no la grieta.</p>
+      <h3>Qué causa el desfase y cómo se corrige</h3>
+      <p>La causa es el disparo de la adquisición, no la grieta. Y aquí hay un truco útil: el canal del actuador repite exactamente el mismo tren de ondas en todos los registros y no lleva ninguna información del daño. Cualquier diferencia de tiempo que aparezca en ese canal es, por definición, desajuste de disparo.</p>
+      <div class="paso">
+        <div><b>Referencia</b>Cada registro se compara con el registro de referencia de su propia probeta.</div>
+        <div><b>Medida</b>El desplazamiento se mide por correlación cruzada sobre el canal del actuador: se desliza una onda sobre la otra hasta que encajan.</div>
+        <div><b>Corrección</b>Ese mismo desplazamiento se aplica al canal del receptor, que es el que lleva la información de la grieta.</div>
+      </div>
+      <h3>De dónde viene la idea</h3>
+      <p>La alineación la proponen Kong et al. (2020), segundo puesto del certamen, aunque ellos usan la posición del máximo absoluto de la señal. Esa regla aquí no funciona: el tren de excitación tiene dos picos casi iguales y, en T4, el máximo salta de uno a otro en siete de los ocho registros, lo que produce desplazamientos falsos de 81 a 125 muestras, entre 4 y 6 µs. Por eso se sustituyó por la correlación cruzada, que mira la forma completa.</p>
+      <p>Hay un matiz honesto que contar: medido sobre las ocho probetas, el desajuste real nunca supera una muestra, es decir, 0.05 µs. Los registros ya venían prácticamente alineados. El paso se conserva como salvaguarda, por si otro conjunto de datos no tuviera tanta suerte.</p>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_2_2_correlacion.mp4" muted loop playsinline preload="metadata" aria-label="Alinear por correlación"></video>
+        <figcaption>Deslizar hasta que encajan.</figcaption>
+      </figure>
+      
+    </div>
+  </section>
+
+  <section id="p2-ventaneo" class="sec">
+    <div class="wrap">
+      <span class="kicker">Paso 3</span>
+      <h2>Ventaneo: recortar la parte que habla de la grieta</h2>
+      <h3>Por qué se recorta</h3>
+      <p>Las ondas de Lamb viajan en varios modos a la vez, con velocidades distintas. El primero en llegar al receptor es el modo simétrico fundamental, llamado S0. Es el que porta la huella del daño de forma más limpia, porque llega antes de que empiecen los ecos de los bordes y la reverberación. Todo lo que llega después mezcla la grieta con la geometría de la chapa.</p>
+      <h3>Cómo se eligió el tamaño</h3>
+      <p>El paquete S0 llega entre los 100 y los 130 µs. La ventana se fijó de 90 a 145 µs, es decir, deliberadamente más ancha que el paquete. La razón es no imponer a la red un límite ajustado a mano: dentro de esa ventana, son las capas convolucionales las que aprenden qué tramo es informativo. El tamaño no salió de una búsqueda automática, sino de dónde llega el paquete con un margen a cada lado.</p>
+      <p>El resultado son 1100 muestras por canal, y se descarta el 72.5% de la traza: el silencio previo, el pulso que se cuela del emisor y la reverberación posterior.</p>
+      <h3>De dónde viene la idea</h3>
+      <p>Los tres ganadores también recortan el primer paquete, pero con criterios más ajustados: Youn et al. toman 400 muestras desde el inicio de la llegada, Kong et al. usan un rango fijo alrededor del S0 y Rao et al. un intervalo en torno al primer pico. Aquí la ventana es fija y más ancha porque el trabajo fino de selección lo hace la red.</p>
+      <figure class="fig">
+        <img src="../media/img/ventaneo_antes_despues.png" alt="Traza completa con la ventana sombreada y la ventana recortada tras filtrar">
+        <figcaption>Izquierda: la traza completa sin procesar, con la ventana de 90 a 145 µs sombreada. Derecha: lo que queda tras recortar, alinear y filtrar, 1100 muestras.</figcaption>
+      </figure>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_2_3_ventaneo.mp4" muted loop playsinline preload="metadata" aria-label="Recortar el modo s0"></video>
+        <figcaption>De 4000 a 1100 muestras.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="p2-diferencial" class="sec">
+    <div class="wrap">
+      <span class="kicker">Paso 4</span>
+      <h2>Canal diferencial: mirar solo lo que ha cambiado</h2>
+      <h3>Por qué hace falta un segundo canal</h3>
+      <p>Si comparamos a simple vista la onda de un ciclo sin grieta con la de un ciclo con 7 mm de grieta, se parecen muchísimo. La huella del daño está ahí, pero escondida bajo todo lo que la onda tiene de propio: el pegado de la pastilla, el ajuste de los remaches, la distancia del camino. Y esas cosas cambian de una probeta a otra más que la propia grieta.</p>
+      <p>La solución es restar. A cada onda se le resta el registro sano de su misma probeta. Lo que es común a los dos, es decir, todo lo que depende del montaje, se cancela. Lo que queda es lo que ha cambiado desde que la probeta estaba intacta.</p>
+      <h3>Qué se gana</h3>
+      <p>La red recibe dos canales a la vez: la onda estandarizada, tal cual, y su diferencia respecto del registro sano. El primero cambia poco a lo largo de la vida de la probeta; el segundo crece de forma ordenada con la grieta, como se ve abajo. Es mucho más fácil aprender de una señal que crece con lo que queremos medir que de una que apenas se mueve.</p>
+      <figure class="fig">
+        <img src="../media/img/firma_diferencial.png" alt="Onda estandarizada y canal diferencial de T4 en cuatro momentos de su vida">
+        <figcaption>T4 en cuatro momentos de su vida. Arriba, la onda ventaneada y estandarizada (primer canal). Abajo, su diferencia respecto del registro sano (segundo canal). La curva de N = 55900 es el propio registro de referencia, y por eso su diferencia es nula.</figcaption>
+      </figure>
+      <h3>De dónde viene la idea</h3>
+      <p>Comparar con el estado sano procede de Youn et al. (2020), primer puesto del certamen, que refieren sus características al registro sin daño. La diferencia aquí es que la resta se aplica a la forma de onda completa y se entrega a la red como un canal más, en lugar de resumirla antes en unos pocos números.</p>
+
+      <div class="aparte">
+        <span class="kicker">Un paréntesis necesario</span>
+        <h3>¿De dónde sale el registro sano?</h3>
+        <p>El conjunto de datos no incluye un registro de referencia aparte, a pesar de que su documentación lo menciona. Así que el registro sano de cada probeta es su primer ciclo medido, que corresponde a una grieta nula: en T4, por ejemplo, el ciclo 55900.</p>
+        <p>Hay dos excepciones. En T8, el primer registro, el del ciclo 40000, no se parece a ningún otro de la misma probeta (correlación de 0.27 a 0.48, frente a 0.64 a 0.99 entre los demás). Esa misma rareza se ve en una figura del segundo puesto, reproducida abajo. Como está etiquetado con grieta nula, conservarlo equivaldría a enseñar a la red que una onda corrompida es una onda sana, de modo que se descarta y la referencia de T8 pasa a ser el ciclo 50000. La otra excepción está en T1, cuyas dos repeticiones del ciclo 50000 no son compatibles entre sí; para todas las referencias se usa siempre la primera repetición.</p>
+        <figure class="fig" style="margin-bottom: 0">
+          <img src="../media/img/kong_correlacion.png" alt="Correlación de cada registro con el registro sin grieta, por probeta">
+          <figcaption>Correlación de cada registro con el registro sin grieta, frente a los ciclos. La curva de T8 parte de un valor cercano a 0.4 en el ciclo 40000 pese a tener grieta nula y salta a la unidad en el 50000. Adaptado de Kong et al. (2020), figura 8(d).</figcaption>
+        </figure>
+      </div>
+
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_2_4_diferencia.mp4" muted loop playsinline preload="metadata" aria-label="Restar el registro sano"></video>
+        <figcaption>Onda actual menos onda sana.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="p2-normalizacion" class="sec">
+    <div class="wrap">
+      <span class="kicker">Paso 5</span>
+      <h2>Estandarización y normalización: que un mismo valor signifique lo mismo</h2>
+      <p>Este paso aplica dos escalados distintos, que se suelen confundir y conviene separar.</p>
+      <div class="tabla">
+        <table>
+          <thead><tr><th></th><th>Estandarización</th><th>Normalización por probeta</th></tr></thead>
+          <tbody>
+            <tr><td><strong>A qué se aplica</strong></td><td>A cada onda, por separado.</td><td>Solo al canal diferencial, una vez por probeta.</td></tr>
+            <tr><td><strong>Qué hace</strong></td><td>Resta la media de la onda y divide por su desviación típica.</td><td>Divide el canal diferencial por su valor eficaz en un estado de daño de referencia.</td></tr>
+            <tr><td><strong>Qué elimina</strong></td><td>La ganancia de acoplamiento del transductor, que depende del pegado y es información del sensor, no de la grieta.</td><td>La diferente sensibilidad de cada par de sensores al daño.</td></tr>
+            <tr><td><strong>Cuándo ocurre</strong></td><td>Antes de la resta del paso 4.</td><td>Después de la resta.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_2_5_a_estandarizacion.mp4" muted loop playsinline preload="metadata" aria-label="Misma escala para todas las ondas"></video>
+        <figcaption>Estandarizar dos ondas sin daño.</figcaption>
+      </figure>
+      <h3>Por qué no basta con estandarizar</h3>
+      <p>Igualar la amplitud de las ondas no iguala el tamaño de sus diferencias. Con la grieta en 2 mm, el valor eficaz del canal diferencial va de 0.30 en T4 a 1.57 en T1, porque cada probeta está instrumentada sobre un camino distinto. Sin corregirlo, la red leería esa amplitud como longitud de grieta y se equivocaría de forma sistemática ante una probeta nueva.</p>
+      <h3>El estado de referencia: 2 mm</h3>
+      <p>La corrección divide el canal diferencial de cada probeta por su valor en la primera medida cuya grieta alcanza 2 mm, un estado de daño por el que pasan las ocho probetas. Así, un valor igual a la unidad significa lo mismo en todas. Dentro de la banda de 2 a 2.5 mm, la dispersión entre probetas pasa de un factor 5.9 a un factor 1.1.</p>
+      <p>La alternativa obvia sería dividir por el valor máximo de cada probeta, pero eso tiene una trampa. El máximo se alcanza en el último ciclo con señal, y las probetas de validación pierden la señal mucho antes: su última medida útil está en 3.14 mm en T7 y en 2.5 mm en T8, frente a los 5 a 7.5 mm del resto. Dividir por ese máximo inflaría su canal diferencial, y la red sobreestimaría justo las dos probetas con las que se juzga todo el trabajo.</p>
+      <figure class="fig">
+        <img src="../media/img/normalizacion_especimen_memoria.png" alt="Valor eficaz del canal diferencial antes y después de normalizar por probeta">
+        <figcaption>Valor eficaz del canal diferencial frente a la grieta. Arriba a la izquierda, sin normalizar; arriba a la derecha, tras dividir cada probeta por su valor a 2 mm. Abajo, los ocho divisores; entre el mayor (T1) y el menor (T4) media un factor 5.3.</figcaption>
+      </figure>
+      <h3>De dónde viene la idea</h3>
+      <p>La estandarización es una práctica estándar. La normalización por probeta, en cambio, es una aportación de este trabajo: ni los métodos del certamen ni el resto de la literatura revisada reescalan las señales entre probetas; se limitan a referirlas al registro sano de cada una.</p>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_2_5_b_normalizacion.mp4" muted loop playsinline preload="metadata" aria-label="Las ocho curvas se encuentran"></video>
+        <figcaption>Dividir cada probeta por su valor a 2 mm.</figcaption>
+      </figure>
+      
+      <a class="cuaderno" href="../tratamiento_senal/tratamiento_senal.html" target="_blank" rel="noopener">
+        <span><b>Cuaderno: tratamiento de la señal</b>Los cinco pasos de esta parte con el código que los ejecuta y todas sus figuras.</span>
+        <em>Abrir el cuaderno ↗</em>
+      </a>
+      <div class="ui" style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 30px; font-size: 16px">
+        <a href="parte1.html">Anterior: el problema</a>
+        <a href="parte3.html">Siguiente: la ley física</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  var videos = document.querySelectorAll("video.auto");
+  if (!("IntersectionObserver" in window)) {
+    videos.forEach(function (v) { v.play(); });
+    return;
+  }
+  var observador = new IntersectionObserver(function (entradas) {
+    entradas.forEach(function (e) {
+      if (e.isIntersecting) { e.target.play().catch(function () {}); }
+      else { e.target.pause(); }
+    });
+  }, { threshold: 0.5 });
+  videos.forEach(function (v) { observador.observe(v); });
+})();
+</script>
+</body>
+</html>

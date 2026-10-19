@@ -8,6 +8,9 @@ remachadas de aluminio 2024-T3 del [PHM Data Challenge 2019](https://data.phmsoc
 El problema tiene dos tareas: **estimar** la longitud de grieta mientras existe señal ultrasónica y
 **pronosticarla** cuando esa señal deja de estar disponible.
 
+El [sitio web del trabajo](https://carlosbravo1408.github.io/TFMProject/) lo explica paso a paso, con
+animaciones de cada etapa y una simulación de las ondas de Lamb sobre la junta.
+
 ## Resultados principales
 
 | | T7 (amplitud constante) | T8 (amplitud variable) | Total |

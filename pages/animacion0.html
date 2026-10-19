@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ondas en la junta</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@600&family=IBM+Plex+Sans:wght@500&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:transparent;overflow:hidden}
+canvas{display:block;width:100%;height:auto}
+</style>
+</head>
+<body>
+<canvas id="junta" aria-label="Vista superior de la junta remachada con ondas ultrasónicas propagándose desde los emisores"></canvas>
+<canvas id="lateral" aria-hidden="true"></canvas>
+<canvas id="traza" aria-hidden="true"></canvas>
+<script>
+(function () {
+  var L = 533.4, W = 139.7, FIN_INF = 304.8, INI_SUP = 228.6;
+  var COLS = [241.3, 266.7, 292.1], FILAS = [19.05, 44.45, 69.85, 95.25, 120.65];
+  var X_SENSOR = INI_SUP + 42.2, X_ACTUADOR = INI_SUP + 203.2;
+  var R_REMACHE = 2.38, R_CABEZA = 4.2, R_MORDAZA = 6.35;
+  var MORDAZAS = [[25.4, 44.45], [25.4, 95.25], [508, 44.45], [508, 95.25]];
+  var ROMANOS = ["I", "II", "III", "IV", "V"];
+
+  var DX = 1, NX = Math.ceil(L / DX), NY = Math.ceil(W / DX), N = NX * NY;
+  var R2 = 0.25, PERIODO = 20, CICLOS = 5, PASOS_DISPARO = 1150, PASOS_FOTOGRAMA = 8;
+
+  function crearCapa(dentro) {
+    var c = {m: new Float32Array(N), kx: new Float32Array(N), ky: new Float32Array(N),
+             u: new Float32Array(N), u0: new Float32Array(N), un: new Float32Array(N), d: new Float32Array(N)};
+    for (var j = 0; j < NY; j++) for (var i = 0; i < NX; i++) {
+      var x = (i + 0.5) * DX, y = (j + 0.5) * DX, k = j * NX + i, v = dentro(x) ? 1 : 0;
+      MORDAZAS.forEach(function (h) { if (Math.hypot(x - h[0], y - h[1]) < R_MORDAZA) v = 0; });
+      if (v) COLS.forEach(function (cx) { FILAS.forEach(function (fy) {
+        if (Math.hypot(x - cx, y - fy) < R_REMACHE) v = 0.35;
+      }); });
+      c.m[k] = v;
+      c.d[k] = 0.0016;
+    }
+    for (var j2 = 0; j2 < NY; j2++) for (var i2 = 0; i2 < NX; i2++) {
+      var a = j2 * NX + i2;
+      if (i2 < NX - 1) c.kx[a] = Math.min(c.m[a], c.m[a + 1]);
+      if (j2 < NY - 1) c.ky[a] = Math.min(c.m[a], c.m[a + NX]);
+    }
+    return c;
+  }
+
+  var sup = crearCapa(function (x) { return x >= INI_SUP; });
+  var inf = crearCapa(function (x) { return x <= FIN_INF; });
+
+  var acople = [];
+  for (var jj = 0; jj < NY; jj++) for (var ii = 0; ii < NX; ii++) {
+    var xx = (ii + 0.5) * DX, yy = (jj + 0.5) * DX, kk = jj * NX + ii;
+    if (xx >= INI_SUP && xx <= FIN_INF) {
+      sup.d[kk] = 0.0035;
+      inf.d[kk] = 0.0035;
+      var cerca = false;
+      COLS.forEach(function (cx) { FILAS.forEach(function (fy) {
+        if (Math.hypot(xx - cx, yy - fy) < R_CABEZA) cerca = true;
+      }); });
+      acople.push(kk, cerca ? 0.12 : 0.004);
+    }
+  }
+
+  function paso(c) {
+    var u = c.u, u0 = c.u0, un = c.un, kx = c.kx, ky = c.ky, d = c.d;
+    for (var k = 0; k < N; k++) {
+      if (c.m[k] === 0) { un[k] = 0; continue; }
+      var lap = 0;
+      if (k % NX < NX - 1) lap += kx[k] * (u[k + 1] - u[k]);
+      if (k % NX > 0) lap += kx[k - 1] * (u[k - 1] - u[k]);
+      if (k + NX < N) lap += ky[k] * (u[k + NX] - u[k]);
+      if (k - NX >= 0) lap += ky[k - NX] * (u[k - NX] - u[k]);
+      un[k] = 2 * u[k] - u0[k] + R2 * lap - d[k] * (u[k] - u0[k]);
+    }
+  }
+
+  function intercambiar(c) { var t = c.u0; c.u0 = c.u; c.u = c.un; c.un = t; }
+
+  function acoplar() {
+    for (var a = 0; a < acople.length; a += 2) {
+      var k = acople[a], g = acople[a + 1], dif = sup.un[k] - inf.un[k];
+      sup.un[k] -= g * dif;
+      inf.un[k] += g * dif;
+    }
+  }
+
+  var activo = 0, t = 0, ruido = 0;
+  var trazaSensor = new Float32Array(Math.ceil(PASOS_DISPARO / 2));
+
+  function fuente(n) {
+    var dur = PERIODO * CICLOS;
+    if (n >= dur) return 0;
+    return 0.5 * (1 - Math.cos(2 * Math.PI * n / dur)) * Math.sin(2 * Math.PI * n / PERIODO);
+  }
+
+  function avanzar() {
+    var s = fuente(t);
+    if (s !== 0) {
+      var ci = Math.round(X_ACTUADOR / DX), cj = Math.round(FILAS[activo] / DX);
+      for (var dj = -1; dj <= 1; dj++) for (var di = -1; di <= 1; di++) {
+        sup.u[(cj + dj) * NX + ci + di] += 0.6 * s * (di === 0 && dj === 0 ? 1 : 0.5);
+      }
+    }
+    paso(sup);
+    paso(inf);
+    acoplar();
+    intercambiar(sup);
+    intercambiar(inf);
+    if (t % 2 === 0) {
+      var ks = Math.round(FILAS[activo] / DX) * NX + Math.round(X_SENSOR / DX);
+      ruido = 0.85 * ruido + 0.15 * (Math.random() - 0.5);
+      trazaSensor[t / 2] = sup.u[ks] + 0.02 * ruido;
+    }
+    t++;
+    if (t >= PASOS_DISPARO) {
+      [sup, inf].forEach(function (c) { c.u.fill(0); c.u0.fill(0); });
+      t = 0;
+      activo = (activo + 1) % FILAS.length;
+      trazaSensor.fill(0);
+    }
+  }
+
+  var lienzo = document.getElementById("junta"), ctx = lienzo.getContext("2d");
+  var lateral = document.getElementById("lateral"), lctx = lateral.getContext("2d");
+  var traza = document.getElementById("traza"), tctx = traza.getContext("2d");
+  var campo = document.createElement("canvas");
+  campo.width = NX; campo.height = NY;
+  var cctx = campo.getContext("2d"), img = cctx.createImageData(NX, NY);
+  var escala = 0.02;
+
+  var BASE_SUP = [203, 208, 214], BASE_INF = [216, 220, 225], BASE_SOLAPE = [188, 194, 201];
+  var POS = [238, 82, 36], NEG = [30, 128, 230], OSCURO_POS = [130, 20, 10], OSCURO_NEG = [10, 45, 120];
+
+  function pintarCampo() {
+    var maximo = 1e-6;
+    for (var k = 0; k < N; k++) {
+      var a = Math.abs(sup.m[k] ? sup.u[k] : inf.u[k]);
+      if (a > maximo) maximo = a;
+    }
+    escala = Math.max(0.97 * escala, maximo, 0.004);
+    var px = img.data;
+    for (var j = 0; j < NY; j++) for (var i = 0; i < NX; i++) {
+      var k = j * NX + i, o = 4 * ((NY - 1 - j) * NX + i), x = (i + 0.5) * DX;
+      var base, u;
+      if (x >= INI_SUP && sup.m[k] > 0) { base = x <= FIN_INF ? BASE_SOLAPE : BASE_SUP; u = sup.u[k]; }
+      else if (x <= FIN_INF && inf.m[k] > 0) { base = BASE_INF; u = inf.u[k]; }
+      else { px[o] = 255; px[o + 1] = 255; px[o + 2] = 255; px[o + 3] = 0; continue; }
+      var v = u / escala, s = Math.sign(v) * Math.pow(Math.min(1, Math.abs(v)), 0.5);
+      var col = s >= 0 ? POS : NEG, f = Math.abs(s), r, g, b;
+      if (f < 0.7) {
+        var q = f / 0.7;
+        r = base[0] + (col[0] - base[0]) * q; g = base[1] + (col[1] - base[1]) * q; b = base[2] + (col[2] - base[2]) * q;
+      } else {
+        var q2 = (f - 0.7) / 0.3;
+        var fin = s >= 0 ? OSCURO_POS : OSCURO_NEG;
+        r = col[0] + (fin[0] - col[0]) * q2; g = col[1] + (fin[1] - col[1]) * q2; b = col[2] + (fin[2] - col[2]) * q2;
+      }
+      px[o] = r; px[o + 1] = g; px[o + 2] = b;
+      px[o + 3] = 255;
+    }
+    cctx.putImageData(img, 0, 0);
+  }
+
+  var ancho = 0, alto = 0, dpr = 1;
+  function medir() {
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    ancho = lienzo.clientWidth;
+    alto = ancho * W / L;
+    [[lienzo, alto], [lateral, Math.max(44, ancho * 0.08)], [traza, Math.max(46, ancho * 0.085)]].forEach(function (p) {
+      p[0].width = Math.round(ancho * dpr);
+      p[0].height = Math.round(p[1] * dpr);
+      p[0].style.height = p[1] + "px";
+    });
+    dibujarLateral();
+  }
+
+  function mm(x, y) { return [x / L * ancho, alto - y / W * alto]; }
+
+  function dibujarJunta() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, ancho, alto);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(campo, 0, 0, ancho, alto);
+    var e = ancho / L;
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "rgba(70,80,92,.55)";
+    ctx.strokeRect(0.5, 0.5, FIN_INF * e - 1, alto - 1);
+    ctx.strokeStyle = "rgba(60,70,82,.8)";
+    ctx.strokeRect(INI_SUP * e + 0.5, 0.5, (L - INI_SUP) * e - 1, alto - 1);
+    MORDAZAS.forEach(function (h) {
+      var p = mm(h[0], h[1]);
+      ctx.beginPath(); ctx.arc(p[0], p[1], R_MORDAZA * e, 0, 7);
+      ctx.fillStyle = "#ffffff"; ctx.fill(); ctx.strokeStyle = "rgba(70,80,92,.6)"; ctx.stroke();
+    });
+    FILAS.forEach(function (fy, f) {
+      var a = mm(X_ACTUADOR, fy), s = mm(X_SENSOR, fy);
+      ctx.setLineDash(f === activo ? [8, 5] : [4, 4]);
+      ctx.lineWidth = f === activo ? 3 : 1;
+      ctx.strokeStyle = f === activo ? "rgba(15,18,24,.95)" : "rgba(30,36,44,.15)";
+      ctx.beginPath(); ctx.moveTo(s[0], s[1]); ctx.lineTo(a[0], a[1]); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.lineWidth = 1;
+      COLS.forEach(function (cx) {
+        var p = mm(cx, fy);
+        ctx.beginPath(); ctx.arc(p[0], p[1], Math.max(2, R_CABEZA * e), 0, 7);
+        ctx.fillStyle = "rgba(150,158,168,.95)"; ctx.fill(); ctx.strokeStyle = "rgba(70,78,88,.9)"; ctx.lineWidth = 1; ctx.stroke();
+      });
+      var r = Math.max(2.5, 2.6 * e);
+      ctx.beginPath(); ctx.arc(a[0], a[1], r, 0, 7);
+      ctx.fillStyle = f === activo ? "#e0201b" : "#b8524d"; ctx.fill();
+      ctx.beginPath(); ctx.arc(s[0], s[1], r, 0, 7);
+      ctx.fillStyle = "#2f9a3a"; ctx.fill();
+      if (ancho > 560) {
+        ctx.font = "600 12px 'IBM Plex Mono', monospace";
+        ctx.fillStyle = "#1f2329"; ctx.textBaseline = "middle";
+        ctx.textAlign = "left"; ctx.fillText(String(f + 1), a[0] + r + 4, a[1]);
+        ctx.textAlign = "right"; ctx.fillText(String(f + 6), s[0] - r - 4, s[1]);
+        ctx.textAlign = "center"; ctx.fillStyle = "rgba(31,35,41,.5)";
+        ctx.fillText(ROMANOS[f], (a[0] + s[0]) / 2 + 40 * e, a[1] - 7 * e);
+      }
+    });
+  }
+
+  function dibujarLateral() {
+    var h = lateral.height / dpr, e = ancho / L, g = Math.max(7, h * 0.26);
+    lctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    lctx.clearRect(0, 0, ancho, h);
+    var ys = h * 0.22, yi = ys + g, yb = yi + g;
+    var placa = function (x0, x1, y0, color) {
+      lctx.fillStyle = color; lctx.fillRect(x0, y0, x1 - x0, g);
+      lctx.strokeStyle = "rgba(70,80,92,.7)"; lctx.lineWidth = 1;
+      lctx.strokeRect(x0 + 0.5, y0 + 0.5, x1 - x0 - 1, g - 1);
+    };
+    placa(0, FIN_INF * e, yi, "rgb(216,220,225)");
+    placa(INI_SUP * e, ancho, ys, "rgb(203,208,214)");
+    var cuerpo = Math.max(3, 2 * R_REMACHE * e), cabeza = Math.max(7, 2 * R_CABEZA * e);
+    COLS.forEach(function (cx) {
+      var x = cx * e;
+      lctx.beginPath();
+      lctx.moveTo(x - cabeza / 2, ys);
+      lctx.lineTo(x + cabeza / 2, ys);
+      lctx.lineTo(x + cuerpo / 2, ys + g * 0.75);
+      lctx.lineTo(x + cuerpo / 2, yb);
+      lctx.lineTo(x - cuerpo / 2, yb);
+      lctx.lineTo(x - cuerpo / 2, ys + g * 0.75);
+      lctx.closePath();
+      lctx.fillStyle = "rgb(150,158,168)"; lctx.fill();
+      lctx.strokeStyle = "rgba(60,68,78,.9)"; lctx.lineWidth = 1; lctx.stroke();
+    });
+    lctx.fillStyle = "#e0201b"; lctx.fillRect(X_ACTUADOR * e - 4, ys - 3, 8, 3);
+    lctx.fillStyle = "#2f9a3a"; lctx.fillRect(X_SENSOR * e - 4, ys - 3, 8, 3);
+    if (ancho > 560) {
+      lctx.font = "500 11px 'IBM Plex Sans', system-ui, sans-serif"; lctx.fillStyle = "#5f5f5a";
+      lctx.textBaseline = "top"; lctx.textAlign = "left";
+      lctx.fillText("remache avellanado (vista lateral, espesores exagerados)", (FIN_INF + 6) * e, yb + 3);
+    }
+  }
+
+
+  function dibujarTraza() {
+    var h = traza.height / dpr;
+    tctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    tctx.clearRect(0, 0, ancho, h);
+    var x0 = INI_SUP / L * ancho, x1 = ancho, mitad = h * 0.55;
+    tctx.strokeStyle = "rgba(38,38,38,.15)"; tctx.lineWidth = 1;
+    tctx.beginPath(); tctx.moveTo(x0, mitad); tctx.lineTo(x1, mitad); tctx.stroke();
+    var maximo = 1e-6;
+    for (var n = 0; n < trazaSensor.length; n++) maximo = Math.max(maximo, Math.abs(trazaSensor[n]));
+    maximo = Math.max(maximo, escala * 0.25);
+    tctx.strokeStyle = "#e0482a"; tctx.lineWidth = 1.2;
+    tctx.beginPath();
+    var hasta = Math.floor(t / 2);
+    for (var m = 0; m < hasta; m++) {
+      var px = x0 + (x1 - x0) * m / trazaSensor.length, py = mitad - trazaSensor[m] / maximo * h * 0.42;
+      if (m === 0) tctx.moveTo(px, py); else tctx.lineTo(px, py);
+    }
+    tctx.stroke();
+    tctx.font = "500 12px 'IBM Plex Sans', system-ui, sans-serif";
+    tctx.fillStyle = "#5f5f5a"; tctx.textBaseline = "top"; tctx.textAlign = "right";
+    tctx.fillText("sensor " + (activo + 6) + " · camino " + ROMANOS[activo], x0 - 10, 4);
+  }
+
+  var visible = true, reducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function (e) { visible = e[0].isIntersecting; }, {threshold: 0.1}).observe(lienzo);
+  }
+
+  function bucle() {
+    if (visible) {
+      for (var p = 0; p < PASOS_FOTOGRAMA; p++) avanzar();
+      pintarCampo();
+      dibujarJunta();
+      dibujarTraza();
+    }
+    if (!reducido) requestAnimationFrame(bucle);
+  }
+
+  medir();
+  window.addEventListener("resize", medir);
+  if (reducido) { for (var q = 0; q < 300; q++) avanzar(); }
+  bucle();
+})();
+</script>
+</body>
+</html>

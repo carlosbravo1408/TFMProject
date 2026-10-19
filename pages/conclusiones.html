@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parte 5: conclusiones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#ffffff}
+a{color:#A63C0A}a:hover{color:#4D1B06}
+.pg{font-family:'Source Serif 4',Georgia,serif;color:#262626;background:#ffffff}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px}
+.ui{font-family:'IBM Plex Sans',system-ui,sans-serif}
+.pg p{font-size:19px;line-height:1.65;margin:0 0 18px}
+.pg h2{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:30px;line-height:1.2;margin:0 0 18px;color:#1f1f1d}
+.pg h3{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:22px;line-height:1.25;margin:32px 0 12px;color:#1f1f1d}
+.sec{padding:56px 0;border-top:1px solid #e6e6e2}
+.kicker{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.06em;color:#5f5f5a;text-transform:uppercase;margin-bottom:8px;display:block}
+.nav{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid #d9d9d5;background:#fafaf8}
+.nav ul{display:flex;flex-wrap:wrap;gap:8px 20px;list-style:none;margin:0;padding:0;font-size:15px}
+.logo{width:120px;height:36px;background:#ececE8;border:1px dashed #b9b9b3;display:flex;align-items:center;justify-content:center;font-size:12px;color:#5f5f5a}
+.anim{margin:28px 0;border:2px dashed #C2470D;border-radius:8px;background:repeating-linear-gradient(45deg,#fff3ec 0 12px,#fffaf6 12px 24px);padding:22px;display:flex;flex-direction:column;gap:12px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#3a1604}
+.anim .rot{font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:.06em;color:#A63C0A;font-weight:600}
+.anim h4{margin:0;font-size:19px;color:#4D1B06}
+.anim p{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.55;margin:0;color:#3a1604}
+.anim dl{display:grid;grid-template-columns:140px minmax(0,1fr);gap:6px 14px;margin:0;font-size:14.5px;line-height:1.5}
+.anim dt{font-weight:600;color:#7a2d08}
+.anim dd{margin:0}
+.anim .lienzo{aspect-ratio:16/9;max-height:300px;border:1px solid #e3b79f;border-radius:4px;background:#ffffffcc;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#A63C0A}
+.nota{font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.55;color:#6B2560;background:#faf3f8;border:1px dotted #b77aa9;border-radius:6px;padding:12px 14px;margin:18px 0}
+.toc{display:flex;flex-wrap:wrap;gap:8px 18px;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;margin-top:8px}
+.concl{list-style:none;counter-reset:c;margin:22px 0;padding:0;display:flex;flex-direction:column;gap:16px}
+.concl li{counter-increment:c;display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;align-items:start}
+.concl li::before{content:counter(c);display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:20px;background:#f4ece6;color:#4D1B06;font-family:'IBM Plex Sans',system-ui,sans-serif;font-weight:700;font-size:17px}
+.concl h3{margin:6px 0 6px;font-size:19px}
+.concl p{font-size:17.5px;margin:0}
+.general{border:2px solid #4D1B06;border-radius:10px;padding:22px;margin:30px 0;background:#fffaf6}
+.general h3{margin-top:0}
+.dato{border:1px solid #d4d4d0;border-radius:8px;padding:16px;background:#fafaf8;display:flex;flex-direction:column;gap:4px}
+.dato b{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:28px;color:#4D1B06}
+.dato span{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;line-height:1.4;color:#4a4a46}
+.limites{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:18px 0 24px}
+.limites div{border:1px solid #d4d4d0;border-radius:8px;padding:14px;background:#fafaf8;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#3b3b38}
+.limites b{display:block;color:#4D1B06;margin-bottom:4px}
+.futuro{display:flex;flex-direction:column;gap:6px;margin:26px 0}
+.futuro .kicker{margin:0}
+.futuro h3{margin:0 0 6px}
+.cuadernos{columns:2 260px;column-gap:28px;margin:0 0 24px;padding-left:22px;font-size:16px;line-height:1.5}
+.cuadernos li{margin:0 0 8px;break-inside:avoid}
+
+.anim{margin:30px 0;border:0;border-radius:0;background:none;padding:0;display:flex;flex-direction:column;gap:10px}
+.anim video{display:block;width:100%;height:auto;border:1px solid #e0e0dc;border-radius:4px;background:#ffffff}
+.anim figcaption{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#4a4a46}
+.eq{overflow-x:auto;overflow-y:hidden;margin:20px 0;font-size:1.1em}
+.logo{width:auto;height:36px;background:none;border:0;display:block}
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'\\[',right:'\\]',display:true}]})"></script>
+</head>
+<body>
+<div class="pg" style="width: 100%">
+  <header class="nav ui">
+    <div style="display: flex; gap: 14px; align-items: center">
+      <img class="logo" src="../media/img/Logo_VIU.png" alt="VIU">
+      <a href="../index.html" style="font-size: 17px; font-weight: 700; color: #262626; text-decoration: none">Grietas, ondas y física</a>
+    </div>
+    <ul>
+      <li><a href="parte1.html">1. El problema</a></li>
+      <li><a href="parte2.html">2. La señal</a></li>
+      <li><a href="parte3.html">3. La ley física</a></li>
+      <li><a href="parte4.html">4. El modelo</a></li>
+      <li><strong>5. Conclusiones</strong></li>
+      <li><a href="bibliografia.html">Bibliografía</a></li>
+    </ul>
+  </header>
+
+  <section style="padding: 60px 0 36px; background: #fafaf8">
+    <div class="wrap">
+      <span class="kicker">Parte 5</span>
+      <h1 class="ui" style="margin: 0 0 14px; font-size: 42px; line-height: 1.12; color: #1f1f1d">Conclusiones y trabajo futuro</h1>
+      <p style="font-size: 21px; color: #3b3b38">Después de recorrer el problema, la señal, la física y las cuatro configuraciones, toca hacer balance: qué se consiguió, qué no se consiguió y por qué, y hacia dónde merece la pena seguir.</p>
+      <nav class="toc" aria-label="Contenido de la parte 5">
+        <a href="#p5-balance">5.1 El balance en cifras</a>
+        <a href="#p5-conclusiones">5.2 Conclusiones</a>
+        <a href="#p5-limites">5.3 Lo que los resultados no permiten afirmar</a>
+        <a href="#p5-futuro">5.4 Trabajo futuro</a>
+      </nav>
+    </div>
+  </section>
+
+  <section id="p5-balance" class="sec">
+    <div class="wrap">
+      <span class="kicker">5.1</span>
+      <h2>El balance en cifras</h2>
+      <p>Este trabajo construyó un modelo híbrido que lee ondas ultrasónicas con una red convolucional y proyecta el crecimiento de la grieta con la ley de Paris-Erdogan, y lo comparó con réplicas de los tres métodos que ganaron el certamen. Cuatro números resumen dónde quedó.</p>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin: 18px 0 26px">
+        <div class="dato"><b>6.49</b><span>penalización en T7, frente a 22.71 de la mejor réplica</span></div>
+        <div class="dato"><b>0.35 mm</b><span>error cuadrático medio en T7, con un error máximo de 0.55 mm</span></div>
+        <div class="dato"><b>96.94</b><span>total T7 + T8, menor que el de las tres réplicas</span></div>
+        <div class="dato"><b>90.45</b><span>penalización en T8, el caso de carga variable que queda sin resolver</span></div>
+      </div>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_5_1_dos_historias.mp4" muted loop playsinline preload="metadata" aria-label="Dos probetas, dos historias (opcional)"></video>
+        <figcaption>La misma entrega, en T7 y en T8.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="p5-conclusiones" class="sec">
+    <div class="wrap">
+      <span class="kicker">5.2</span>
+      <h2>Conclusiones</h2>
+      <p>Las conclusiones siguen los objetivos del trabajo: una por cada objetivo específico y, al final, la que responde al objetivo general.</p>
+      <ol class="concl">
+        <li>
+          <div>
+            <h3 class="ui">Las réplicas de los ganadores son el único término de comparación justo</h3>
+            <p>Los tres métodos se reconstruyeron y se ejecutaron con el mismo protocolo, pero quedan entre quince y treinta veces por encima de lo que publican sus autores. La métrica no es la causa, porque reproduce la penalización publicada de uno de ellos a partir de sus propias predicciones. La distancia viene de decisiones que los artículos no documentan: las constantes de la ley física, el tratamiento de la señal o la elección de los puntos de anclaje.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3 class="ui">Preparar bien la señal hace comparables probetas muy distintas</h3>
+            <p>La cadena de cinco pasos entrega la onda directamente a la red, acompañada de 13 rasgos calculados sobre ella. La normalización por probeta, que no tiene precedente en los métodos del certamen ni en la literatura revisada, reduce la dispersión entre probetas en un mismo estado de daño de un factor 5.9 a un factor 1.1. Mientras hay señal, el error de estimación es de 0.33 mm en T7 y de 1.02 mm en T8.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3 class="ui">Las constantes físicas son la decisión que más pesa</h3>
+            <p>De los seis algoritmos comparados, la evolución diferencial fue la más fiable: encontró el mejor ajuste en todas sus ejecuciones, frente a menos de la mitad del algoritmo genético. Pero el ajuste no fija las constantes, sino un espacio: cualquier exponente entre 1.40 y 3.15 reproduce las curvas casi igual de bien. El exponente se eligió por su capacidad de extrapolar, m = 2.00, y con él el coeficiente quedó determinado, log10 C = -8.4264, con una dispersión entre probetas de solo 0.081 décadas. Cambiar de dónde salen esas constantes multiplica por más de nueve la penalización de las seis probetas evaluables; cambiar de arquitectura mueve el total de T7 y T8 menos de un 0.1%.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3 class="ui">La arquitectura híbrida cumple lo que promete por diseño</h3>
+            <p>La red estima a la vez la grieta de cada onda y el coeficiente de cada probeta, y la función de pérdida obliga a que ambas salidas sean coherentes con la ley física. La grieta estimada no puede decrecer por construcción, y la asimetría del certamen está incorporada a la pérdida en lugar de corregirse después. Con ella, la Configuración 1 obtiene en T7 una penalización de 6.49, frente a 22.71, 83.25 y 215.12 de las réplicas, y del mismo orden que los valores publicados por los dos primeros puestos.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3 class="ui">Ninguna pieza opcional aporta de forma atribuible</h3>
+            <p>El predictor multi-paso no puede mejorar la fórmula cerrada con carga constante, y el retardo de Wheeler resulta ser una recalibración del coeficiente con un techo inferior a la mitad de la corrección que necesita T8. La autoatención no reproduce la ganancia que describe la literatura en secuencias largas: con tres a nueve ciclos no tiene estructura que ponderar, y su efecto cambia de signo con la semilla. El mejor total del estudio es el de la configuración base.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3 class="ui">Útil con carga constante; sin información para la carga variable</h3>
+            <p>En T7 el método sigue la forma de la curva medida durante toda la vida restante. En T8 el error se explica entero por el coeficiente de la extrapolación, y las constantes que lo corregirían multiplican entre catorce y dieciséis veces la penalización de las otras cinco probetas. Las constantes identificadas con carga constante no se pueden trasladar a carga variable, y lo que falta para resolver ese caso es, como mínimo, una probeta de entrenamiento de ese régimen.</p>
+          </div>
+        </li>
+      </ol>
+      <div class="general">
+        <span class="kicker">Objetivo general</span>
+        <h3 class="ui">Lo que el trabajo responde</h3>
+        <p style="margin: 0">El modelo propuesto estima y pronostica el crecimiento de la grieta con carga constante con un error del orden de las décimas de milímetro y supera a los tres métodos reproducibles del certamen, pero no resuelve el caso de carga variable. La causa no está en la arquitectura sino en los datos: la información que distinguiría ese régimen no está ni en la ventana con señal ni en el conjunto de entrenamiento.</p>
+      </div>
+      
+    </div>
+  </section>
+
+  <section id="p5-limites" class="sec">
+    <div class="wrap">
+      <span class="kicker">5.3</span>
+      <h2>Lo que los resultados no permiten afirmar</h2>
+      <p>Un resultado solo es tan sólido como las condiciones en las que se obtuvo. Estas son las limitaciones que, en la práctica, condicionaron las cifras.</p>
+      <div class="limites">
+        <div><b>Ninguna probeta de carga variable en entrenamiento</b>Las seis variantes del estudio dejan T8 entre 90.45 y 91.12: ningún cambio de arquitectura podía compensar esa ausencia.</div>
+        <div><b>Constantes de carga constante</b>Se identificaron con probetas de carga constante y no se trasladan a la carga variable de T8.</div>
+        <div><b>Dos anclajes</b>La proyección parte de la última estimación con señal, y un error ahí se arrastra a toda la vida restante.</div>
+        <div><b>La cota de T8</b>El 90.45 es una sobreestimación acotada, no una prognosis: en la mitad ciega de T8 el método no aporta información.</div>
+        <div><b>Dos probetas de validación</b>Cada régimen de carga se evalúa sobre una sola probeta, y cambiar la semilla basta para invertir el signo de algunas diferencias.</div>
+        <div><b>87 ondas</b>Demasiado pocas para demostrar la ventaja de una arquitectura más compleja.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="p5-futuro" class="sec">
+    <div class="wrap">
+      <span class="kicker">5.4</span>
+      <h2>Trabajo futuro</h2>
+      <p>Las tres líneas siguientes están ordenadas por el efecto que los resultados permiten esperar de cada una, de mayor a menor.</p>
+
+      <div class="futuro">
+        <span class="kicker">Línea 1</span>
+        <h3 class="ui">Probetas de carga variable en el entrenamiento</h3>
+        <p>Es, con diferencia, la línea de mayor efecto esperado. Bastaría con disponer de ensayos de ese régimen, ya sea con nuevas probetas de la misma geometría o incorporando datos de otras campañas sobre juntas remachadas de 2024-T3. Con ellos se podrían identificar constantes propias de la carga variable y, sobre todo, condicionar la cabeza del coeficiente al espectro de carga, que se conoce de antemano y es lo único que distingue a T8 de T7 mientras hay señal. La arquitectura actual ya admite ese condicionamiento; lo que le faltan son ejemplos de los que aprenderlo.</p>
+      </div>
+
+      <div class="futuro">
+        <span class="kicker">Línea 2</span>
+        <h3 class="ui">Un mecanismo físico que actúe sobre todo el bloque de carga</h3>
+        <p>Si no hay nuevos ensayos, la alternativa es imponer la corrección desde la física. El retardo por zona plástica falla porque nunca actúa sobre el tramo de mayor amplitud del bloque, que es precisamente la sobrecarga. Los modelos de cierre de grieta (Elber, 1971), que corrigen el rango efectivo del factor de intensidad de tensiones, actúan sobre los dos tramos, y con m = 2.00 una reducción moderada de ese rango equivale a desplazar el coeficiente algunas décimas de década, justo el orden de la corrección que necesita T8. Hay una precaución importante: la calibración con carga constante ya incluye en el coeficiente el cierre propio de ese régimen, de modo que solo habría que modelar el cierre adicional que provoca la sobrecarga repetida, y fijar su parámetro con la literatura del material, nunca con la curva de T8.</p>
+      </div>
+
+      <div class="futuro">
+        <span class="kicker">Línea 3</span>
+        <h3 class="ui">Un factor geométrico propio de la unión</h3>
+        <p>Suponer Y = 1 obliga al coeficiente a absorber la concentración de tensiones del agujero avellanado, y por eso queda más de dos décadas por encima de los valores publicados para metales. Un factor geométrico calculado por elementos finitos para la geometría del remache, o una corrección de agujero identificada con suficientes medidas, acercaría el coeficiente a esas constantes de laboratorio y permitiría contrastarlas con los datos en lugar de descartarlas por no ser comparables.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" style="background: #fafaf8">
+    <div class="wrap">
+      <span class="kicker">Para seguir leyendo</span>
+      <h2>El código y la memoria</h2>
+      <p>Todo el código del trabajo está en un repositorio público: el tratamiento de la señal, la calibración física, las réplicas de los tres ganadores y las cuatro configuraciones, organizados en nueve cuadernos que calculan sus propias tablas y figuras. Se ejecuta en Python con PyTorch, sin tarjeta gráfica, en un ordenador personal.</p>
+      <p>Los nueve cuadernos también pueden leerse directamente, ya ejecutados, sin instalar nada:</p>
+      <ol class="cuadernos ui">
+        <li><a href="../1st_place_baseline/1st_place_baseline.html" target="_blank" rel="noopener">Réplica del 1.er puesto (Youn et al.) ↗</a></li>
+        <li><a href="../2nd_place_baseline/2nd_place_baseline.html" target="_blank" rel="noopener">Réplica del 2.º puesto (Kong et al.) ↗</a></li>
+        <li><a href="../3rd_place_baseline/3rd_place_baseline.html" target="_blank" rel="noopener">Réplica del 3.er puesto (Rao et al.) ↗</a></li>
+        <li><a href="../tratamiento_senal/tratamiento_senal.html" target="_blank" rel="noopener">Tratamiento de la señal ↗</a></li>
+        <li><a href="../physics_calibration/hiperparametros.html" target="_blank" rel="noopener">Calibración de la ley física ↗</a></li>
+        <li><a href="../config1_cnn_pinn/configuracion1.html" target="_blank" rel="noopener">Configuración 1 ↗</a></li>
+        <li><a href="../config2_rk4/configuracion2.html" target="_blank" rel="noopener">Configuración 2 ↗</a></li>
+        <li><a href="../config3_attention/configuracion3.html" target="_blank" rel="noopener">Configuración 3 ↗</a></li>
+        <li><a href="../config4_completa/configuracion4.html" target="_blank" rel="noopener">Configuración 4 ↗</a></li>
+      </ol>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px">
+        <a class="ui" href="https://github.com/carlosbravo1408/TFMProject" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px; background: #4D1B06; color: #ffffff; border-radius: 6px; text-decoration: none; font-weight: 600">Ver el repositorio</a>
+      </div>
+      <div class="ui" style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 30px; font-size: 16px">
+        <a href="config4.html">Anterior: Configuración 4 y comparación</a>
+        <a href="bibliografia.html">Siguiente: bibliografía</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  var videos = document.querySelectorAll("video.auto");
+  if (!("IntersectionObserver" in window)) {
+    videos.forEach(function (v) { v.play(); });
+    return;
+  }
+  var observador = new IntersectionObserver(function (entradas) {
+    entradas.forEach(function (e) {
+      if (e.isIntersecting) { e.target.play().catch(function () {}); }
+      else { e.target.pause(); }
+    });
+  }, { threshold: 0.5 });
+  videos.forEach(function (v) { observador.observe(v); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configuración 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#ffffff}
+a{color:#A63C0A}a:hover{color:#4D1B06}
+.pg{font-family:'Source Serif 4',Georgia,serif;color:#262626;background:#ffffff}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px}
+.ui{font-family:'IBM Plex Sans',system-ui,sans-serif}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+.pg p{font-size:19px;line-height:1.65;margin:0 0 18px}
+.pg h2{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:30px;line-height:1.2;margin:0 0 18px;color:#1f1f1d}
+.pg h3{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:22px;line-height:1.25;margin:32px 0 12px;color:#1f1f1d}
+.sec{padding:56px 0;border-top:1px solid #e6e6e2}
+.kicker{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.06em;color:#5f5f5a;text-transform:uppercase;margin-bottom:8px;display:block}
+.nav{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid #d9d9d5;background:#fafaf8}
+.nav ul{display:flex;flex-wrap:wrap;gap:8px 20px;list-style:none;margin:0;padding:0;font-size:15px}
+.logo{width:120px;height:36px;background:#ececE8;border:1px dashed #b9b9b3;display:flex;align-items:center;justify-content:center;font-size:12px;color:#5f5f5a}
+.fig{margin:26px 0;display:flex;flex-direction:column;gap:10px}
+.fig img{width:100%;height:auto;display:block;border:1px solid #e0e0dc;border-radius:4px;background:#fff}
+.fig figcaption{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#4a4a46}
+.anim{margin:28px 0;border:2px dashed #C2470D;border-radius:8px;background:repeating-linear-gradient(45deg,#fff3ec 0 12px,#fffaf6 12px 24px);padding:22px;display:flex;flex-direction:column;gap:12px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#3a1604}
+.anim .rot{font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:.06em;color:#A63C0A;font-weight:600}
+.anim h4{margin:0;font-size:19px;color:#4D1B06}
+.anim p{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.55;margin:0;color:#3a1604}
+.anim dl{display:grid;grid-template-columns:140px minmax(0,1fr);gap:6px 14px;margin:0;font-size:14.5px;line-height:1.5}
+.anim dt{font-weight:600;color:#7a2d08}
+.anim dd{margin:0}
+.anim .lienzo{aspect-ratio:16/9;max-height:300px;border:1px solid #e3b79f;border-radius:4px;background:#ffffffcc;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#A63C0A}
+.nota{font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.55;color:#6B2560;background:#faf3f8;border:1px dotted #b77aa9;border-radius:6px;padding:12px 14px;margin:18px 0}
+.tabla{overflow-x:auto;margin:22px 0}
+.tabla table{border-collapse:collapse;width:100%;min-width:560px;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px}
+.tabla th,.tabla td{border-bottom:1px solid #e0e0dc;padding:9px 10px;text-align:left;vertical-align:top}
+.tabla th{background:#f4f4f1;font-weight:600}
+.tabla td.n,.tabla th.n{text-align:right;font-variant-numeric:tabular-nums}
+.tabla caption{caption-side:bottom;text-align:left;font-size:14px;color:#4a4a46;padding-top:8px}
+.tabla tr.base td{background:#f1f6ee;font-weight:600}
+.eq{font-size:17px;background:#f6f6f3;border:1px solid #e3e3df;border-radius:6px;padding:14px 18px;margin:16px 0;overflow-x:auto;text-align:center}
+.eq math{font-size:1.2em}
+.eq details{margin-top:10px;text-align:left}
+.eq summary{cursor:pointer;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:13px;color:#5f5f5a;min-height:28px}
+.eq code{display:block;white-space:pre-wrap;word-break:break-all;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#3b3b38;margin-top:6px}
+.toc{display:flex;flex-wrap:wrap;gap:8px 18px;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;margin-top:8px}
+.dato{border:1px solid #d4d4d0;border-radius:8px;padding:16px;background:#fafaf8;display:flex;flex-direction:column;gap:4px}
+.dato b{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:28px;color:#4D1B06}
+.dato span{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;line-height:1.4;color:#4a4a46}
+.rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:18px 0 24px}
+.rejilla div{border:1px solid #d4d4d0;border-radius:8px;padding:14px;background:#fafaf8;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#3b3b38}
+.rejilla b{display:block;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:#5f5f5a;margin-bottom:4px}
+.aparte{border:1px solid #d4d4d0;border-radius:10px;background:#f7f7f4;padding:22px;margin:26px 0}
+.aparte h3{margin-top:0}
+.subnav{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+.subnav a,.subnav strong{display:inline-flex;align-items:center;min-height:40px;padding:0 12px;border:1px solid #c9c9c4;border-radius:20px;text-decoration:none;color:#262626;background:#ffffff;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px}
+.subnav strong{background:#4D1B06;color:#ffffff;border-color:#4D1B06}
+.cuaderno{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 20px;border:1px solid #d4d4d0;border-left:4px solid #4D1B06;border-radius:8px;padding:16px 20px;margin:30px 0 0;background:#fafaf8;font-family:'IBM Plex Sans',system-ui,sans-serif;text-decoration:none;color:#262626}
+.cuaderno:hover{border-color:#A63C0A;color:#262626}
+.cuaderno span{font-size:15px;line-height:1.45;color:#4a4a46}
+.cuaderno b{display:block;font-size:17px;color:#1f1f1d;margin-bottom:2px}
+.cuaderno em{font-style:normal;font-weight:600;font-size:15px;color:#A63C0A;white-space:nowrap}
+
+.anim{margin:30px 0;border:0;border-radius:0;background:none;padding:0;display:flex;flex-direction:column;gap:10px}
+.anim video{display:block;width:100%;height:auto;border:1px solid #e0e0dc;border-radius:4px;background:#ffffff}
+.anim figcaption{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#4a4a46}
+.eq{overflow-x:auto;overflow-y:hidden;margin:20px 0;font-size:1.1em}
+.logo{width:auto;height:36px;background:none;border:0;display:block}
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'\\[',right:'\\]',display:true}]})"></script>
+</head>
+<body>
+<div class="pg" style="width: 100%">
+  <header class="nav ui">
+    <div style="display: flex; gap: 14px; align-items: center">
+      <img class="logo" src="../media/img/Logo_VIU.png" alt="VIU">
+      <a href="../index.html" style="font-size: 17px; font-weight: 700; color: #262626; text-decoration: none">Grietas, ondas y física</a>
+    </div>
+    <ul>
+      <li><a href="parte1.html">1. El problema</a></li>
+      <li><a href="parte2.html">2. La señal</a></li>
+      <li><a href="parte3.html">3. La ley física</a></li>
+      <li><strong>4. El modelo</strong></li>
+      <li><a href="conclusiones.html">5. Conclusiones</a></li>
+      <li><a href="bibliografia.html">Bibliografía</a></li>
+    </ul>
+  </header>
+
+  <section style="padding: 60px 0 36px; background: #fafaf8">
+    <div class="wrap">
+      <span class="kicker">Parte 4 · 4.2</span>
+      <h1 class="ui" style="margin: 0 0 14px; font-size: 42px; line-height: 1.12; color: #1f1f1d">Configuración 2: integrar la carga real, ciclo a ciclo</h1>
+      <p style="font-size: 21px; color: #3b3b38">La Configuración 1 extrapola con una fórmula cerrada que supone una carga promedio. Esta configuración se pregunta si sería mejor seguir la carga tal como es, bloque a bloque, y si de paso conviene tener en cuenta que una sobrecarga frena la grieta durante un tiempo.</p>
+      <nav class="subnav" aria-label="Configuraciones">
+        <a href="parte4.html#p4-config1">4.1 Configuración 1</a>
+        <strong>4.2 Configuración 2</strong>
+        <a href="config3.html">4.3 Configuración 3</a>
+        <a href="config4.html">4.4 Configuración 4 y comparación</a>
+      </nav>
+    </div>
+  </section>
+
+  <section id="c2-idea" class="sec">
+    <div class="wrap">
+      <span class="kicker">Qué cambia</span>
+      <h2>Una sola pieza nueva, después de la red</h2>
+      <p>La Configuración 2 añade a la base el componente (c), el predictor multi-paso. No toca la red: hereda el codificador, la cabeza de estimación y la cabeza del coeficiente de la Configuración 1, con los mismos pesos y el mismo entrenamiento. Lo único que cambia es el motor que proyecta la grieta cuando se acaba la señal.</p>
+      <div class="rejilla">
+        <div><b>Configuración 1</b>Solución cerrada de Paris con un rango de tensión equivalente para todo el bloque de carga.</div>
+        <div><b>Configuración 2</b>Integración numérica de Runge-Kutta de cuarto orden en pasos de 250 ciclos, con la velocidad media del bloque de carga real recalculada con la grieta de cada paso.</div>
+        <div><b>Variante 2b</b>La misma integración, con el modelo de retardo por sobrecarga de Wheeler.</div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin: 18px 0 26px">
+        <div class="dato"><b>0</b><span>parámetros entrenables nuevos</span></div>
+        <div class="dato"><b>1</b><span>parámetro físico del retardo, el exponente p</span></div>
+        <div class="dato"><b>1000</b><span>ciclos por bloque de carga en T8</span></div>
+      </div>
+      <p>Como el motor de extrapolación no tiene nada que aprender, la evolución del entrenamiento es exactamente la de la Configuración 1. Toda la diferencia, si la hay, aparece al proyectar.</p>
+    </div>
+  </section>
+
+  <section id="c2-rk4" class="sec">
+    <div class="wrap">
+      <span class="kicker">El integrador</span>
+      <h2>Por qué integrar paso a paso podría ayudar</h2>
+      <p>La fórmula cerrada de la Configuración 1 es exacta cuando todos los ciclos son iguales, pero en T8 no lo son: la carga alterna 500 ciclos con un máximo de 90.00 MPa y otros 500 con 100.21 MPa. La fórmula resume ese bloque en un único rango de tensión equivalente y resuelve la ley de una sola vez. El predictor multi-paso la sustituye por un integrador numérico que avanza en pasos de 250 ciclos. En cada paso calcula la velocidad que produciría cada tramo del bloque con la grieta que hay en ese momento, y las promedia ponderando cada tramo por sus ciclos.</p>
+      <p>La ventaja de ese motor no es tanto el promedio como la posibilidad de tocar cada tramo por separado antes de promediar. Es lo que necesita un efecto de historia, en el que lo que pasó en un ciclo altera la velocidad de los siguientes, y es justo lo que hace la variante 2b: frenar el tramo de 90.00 MPa tras la sobrecarga del de 100.21 MPa. La velocidad de cada tramo es la ley de Paris con su propia tensión:</p>
+      <div class="eq">\[\frac{da}{dN}=C\left(\Delta\sigma_j\sqrt{\pi a}\right)^{m},\qquad j\in\{90.00,\ 100.21\ \text{MPa}\}\]</div>
+      <p>El método de Runge-Kutta de cuarto orden avanza la solución a pasos de tamaño h. En cada paso evalúa la pendiente cuatro veces (al principio, dos veces en el punto medio y al final) y las combina con pesos 1, 2, 2 y 1. Es el integrador clásico por excelencia: preciso, estable y fácil de controlar.</p>
+      <div class="eq">\[a_{n+1}=a_n+\frac{h}{6}\left(k_1+2k_2+2k_3+k_4\right)\]</div>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_4_2_a_integracion.mp4" muted loop playsinline preload="metadata" aria-label="Fórmula cerrada frente a integración"></video>
+        <figcaption>Dos caminos que llegan al mismo sitio.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="c2-wheeler" class="sec">
+    <div class="wrap">
+      <span class="kicker">El retardo</span>
+      <h2>Una sobrecarga deja huella: el modelo de Wheeler</h2>
+      <p>Cuando una grieta sufre un ciclo más intenso de lo normal, su punta se deforma plásticamente y deja a su alrededor una pequeña zona de material endurecido. Mientras la grieta avanza dentro de esa zona, crece más despacio. Es un efecto conocido como retardo por sobrecarga, y en T8 el tramo de 100.21 MPa hace de sobrecarga frente al de 90.00 MPa.</p>
+      <p>De todos los modelos que describen este efecto se eligió el de Wheeler (1972) porque es el que menos parámetros libres tiene: uno solo. Ningún espécimen de entrenamiento está sometido a carga variable, así que cualquier modelo con más grados de libertad sería imposible de calibrar con estos datos. El radio de la zona plástica de un ciclo, en tensión plana, es:</p>
+      <div class="eq">\[r_y=\frac{1}{\alpha\pi}\left(\frac{K_{max}}{\sigma_y}\right)^{2},\qquad K_{max}=Y\,S_{max}\sqrt{\pi a}\]</div>
+      <p>con σ<sub>y</sub> = 345 MPa, el límite elástico del 2024-T3 en chapa fina, y α = 2, la constante de tensión plana. El modelo compara la zona que deja la sobrecarga con la que genera el ciclo en curso, y frena la velocidad con un factor φ mientras la punta siga dentro:</p>
+      <div class="eq">\[\varphi=\begin{cases}\left(\dfrac{r_y}{a_{ol}+r_{ol}-a}\right)^{p} &amp; \text{si } a+r_y&lt;a_{ol}+r_{ol}\\1 &amp; \text{en otro caso}\end{cases},\qquad \frac{da}{dN}\Big|_{ret}=\varphi\,\frac{da}{dN}\]</div>
+      <p>Aquí a<sub>ol</sub> es la grieta en el momento de la sobrecarga, r<sub>ol</sub> la zona plástica que generó, y p el único parámetro del modelo. Tampoco p puede calibrarse con estos datos, así que se adoptó p = 1.43, un valor dentro de los intervalos publicados por Sheu et al. (1995) para las aleaciones de aluminio 5083-O y 6061-T651. Para el 2024-T3 no hay ninguno publicado.</p>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_4_2_b_zona_plastica.mp4" muted loop playsinline preload="metadata" aria-label="La zona plástica frena la grieta"></video>
+        <figcaption>Dentro de la zona, más despacio.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="c2-resultados" class="sec">
+    <div class="wrap">
+      <span class="kicker">Qué consigue</span>
+      <h2>Tres filas idénticas, por dos razones distintas</h2>
+      <div class="tabla">
+        <table>
+          <thead><tr><th>Variante</th><th class="n">T7</th><th class="n">T8</th><th class="n">Total</th><th class="n">RMSE T7 (mm)</th><th class="n">RMSE T8 (mm)</th></tr></thead>
+          <tbody>
+            <tr class="base"><td>Configuración 1, fórmula cerrada</td><td class="n">6.49</td><td class="n">90.45</td><td class="n">96.94</td><td class="n">0.350</td><td class="n">2.418</td></tr>
+            <tr><td>Configuración 2, integración paso a paso</td><td class="n">6.49</td><td class="n">90.45</td><td class="n">96.94</td><td class="n">0.350</td><td class="n">2.418</td></tr>
+            <tr><td>Configuración 2b, integración con retardo</td><td class="n">6.49</td><td class="n">90.45</td><td class="n">96.94</td><td class="n">0.350</td><td class="n">2.418</td></tr>
+          </tbody>
+          <caption>Penalización oficial y RMSE de las dos variantes frente a la Configuración 1. Menor es mejor.</caption>
+        </table>
+      </div>
+      <p>Las tres filas coinciden, pero esa coincidencia esconde dos fenómenos diferentes, y solo uno es un resultado nulo de verdad.</p>
+
+      <h3>La integración no aporta, y no podía aportar</h3>
+      <p>La diferencia máxima entre integrar y usar la fórmula cerrada es nula hasta la cuarta cifra decimal, incluso quitando la cota de extrapolación. La razón es estructural. Con carga constante, la fórmula cerrada es la solución exacta de la ecuación, así que no hay nada que mejorar. Con la carga variable de T8 ocurre algo parecido: con m = 2, la velocidad de Paris es proporcional a la grieta por el cuadrado de la tensión, de modo que promediar la velocidad de los dos tramos equivale exactamente a usar el rango de tensión equivalente de la fórmula cerrada. El integrador resuelve la misma ecuación por otro camino. Incluso integrando cada tramo por separado, la grieta crece unas 0.36 mm por bloque en el anclaje de T8 y la diferencia con la fórmula cerrada se queda en dos a cuatro centésimas de milímetro a mitad de bloque, para desaparecer al cerrarlo. Es un resultado nulo útil: descarta que la fórmula cerrada sea una fuente de error en este problema.</p>
+
+      <h3>El retardo sí actúa, pero se queda corto</h3>
+      <p>Si se quita la cota de 7.24 mm y se mira la extrapolación tal cual, el retardo reduce la penalización de T8 de 8289.46 a 6793.85, un 18%, y con exponentes más altos llega a 3811.91. Actúa, y en la dirección correcta. Pero la cota corrige el mismo defecto (la extrapolación de T8 que se dispara) mucho más a fondo: por sí sola lleva la penalización de 8289.46 a 90.45. Con la cota puesta, el efecto del retardo queda absorbido entero.</p>
+      <p>Mirando más de cerca aparece algo más interesante. En el rango de grietas que importa, de 2 a 15 mm, el factor de retardo es prácticamente constante, 0.7354, porque la sobrecarga se repite en cada bloque y la punta nunca llega a salir de su zona plástica. Un factor constante no es un efecto de historia: integrar con él equivale exactamente a multiplicar el coeficiente por 0.88261, es decir, a desplazar log10 C en -0.054 décadas. El retardo, en este bloque de carga, no es más que una recalibración del coeficiente.</p>
+      <figure class="fig">
+        <img src="../media/img/retardo_alcance.png" alt="Penalización de T8 frente al desplazamiento aplicado al coeficiente">
+        <figcaption>Penalización de T8 según cuánto se desplace el coeficiente. Las líneas verticales marcan el coeficiente del modelo, el que produce el retardo con p = 1.43, el techo del retardo y el que implica la curva medida. La franja verde son los desplazamientos que bajarían de la réplica del tercer puesto (25.79).</figcaption>
+      </figure>
+      <p>Y esa recalibración tiene un techo. En el bloque de T8, el tramo de 100.21 MPa es la sobrecarga, de modo que nunca se retarda y siempre aporta su velocidad completa. Aunque el tramo de 90.00 MPa se frenase del todo, la velocidad media del bloque solo podría bajar hasta la contribución del otro tramo. Eso fija un techo de 0.255 décadas, cuando para bajar de la réplica del tercer puesto harían falta entre 0.612 y 0.877. Ni subiendo el exponente p hasta valores sin ningún respaldo se alcanza: la penalización satura en 85.74.</p>
+      <figure class="fig">
+        <img src="../media/img/retardo_exponente.png" alt="Penalización de T8 frente al exponente del modelo de retardo">
+        <figcaption>Penalización de T8 frente al exponente p del retardo, en escala logarítmica. La franja sombreada son los intervalos publicados para otras aleaciones de aluminio (Sheu et al., 1995). La curva baja de forma monótona y se queda en 85.74, lejos de la réplica del tercer puesto y del óptimo alcanzable corrigiendo el coeficiente.</figcaption>
+      </figure>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_4_2_c_techo_retardo.mp4" muted loop playsinline preload="metadata" aria-label="El techo del retardo"></video>
+        <figcaption>Aunque medio bloque se detenga, el otro medio sigue.</figcaption>
+      </figure>
+      
+      <a class="cuaderno" href="../config2_rk4/configuracion2.html" target="_blank" rel="noopener">
+        <span><b>Cuaderno: Configuración 2</b>La integración RK4, el retardo de Wheeler y el techo de la corrección.</span>
+        <em>Abrir el cuaderno ↗</em>
+      </a>
+      <div class="ui" style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 30px; font-size: 16px">
+        <a href="parte4.html">Anterior: Configuración 1</a>
+        <a href="config3.html">Siguiente: Configuración 3</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  var videos = document.querySelectorAll("video.auto");
+  if (!("IntersectionObserver" in window)) {
+    videos.forEach(function (v) { v.play(); });
+    return;
+  }
+  var observador = new IntersectionObserver(function (entradas) {
+    entradas.forEach(function (e) {
+      if (e.isIntersecting) { e.target.play().catch(function () {}); }
+      else { e.target.pause(); }
+    });
+  }, { threshold: 0.5 });
+  videos.forEach(function (v) { observador.observe(v); });
+})();
+</script>
+</body>
+</html>

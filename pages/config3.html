@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configuración 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#ffffff}
+a{color:#A63C0A}a:hover{color:#4D1B06}
+.pg{font-family:'Source Serif 4',Georgia,serif;color:#262626;background:#ffffff}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px}
+.ui{font-family:'IBM Plex Sans',system-ui,sans-serif}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+.pg p{font-size:19px;line-height:1.65;margin:0 0 18px}
+.pg h2{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:30px;line-height:1.2;margin:0 0 18px;color:#1f1f1d}
+.pg h3{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:22px;line-height:1.25;margin:32px 0 12px;color:#1f1f1d}
+.sec{padding:56px 0;border-top:1px solid #e6e6e2}
+.kicker{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.06em;color:#5f5f5a;text-transform:uppercase;margin-bottom:8px;display:block}
+.nav{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid #d9d9d5;background:#fafaf8}
+.nav ul{display:flex;flex-wrap:wrap;gap:8px 20px;list-style:none;margin:0;padding:0;font-size:15px}
+.logo{width:120px;height:36px;background:#ececE8;border:1px dashed #b9b9b3;display:flex;align-items:center;justify-content:center;font-size:12px;color:#5f5f5a}
+.fig{margin:26px 0;display:flex;flex-direction:column;gap:10px}
+.fig img{width:100%;height:auto;display:block;border:1px solid #e0e0dc;border-radius:4px;background:#fff}
+.fig figcaption{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#4a4a46}
+.anim{margin:28px 0;border:2px dashed #C2470D;border-radius:8px;background:repeating-linear-gradient(45deg,#fff3ec 0 12px,#fffaf6 12px 24px);padding:22px;display:flex;flex-direction:column;gap:12px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#3a1604}
+.anim .rot{font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:.06em;color:#A63C0A;font-weight:600}
+.anim h4{margin:0;font-size:19px;color:#4D1B06}
+.anim p{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.55;margin:0;color:#3a1604}
+.anim dl{display:grid;grid-template-columns:140px minmax(0,1fr);gap:6px 14px;margin:0;font-size:14.5px;line-height:1.5}
+.anim dt{font-weight:600;color:#7a2d08}
+.anim dd{margin:0}
+.anim .lienzo{aspect-ratio:16/9;max-height:300px;border:1px solid #e3b79f;border-radius:4px;background:#ffffffcc;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#A63C0A}
+.nota{font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.55;color:#6B2560;background:#faf3f8;border:1px dotted #b77aa9;border-radius:6px;padding:12px 14px;margin:18px 0}
+.tabla{overflow-x:auto;margin:22px 0}
+.tabla table{border-collapse:collapse;width:100%;min-width:560px;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px}
+.tabla th,.tabla td{border-bottom:1px solid #e0e0dc;padding:9px 10px;text-align:left;vertical-align:top}
+.tabla th{background:#f4f4f1;font-weight:600}
+.tabla td.n,.tabla th.n{text-align:right;font-variant-numeric:tabular-nums}
+.tabla caption{caption-side:bottom;text-align:left;font-size:14px;color:#4a4a46;padding-top:8px}
+.tabla tr.base td{background:#f1f6ee;font-weight:600}
+.eq{font-size:17px;background:#f6f6f3;border:1px solid #e3e3df;border-radius:6px;padding:14px 18px;margin:16px 0;overflow-x:auto;text-align:center}
+.eq math{font-size:1.2em}
+.eq details{margin-top:10px;text-align:left}
+.eq summary{cursor:pointer;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:13px;color:#5f5f5a;min-height:28px}
+.eq code{display:block;white-space:pre-wrap;word-break:break-all;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#3b3b38;margin-top:6px}
+.dato{border:1px solid #d4d4d0;border-radius:8px;padding:16px;background:#fafaf8;display:flex;flex-direction:column;gap:4px}
+.dato b{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:28px;color:#4D1B06}
+.dato span{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;line-height:1.4;color:#4a4a46}
+.rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:18px 0 24px}
+.rejilla div{border:1px solid #d4d4d0;border-radius:8px;padding:14px;background:#fafaf8;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#3b3b38}
+.rejilla b{display:block;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:#5f5f5a;margin-bottom:4px}
+.aparte{border:1px solid #d4d4d0;border-radius:10px;background:#f7f7f4;padding:22px;margin:26px 0}
+.aparte h3{margin-top:0}
+.subnav{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+.subnav a,.subnav strong{display:inline-flex;align-items:center;min-height:40px;padding:0 12px;border:1px solid #c9c9c4;border-radius:20px;text-decoration:none;color:#262626;background:#ffffff;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px}
+.subnav strong{background:#4D1B06;color:#ffffff;border-color:#4D1B06}
+.cuaderno{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 20px;border:1px solid #d4d4d0;border-left:4px solid #4D1B06;border-radius:8px;padding:16px 20px;margin:30px 0 0;background:#fafaf8;font-family:'IBM Plex Sans',system-ui,sans-serif;text-decoration:none;color:#262626}
+.cuaderno:hover{border-color:#A63C0A;color:#262626}
+.cuaderno span{font-size:15px;line-height:1.45;color:#4a4a46}
+.cuaderno b{display:block;font-size:17px;color:#1f1f1d;margin-bottom:2px}
+.cuaderno em{font-style:normal;font-weight:600;font-size:15px;color:#A63C0A;white-space:nowrap}
+
+.anim{margin:30px 0;border:0;border-radius:0;background:none;padding:0;display:flex;flex-direction:column;gap:10px}
+.anim video{display:block;width:100%;height:auto;border:1px solid #e0e0dc;border-radius:4px;background:#ffffff}
+.anim figcaption{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#4a4a46}
+.eq{overflow-x:auto;overflow-y:hidden;margin:20px 0;font-size:1.1em}
+.logo{width:auto;height:36px;background:none;border:0;display:block}
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'\\[',right:'\\]',display:true}]})"></script>
+</head>
+<body>
+<div class="pg" style="width: 100%">
+  <header class="nav ui">
+    <div style="display: flex; gap: 14px; align-items: center">
+      <img class="logo" src="../media/img/Logo_VIU.png" alt="VIU">
+      <a href="../index.html" style="font-size: 17px; font-weight: 700; color: #262626; text-decoration: none">Grietas, ondas y física</a>
+    </div>
+    <ul>
+      <li><a href="parte1.html">1. El problema</a></li>
+      <li><a href="parte2.html">2. La señal</a></li>
+      <li><a href="parte3.html">3. La ley física</a></li>
+      <li><strong>4. El modelo</strong></li>
+      <li><a href="conclusiones.html">5. Conclusiones</a></li>
+      <li><a href="bibliografia.html">Bibliografía</a></li>
+    </ul>
+  </header>
+
+  <section style="padding: 60px 0 36px; background: #fafaf8">
+    <div class="wrap">
+      <span class="kicker">Parte 4 · 4.3</span>
+      <h1 class="ui" style="margin: 0 0 14px; font-size: 42px; line-height: 1.12; color: #1f1f1d">Configuración 3: que la red decida cuánto pesa cada ciclo</h1>
+      <p style="font-size: 21px; color: #3b3b38">Para calcular el coeficiente de una probeta, la Configuración 1 promedia todas sus ondas por igual, incluida la del registro sano, que no contiene daño. Esta configuración sustituye ese promedio por un mecanismo de autoatención, la misma idea que está detrás de los Transformers, para que la red aprenda qué ciclos merecen más peso.</p>
+      <nav class="subnav" aria-label="Configuraciones">
+        <a href="parte4.html#p4-config1">4.1 Configuración 1</a>
+        <a href="config2.html">4.2 Configuración 2</a>
+        <strong>4.3 Configuración 3</strong>
+        <a href="config4.html">4.4 Configuración 4 y comparación</a>
+      </nav>
+    </div>
+  </section>
+
+  <section id="c3-idea" class="sec">
+    <div class="wrap">
+      <span class="kicker">Qué cambia</span>
+      <h2>Un promedio que aprende</h2>
+      <p>La Configuración 3 añade a la base el componente (d). Cambia una sola cosa: la forma de resumir las huellas de todas las ondas de la probeta antes de que la cabeza del coeficiente calcule C. La cabeza de estimación, la que entrega la grieta de cada onda, no se toca. Así, cualquier diferencia se puede atribuir al componente y a la magnitud que pretende mejorar, el coeficiente.</p>
+      <p>La expectativa de partida era doble. Por un lado, que la red aprendiera a descontar el ciclo de referencia, que por construcción no tiene daño, y a dar más peso a los ciclos que informan de la velocidad de crecimiento. Por otro, que al ponderar la secuencia completa pudiera detectar que una probeta se comporta de forma distinta a las de entrenamiento, que es justo lo que pasa con T8.</p>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin: 18px 0 26px">
+        <div class="dato"><b>+8672</b><span>parámetros entrenables, un 84% más que la base</span></div>
+        <div class="dato"><b>+47%</b><span>de tiempo de entrenamiento</span></div>
+        <div class="dato"><b>3 a 9</b><span>ciclos por secuencia en entrenamiento; 4 en T7 y T8</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="c3-atencion" class="sec">
+    <div class="wrap">
+      <span class="kicker">El mecanismo</span>
+      <h2>Cómo funciona la autoatención</h2>
+      <p>La atención es una forma de mezclar elementos de una secuencia con pesos que se calculan en el momento. Cada elemento se proyecta en tres vectores: una consulta (Q), una clave (K) y un valor (V). El parecido entre la consulta y cada clave decide cuánto pesa el valor correspondiente en el resultado. La operación estándar, introducida por Vaswani et al. (2017), es:</p>
+      <div class="eq">\[\mathrm{Attention}(Q,K,V)=\mathrm{softmax}\left(\frac{QK^{T}}{\sqrt{d_k}}\right)V\]</div>
+      <p>La división por la raíz de d<sub>k</sub>, la dimensión de las claves, evita que los productos crezcan demasiado y la función softmax se sature. Aplicado a este problema, la cabeza del coeficiente ya no recibe el promedio de las huellas, sino la salida de la atención sobre ellas:</p>
+      <div class="eq">\[\log_{10}C=g\left(\mathrm{Attention}(z_1,\dots,z_k)\right)\]</div>
+      <p>donde z<sub>1</sub> a z<sub>k</sub> son las huellas de los k ciclos de la probeta y g es la capa lineal de la cabeza del coeficiente.</p>
+
+      <h3>Un diseño pensado para secuencias diminutas</h3>
+      <p>Los Transformers que se usan en lenguaje procesan miles de elementos. Aquí cada probeta tiene entre 3 y 9 ciclos con señal en entrenamiento, y solo 4 en T7 y T8. Con tan pocos elementos, la atención no modela dependencias lejanas: simplemente pondera cuánto aporta cada ciclo. Eso condicionó cada decisión.</p>
+      <div class="rejilla">
+        <div><b>Una capa, dos cabezales</b>Sobre la huella de 32 componentes que ya existe. Varias capas tendrían más parámetros que ondas disponibles.</div>
+        <div><b>Un elemento por ciclo</b>Se promedian las dos repeticiones de cada medida, porque son casi idénticas.</div>
+        <div><b>Posición por ciclos, no por índice</b>La codificación de posición usa el intervalo de ciclos y el avance relativo en la vida de la probeta, porque las medidas no están espaciadas por igual.</div>
+        <div><b>Una consulta aprendida</b>Resume toda la secuencia en un único vector, del que la cabeza obtiene su escalar.</div>
+      </div>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_4_3_a_ponderacion.mp4" muted loop playsinline preload="metadata" aria-label="Del promedio a la ponderación"></video>
+        <figcaption>Cada ciclo recibe su propio peso.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="c3-entrenamiento" class="sec">
+    <div class="wrap">
+      <span class="kicker">Entrenamiento</span>
+      <h2>Mismo protocolo, misma curva</h2>
+      <p>La Configuración 3 se entrena exactamente igual que la base: mismas 600 épocas, misma pérdida, mismos pesos de cada término, mismas semillas y misma validación dejando fuera una probeta de entrenamiento cada vez. La pérdida sigue un recorrido casi idéntico y la validación termina en 15.49, frente a 15.26 de la configuración base. La subida final viene sobre todo de T4, que empeora de forma sostenida desde la época 350, mientras T6 mejora y T3 se mantiene.</p>
+      <figure class="fig">
+        <img src="../media/img/c3_entrenamiento.png" alt="Pérdida de entrenamiento y penalización de validación de la Configuración 3">
+        <figcaption>Evolución del entrenamiento y de la validación de la Configuración 3, con el mismo formato que la de la Configuración 1. Más abajo es mejor en ambos paneles.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="c3-resultados" class="sec">
+    <div class="wrap">
+      <span class="kicker">Qué consigue</span>
+      <h2>Mejor en T7, peor en T8... ¿o no?</h2>
+      <div class="tabla">
+        <table>
+          <thead><tr><th>Variante</th><th class="n">T7</th><th class="n">T8</th><th class="n">Total</th><th class="n">RMSE T7 (mm)</th><th class="n">RMSE T8 (mm)</th></tr></thead>
+          <tbody>
+            <tr class="base"><td>Configuración 1, promedio con peso igual</td><td class="n">6.49</td><td class="n">90.45</td><td class="n">96.94</td><td class="n">0.350</td><td class="n">2.418</td></tr>
+            <tr><td>Configuración 3, ponderación aprendida</td><td class="n">5.88</td><td class="n">91.12</td><td class="n">97.00</td><td class="n">0.522</td><td class="n">2.431</td></tr>
+          </tbody>
+          <caption>Configuración 3 frente a la Configuración 1 sobre la misma tanda de semillas. Penalización oficial y RMSE, menor es mejor.</caption>
+        </table>
+      </div>
+      <figure class="fig">
+        <img src="../media/img/c3_entrega.png" alt="Grieta medida y entregada por la Configuración 3 en T7 y T8">
+        <figcaption>Grieta medida y entregada por la Configuración 3. En T7 la proyección queda algo más alta que la de la base; en T8 alcanza igualmente la cota de 7.24 mm desde el primer ciclo sin señal.</figcaption>
+      </figure>
+      <p>A primera vista, la atención mejora T7 (5.88 frente a 6.49) y empeora un poco T8 (91.12 frente a 90.45). Pero con un conjunto tan pequeño, cambiar solo la semilla con la que se inicializa la red puede mover el resultado tanto como cambiar la arquitectura. Para no confundir una cosa con otra se aplicó una regla sencilla: cada arquitectura se entrenó en cuatro tandas de semillas independientes, y una diferencia solo se atribuye al componente si los recorridos de las dos no se solapan.</p>
+      <div class="tabla">
+        <table>
+          <thead><tr><th>Magnitud</th><th>Promedio con peso igual</th><th>Ponderación aprendida</th><th>¿Difieren?</th></tr></thead>
+          <tbody>
+            <tr><td>Penalización de T7</td><td>5.02 a 6.94</td><td>5.03 a 5.88</td><td>No, se solapan</td></tr>
+            <tr><td>Penalización de T8</td><td>90.45 a 90.93</td><td>90.77 a 91.24</td><td>No, se solapan</td></tr>
+            <tr><td>Total</td><td>95.66 a 97.87</td><td>96.14 a 97.00</td><td>No, se solapan</td></tr>
+            <tr><td>RMSE de T7 (mm)</td><td>0.330 a 0.432</td><td>0.436 a 0.522</td><td>Sí, no se tocan</td></tr>
+          </tbody>
+          <caption>Recorrido de cada arquitectura sobre cuatro tandas de semillas.</caption>
+        </table>
+      </div>
+      <figure class="fig">
+        <img src="../media/img/c3_semillas.png" alt="Recorrido de cada arquitectura sobre cuatro tandas de semillas">
+        <figcaption>Cada punto es una tanda de semillas y la línea horizontal su media. Los dos primeros paneles muestran nubes solapadas; el tercero, nubes separadas. Más abajo es mejor.</figcaption>
+      </figure>
+      <p>En la penalización, que es lo que puntúa el certamen, las nubes se solapan en todo, así que la mejora de T7 no se puede atribuir al componente. Solo dos cosas se separan con claridad, y van en sentidos opuestos. A favor: con la atención, el resultado de T7 varía menos de una semilla a otra. En contra: el error medio de T7 empeora siempre, en todas las tandas. La atención no reduce el error; cambia su forma, inclinándolo hacia el lado de pasarse, que la regla del certamen castiga menos.</p>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_4_3_b_semilla.mp4" muted loop playsinline preload="metadata" aria-label="¿componente o semilla?"></video>
+        <figcaption>Dos nubes que se solapan.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="c3-pesos" class="sec">
+    <div class="wrap">
+      <span class="kicker">Mirar dentro</span>
+      <h2>Qué aprendió la atención</h2>
+      <p>Una ventaja de la atención es que sus pesos se pueden leer directamente. Si la expectativa fuera cierta, los ciclos sin grieta deberían recibir menos peso que los ciclos con grieta. No es lo que ocurre. La razón entre el peso medio de los ciclos sin grieta y el de los ciclos con grieta va de 0.995 a 1.123, con mediana 1.077, y es mayor que uno en siete de las ocho probetas: los ciclos sanos pesan, si acaso, un poco más.</p>
+      <figure class="fig">
+        <img src="../media/img/c3_pesos_atencion.png" alt="Peso que la consulta aprendida asigna a cada ciclo en las ocho probetas">
+        <figcaption>Peso que la consulta aprendida asigna a cada ciclo. En rojo, ciclos sin grieta medida; la línea discontinua es el peso igual que usa la Configuración 1.</figcaption>
+      </figure>
+      <p>Lo importante, sin embargo, no es la dirección del sesgo sino su tamaño. Los pesos quedan muy cerca del reparto uniforme que el mecanismo venía a sustituir. Si la atención aprende algo casi idéntico al promedio, la cabeza del coeficiente recibe casi lo mismo y devuelve casi lo mismo, y eso explica por sí solo el empate.</p>
+
+      <div class="aparte">
+        <span class="kicker">Por qué no podía arreglar T8</span>
+        <h3>Dos probetas indistinguibles donde la red mira</h3>
+        <p>Hay una razón más de fondo, y no está en el modelo sino en los datos. Si se ajusta la ley de Paris directamente a las grietas medidas, sin ninguna red de por medio, T7 y T8 implican coeficientes que difieren solo 0.0070 décadas en la ventana con señal, y 0.4253 décadas en la ventana que hay que predecir. Las dos probetas son prácticamente iguales justo donde el estimador puede mirar, y se separan donde ya no hay nada que medir.</p>
+        <p>Por eso ninguna ponderación de esas ondas puede producir dos coeficientes distintos. Y cualquier ajuste que bajase el de T8 bajaría también el de T7 y lo empeoraría. No es un problema de capacidad, porque la cabeza puede emitir sin dificultad el valor que T8 necesita; es un problema de información. Lo único que distingue a T8 es su espectro de carga, que se conoce de antemano, pero aprender qué implica exigiría al menos una probeta de carga variable en entrenamiento, y no hay ninguna.</p>
+        <figure class="anim">
+        <video class="auto" src="../media/video/web_4_3_c_identificabilidad.mp4" muted loop playsinline preload="metadata" aria-label="Iguales hasta que ya no se ve"></video>
+        <figcaption>Dos coeficientes que solo se separan a ciegas.</figcaption>
+      </figure>
+      </div>
+      <a class="cuaderno" href="../config3_attention/configuracion3.html" target="_blank" rel="noopener">
+        <span><b>Cuaderno: Configuración 3</b>La autoatención, sus pesos y la prueba con varias semillas.</span>
+        <em>Abrir el cuaderno ↗</em>
+      </a>
+      <div class="ui" style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 30px; font-size: 16px">
+        <a href="config2.html">Anterior: Configuración 2</a>
+        <a href="config4.html">Siguiente: Configuración 4 y comparación</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  var videos = document.querySelectorAll("video.auto");
+  if (!("IntersectionObserver" in window)) {
+    videos.forEach(function (v) { v.play(); });
+    return;
+  }
+  var observador = new IntersectionObserver(function (entradas) {
+    entradas.forEach(function (e) {
+      if (e.isIntersecting) { e.target.play().catch(function () {}); }
+      else { e.target.pause(); }
+    });
+  }, { threshold: 0.5 });
+  videos.forEach(function (v) { observador.observe(v); });
+})();
+</script>
+</body>
+</html>

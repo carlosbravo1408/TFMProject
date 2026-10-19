@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parte 4: el modelo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#ffffff}
+a{color:#A63C0A}a:hover{color:#4D1B06}
+.pg{font-family:'Source Serif 4',Georgia,serif;color:#262626;background:#ffffff}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px}
+.ui{font-family:'IBM Plex Sans',system-ui,sans-serif}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+.pg p{font-size:19px;line-height:1.65;margin:0 0 18px}
+.pg h2{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:30px;line-height:1.2;margin:0 0 18px;color:#1f1f1d}
+.pg h3{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:22px;line-height:1.25;margin:32px 0 12px;color:#1f1f1d}
+.sec{padding:56px 0;border-top:1px solid #e6e6e2}
+.kicker{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.06em;color:#5f5f5a;text-transform:uppercase;margin-bottom:8px;display:block}
+.nav{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid #d9d9d5;background:#fafaf8}
+.nav ul{display:flex;flex-wrap:wrap;gap:8px 20px;list-style:none;margin:0;padding:0;font-size:15px}
+.logo{width:120px;height:36px;background:#ececE8;border:1px dashed #b9b9b3;display:flex;align-items:center;justify-content:center;font-size:12px;color:#5f5f5a}
+.fig{margin:26px 0;display:flex;flex-direction:column;gap:10px}
+.fig img{width:100%;height:auto;display:block;border:1px solid #e0e0dc;border-radius:4px;background:#fff}
+.fig figcaption{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#4a4a46}
+.anim{margin:28px 0;border:2px dashed #C2470D;border-radius:8px;background:repeating-linear-gradient(45deg,#fff3ec 0 12px,#fffaf6 12px 24px);padding:22px;display:flex;flex-direction:column;gap:12px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#3a1604}
+.anim .rot{font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:.06em;color:#A63C0A;font-weight:600}
+.anim h4{margin:0;font-size:19px;color:#4D1B06}
+.anim p{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.55;margin:0;color:#3a1604}
+.anim dl{display:grid;grid-template-columns:140px minmax(0,1fr);gap:6px 14px;margin:0;font-size:14.5px;line-height:1.5}
+.anim dt{font-weight:600;color:#7a2d08}
+.anim dd{margin:0}
+.anim .lienzo{aspect-ratio:16/9;max-height:300px;border:1px solid #e3b79f;border-radius:4px;background:#ffffffcc;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#A63C0A}
+.nota{font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.55;color:#6B2560;background:#faf3f8;border:1px dotted #b77aa9;border-radius:6px;padding:12px 14px;margin:18px 0}
+.tabla{overflow-x:auto;margin:22px 0}
+.tabla table{border-collapse:collapse;width:100%;min-width:560px;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px}
+.tabla th,.tabla td{border-bottom:1px solid #e0e0dc;padding:9px 10px;text-align:left;vertical-align:top}
+.tabla th{background:#f4f4f1;font-weight:600}
+.tabla td.n,.tabla th.n{text-align:right;font-variant-numeric:tabular-nums}
+.tabla caption{caption-side:bottom;text-align:left;font-size:14px;color:#4a4a46;padding-top:8px}
+.tabla tr.base td{background:#f1f6ee;font-weight:600}
+.eq{font-size:17px;background:#f6f6f3;border:1px solid #e3e3df;border-radius:6px;padding:14px 18px;margin:16px 0;overflow-x:auto;text-align:center}
+.eq math{font-size:1.2em}
+.eq details{margin-top:10px;text-align:left}
+.eq summary{cursor:pointer;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:13px;color:#5f5f5a;min-height:28px}
+.eq code{display:block;white-space:pre-wrap;word-break:break-all;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#3b3b38;margin-top:6px}
+.toc{display:flex;flex-wrap:wrap;gap:8px 18px;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;margin-top:8px}
+.dato{border:1px solid #d4d4d0;border-radius:8px;padding:16px;background:#fafaf8;display:flex;flex-direction:column;gap:4px}
+.dato b{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:28px;color:#4D1B06}
+.dato span{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;line-height:1.4;color:#4a4a46}
+.rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:18px 0 24px}
+.rejilla div{border:1px solid #d4d4d0;border-radius:8px;padding:14px;background:#fafaf8;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#3b3b38}
+.rejilla b{display:block;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:#5f5f5a;margin-bottom:4px}
+.aparte{border:1px solid #d4d4d0;border-radius:10px;background:#f7f7f4;padding:22px;margin:26px 0}
+.aparte h3{margin-top:0}
+.subnav{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+.subnav a{display:inline-flex;align-items:center;min-height:40px;padding:0 12px;border:1px solid #c9c9c4;border-radius:20px;text-decoration:none;color:#262626;background:#ffffff;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px}
+.cuaderno{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 20px;border:1px solid #d4d4d0;border-left:4px solid #4D1B06;border-radius:8px;padding:16px 20px;margin:30px 0 0;background:#fafaf8;font-family:'IBM Plex Sans',system-ui,sans-serif;text-decoration:none;color:#262626}
+.cuaderno:hover{border-color:#A63C0A;color:#262626}
+.cuaderno span{font-size:15px;line-height:1.45;color:#4a4a46}
+.cuaderno b{display:block;font-size:17px;color:#1f1f1d;margin-bottom:2px}
+.cuaderno em{font-style:normal;font-weight:600;font-size:15px;color:#A63C0A;white-space:nowrap}
+
+.anim{margin:30px 0;border:0;border-radius:0;background:none;padding:0;display:flex;flex-direction:column;gap:10px}
+.anim video{display:block;width:100%;height:auto;border:1px solid #e0e0dc;border-radius:4px;background:#ffffff}
+.anim figcaption{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#4a4a46}
+.eq{overflow-x:auto;overflow-y:hidden;margin:20px 0;font-size:1.1em}
+.logo{width:auto;height:36px;background:none;border:0;display:block}
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'\\[',right:'\\]',display:true}]})"></script>
+</head>
+<body>
+<div class="pg" style="width: 100%">
+  <header class="nav ui">
+    <div style="display: flex; gap: 14px; align-items: center">
+      <img class="logo" src="../media/img/Logo_VIU.png" alt="VIU">
+      <a href="../index.html" style="font-size: 17px; font-weight: 700; color: #262626; text-decoration: none">Grietas, ondas y física</a>
+    </div>
+    <ul>
+      <li><a href="parte1.html">1. El problema</a></li>
+      <li><a href="parte2.html">2. La señal</a></li>
+      <li><a href="parte3.html">3. La ley física</a></li>
+      <li><strong>4. El modelo</strong></li>
+      <li><a href="conclusiones.html">5. Conclusiones</a></li>
+      <li><a href="bibliografia.html">Bibliografía</a></li>
+    </ul>
+  </header>
+
+  <section style="padding: 60px 0 36px; background: #fafaf8">
+    <div class="wrap">
+      <span class="kicker">Parte 4</span>
+      <h1 class="ui" style="margin: 0 0 14px; font-size: 42px; line-height: 1.12; color: #1f1f1d">El modelo: arquitectura y ablación</h1>
+      <p style="font-size: 21px; color: #3b3b38">Con la señal limpia y la ley física calibrada, toca juntarlas. Esta parte presenta la arquitectura completa, explica cómo se diseñó el estudio de ablación para medir qué aporta cada pieza, y desmonta con detalle la configuración base, la que sirve de referencia para todas las demás.</p>
+      <nav class="toc" aria-label="Contenido de la parte 4">
+        <a href="#p4-arquitectura">4.0 La arquitectura y la ablación</a>
+        <a href="#p4-config1">4.1 Configuración 1: 1D-CNN + PINN</a>
+        <a href="config2.html">4.2 Configuración 2: predictor multi-paso</a>
+        <a href="config3.html">4.3 Configuración 3: autoatención</a>
+        <a href="config4.html">4.4 Configuración 4 y comparación</a>
+      </nav>
+    </div>
+  </section>
+
+  <section id="p4-arquitectura" class="sec">
+    <div class="wrap">
+      <span class="kicker">4.0</span>
+      <h2>La arquitectura y el estudio de ablación</h2>
+      <p>En medicina, una ablación consiste en retirar un tejido para ver qué función cumplía. En aprendizaje automático la idea es la misma: se construye un modelo por piezas y se quitan o añaden de una en una, para saber cuánto aporta realmente cada una en lugar de presumirlo. Es la forma honesta de responder a la pregunta "¿esto sirve para algo?".</p>
+      <p>El modelo de este trabajo tiene cuatro piezas. Dos están siempre presentes y forman la base; las otras dos son opcionales.</p>
+      <div class="rejilla">
+        <div><b>(a) Codificador 1D-CNN</b>Lee la onda y estima la longitud de grieta en los ciclos con señal. Siempre presente.</div>
+        <div><b>(b) Módulo físicamente informado</b>Estima el coeficiente C de cada probeta y extrapola con la ley de Paris-Erdogan. Siempre presente.</div>
+        <div><b>(c) Predictor multi-paso</b>Opcional. Sustituye la fórmula cerrada de la ley por una integración numérica (Runge-Kutta de cuarto orden) sobre la carga real, bloque a bloque.</div>
+        <div><b>(d) Autoatención</b>Opcional. Sustituye el promedio de todas las ondas de la probeta por una ponderación aprendida de cada ciclo.</div>
+      </div>
+      <figure class="fig">
+        <img src="../media/img/arquitectura_memoria.png" alt="Diagrama de la arquitectura con los cuatro componentes">
+        <figcaption>Arquitectura del modelo y ubicación de los cuatro componentes. Abajo, la cabeza de estimación, que trabaja mientras hay señal; arriba, el módulo físico, que identifica el coeficiente y extrapola. Las piezas opcionales (c) y (d) sustituyen cada una un bloque enmarcado en trazo discontinuo. La flecha roja no transporta datos: es el término físico de la pérdida, que solo actúa durante el entrenamiento.</figcaption>
+      </figure>
+      <h3>Las cuatro configuraciones</h3>
+      <p>Combinando las piezas salen cuatro configuraciones. Cada componente opcional se prueba dos veces, una sin el otro y otra con él, de modo que su efecto no dependa de una única combinación.</p>
+      <div class="tabla">
+        <table>
+          <thead><tr><th>Configuración</th><th>Componentes</th><th>Cómo extrapola</th><th>Cómo resume las ondas</th></tr></thead>
+          <tbody>
+            <tr class="base"><td>1 (base)</td><td>(a) + (b)</td><td>Fórmula cerrada de Paris-Erdogan</td><td>Promedio con peso igual</td></tr>
+            <tr><td>2</td><td>(a) + (b) + (c)</td><td>Integración RK4 sobre el bloque de carga real</td><td>Promedio con peso igual</td></tr>
+            <tr><td>3</td><td>(a) + (b) + (d)</td><td>Fórmula cerrada de Paris-Erdogan</td><td>Autoatención</td></tr>
+            <tr><td>4</td><td>(a) + (b) + (c) + (d)</td><td>Integración RK4 sobre el bloque de carga real</td><td>Autoatención</td></tr>
+          </tbody>
+          <caption>Las configuraciones 2 y 4 tienen además una variante (2b y 4b) que añade el retardo por sobrecarga de Wheeler a la integración.</caption>
+        </table>
+      </div>
+      <p>El resto de esta parte se centra en la Configuración 1. Entenderla bien es imprescindible, porque las otras tres solo cambian una pieza de ella.</p>
+      
+    </div>
+  </section>
+
+  <section id="p4-config1" class="sec">
+    <div class="wrap">
+      <span class="kicker">4.1</span>
+      <h2>Configuración 1: una red convolucional que obedece a la física</h2>
+      <p>La configuración base tiene dos salidas, una por cada tarea del certamen. La primera, la cabeza de estimación, entrega una longitud de grieta por cada onda. La segunda, la cabeza del coeficiente, entrega un único número por probeta, su coeficiente C, con el que la ley de Paris proyecta la grieta cuando ya no hay señal. Las dos leen la misma representación de la onda y, durante el entrenamiento, quedan atadas por una condición: el coeficiente de una debe ser capaz de reproducir la secuencia de grietas que estima la otra.</p>
+      <nav class="subnav" aria-label="Apartados de la Configuración 1">
+        <a href="#c1-datos">Los datos</a>
+        <a href="#c1-codificador">El codificador</a>
+        <a href="#c1-filtros">Los filtros</a>
+        <a href="#c1-estimacion">Cabeza de estimación</a>
+        <a href="#c1-coeficiente">Cabeza del coeficiente</a>
+        <a href="#c1-perdida">La pérdida</a>
+        <a href="#c1-entrenamiento">Entrenamiento</a>
+        <a href="#c1-resultados">Resultados</a>
+      </nav>
+
+      <h3 id="c1-datos">Los datos que recibe, y por qué son tan pocos</h3>
+      <p>Cada onda llega de la Parte 2 convertida en dos canales de 1100 muestras: la onda estandarizada y su diferencia respecto del registro sano. En total, 2200 números por onda. Y hay muy pocas ondas: 87 con su longitud de grieta, de las que solo 65 corresponden a una grieta mayor que cero.</p>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin: 18px 0 26px">
+        <div class="dato"><b>2 × 1100</b><span>valores de entrada por onda</span></div>
+        <div class="dato"><b>87</b><span>ondas etiquetadas en todo el conjunto</span></div>
+        <div class="dato"><b>10274</b><span>parámetros entrenables del modelo completo</span></div>
+        <div class="dato"><b>82 s</b><span>de entrenamiento de las cinco semillas, sin tarjeta gráfica</span></div>
+      </div>
+      <p>Ese tamaño manda sobre todo lo demás. Una red convolucional de las habituales, con millones de parámetros, memorizaría las 87 ondas en pocas épocas y no sabría nada de una probeta nueva. Por eso el codificador tiene solo 10160 parámetros, y el modelo completo, 10274.</p>
+
+      <div class="aparte">
+        <span class="kicker">Detalle</span>
+        <h3>Por qué cada ciclo aporta dos ondas</h3>
+        <p>Cada vez que el ensayo se detiene para medir, la señal se registra dos veces seguidas, en los ficheros signal_1 y signal_2. Las dos repeticiones corresponden a la misma grieta, pero no son idénticas: difieren en el ruido eléctrico y en pequeñas variaciones de la adquisición. El modelo las usa como dos ejemplos distintos con la misma etiqueta, lo que duplica los ejemplos disponibles y, de paso, enseña a la red que esas pequeñas diferencias no significan nada.</p>
+        <p>Esa misma semejanza obliga a tener cuidado al validar. Si una repetición quedara en entrenamiento y la otra en validación, la red estaría examinándose con una copia casi exacta de algo que ya ha visto. Por eso la validación separa siempre probetas completas, nunca ciclos sueltos. La única excepción al uso de ambas es el registro sano de referencia, para el que se toma siempre la primera repetición.</p>
+        <figure class="anim">
+        <video class="auto" src="../media/video/web_4_1_a_repeticiones.mp4" muted loop playsinline preload="metadata" aria-label="Dos repeticiones, una etiqueta"></video>
+        <figcaption>Dos ondas casi gemelas que cuentan como dos ejemplos.</figcaption>
+      </figure>
+      </div>
+
+      <h3 id="c1-codificador">El codificador: de 2200 números a 32</h3>
+      <p>Una red convolucional unidimensional recorre la onda con pequeños patrones, llamados filtros, y en cada posición mide cuánto se parece el tramo de onda a cada patrón. El resultado es un mapa que dice dónde aparece cada patrón. Encadenando varias capas, la red pasa de detectar formas muy locales a reconocer estructuras más largas.</p>
+      <p>El codificador tiene cuatro bloques. Cada uno aplica una convolución, normaliza las activaciones del lote (batch normalization) y las pasa por una función de activación suave llamada GELU. En lugar de usar capas de agrupamiento para acortar la secuencia, cada convolución avanza varias muestras de golpe (paso o stride), lo que reduce la longitud y el coste de cálculo en la misma operación.</p>
+      <div class="tabla">
+        <table>
+          <thead><tr><th>Bloque</th><th class="n">Filtros</th><th class="n">Tamaño del filtro</th><th class="n">Paso</th><th class="n">Longitud de salida</th></tr></thead>
+          <tbody>
+            <tr><td>Entrada</td><td class="n">2 canales</td><td class="n"></td><td class="n"></td><td class="n">1100</td></tr>
+            <tr><td>1</td><td class="n">8</td><td class="n">15</td><td class="n">4</td><td class="n">275</td></tr>
+            <tr><td>2</td><td class="n">16</td><td class="n">9</td><td class="n">4</td><td class="n">69</td></tr>
+            <tr><td>3</td><td class="n">24</td><td class="n">7</td><td class="n">4</td><td class="n">18</td></tr>
+            <tr><td>4</td><td class="n">32</td><td class="n">5</td><td class="n">2</td><td class="n">9</td></tr>
+          </tbody>
+          <caption>Los cuatro bloques convolucionales: cada vez más filtros sobre una secuencia cada vez más corta.</caption>
+        </table>
+      </div>
+      <p>Al final del cuarto bloque, cada una de las 9 posiciones resume 399 muestras de la onda original, unos 20 µs, y posiciones consecutivas distan 6.4 µs. Es decir, la red acaba mirando la onda en tramos solapados de unos 20 µs, pero nadie los ha definido a mano: salen solos del tamaño de los filtros y de los pasos.</p>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_4_1_b_convolucion.mp4" muted loop playsinline preload="metadata" aria-label="Una convolución con paso"></video>
+        <figcaption>Un filtro recorre la onda de cuatro en cuatro.</figcaption>
+      </figure>
+
+      <h3 id="c1-filtros">Los filtros del primer bloque: de dónde salen</h3>
+      <p>El primer bloque tiene 8 filtros, y cada uno es una pequeña matriz de 2 × 15 números: 15 muestras de cada canal. Como abarca los dos canales a la vez, cada filtro combina desde el principio la onda estandarizada y la diferencial, en lugar de tratarlas por separado.</p>
+      <p>Al empezar el entrenamiento, son valores aleatorios, y el algoritmo de entrenamiento los va corrigiendo poco a poco, en la dirección que reduce el error, hasta que se convierten en los patrones que a la red le resultan útiles para estimar la grieta. En ese sentido, los filtros son lo que la red ha aprendido a buscar en la onda.</p>
+      <p>Conviene poner su tamaño en perspectiva. Quince muestras a 20 MHz son 0.75 µs, mientras que un periodo completo de la portadora de 200 kHz dura 5 µs, es decir, 100 muestras. Un filtro del primer bloque, por tanto, no ve ni siquiera una oscilación entera: responde a rasgos muy locales de la forma, como pendientes y curvaturas, y a cómo se combinan los dos canales. Los patrones de escala más larga, del tamaño del paquete S0, se construyen en los bloques siguientes.</p>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_4_1_c_filtros.mp4" muted loop playsinline preload="metadata" aria-label="Lo que aprendió el primer bloque"></video>
+        <figcaption>De pesos aleatorios a filtros aprendidos.</figcaption>
+      </figure>
+      
+
+      <h3 id="c1-mapas">El mapa de activación: de 2 × 1100 a 32 × 9</h3>
+      <p>Cuando un filtro recorre la onda, en cada posición multiplica sus 2 × 15 pesos por el tramo de onda que tiene debajo y suma el resultado. Si el tramo se parece al patrón, sale un número alto; si no, uno bajo o negativo. Como avanza de cuatro en cuatro muestras, de las 1100 posiciones posibles solo visita 275, así que cada filtro deja una fila de 275 números. Esa fila es un mapa de activación: dice en qué zonas de la onda aparece el patrón que busca ese filtro.</p>
+      <p>Los dos canales de entrada no dan dos filas, porque cada filtro los combina en una sola suma. Lo que decide el número de filas es el número de filtros. Con los 8 filtros del primer bloque, la onda de 2 × 1100 se convierte en un mapa de 8 × 275: ocho filas, una por patrón, y 275 posiciones a lo largo de la onda.</p>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_4_1_j_mapa.mp4" muted loop playsinline preload="metadata" aria-label="Ocho filtros, un mapa"></video>
+        <figcaption>De la onda de 2 × 1100 al mapa de 8 × 275.</figcaption>
+      </figure>
+      <p>A partir de aquí, cada bloque repite la misma operación sobre el mapa del bloque anterior, que trata como si fuera una señal con tantos canales como filas. Los filtros del segundo bloque son matrices de 8 × 9, porque abarcan las 8 filas del mapa anterior y 9 posiciones; hay 16 y avanzan de cuatro en cuatro, así que dejan un mapa de 16 × 69. El tercero, con 24 filtros de 16 × 7, deja 24 × 18. El cuarto, con 32 filtros de 24 × 5 y paso 2, deja 32 × 9.</p>
+      <p class="ui" style="font-size: 17px; text-align: center; margin: 22px 0"><strong>2 × 1100 → 8 × 275 → 16 × 69 → 24 × 18 → 32 × 9</strong></p>
+      <p>En cada bloque hay más filas y menos posiciones. Las filas son patrones cada vez más elaborados, porque combinan los del bloque anterior. Las posiciones son cada vez menos y más anchas: al final, cada una de las 9 abarca unos 20 µs de la onda original.</p>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_4_1_k_bloques.mp4" muted loop playsinline preload="metadata" aria-label="La cadena de bloques"></video>
+        <figcaption>Cuatro bloques, cada vez más filas y menos posiciones.</figcaption>
+      </figure>
+
+      <h3>Del mapa a un resumen de 32 números</h3>
+      <p>Tras el cuarto bloque quedan 32 mapas de 9 posiciones. Cada mapa se resume con dos estadísticos complementarios: su promedio y su máximo. El promedio refleja la atenuación global de la onda; el máximo, la amplitud del eco disperso más intenso. Como hay 32 mapas y de cada uno salen dos números, el resultado son 32 × 2 = 64 valores. Esos 64 números pasan por una capa lineal que los comprime en un vector de 32 componentes, la representación latente o huella de la onda. Durante el entrenamiento, una fracción de sus componentes se apaga al azar (dropout del 30%) para que la red no dependa de ninguna en exclusiva.</p>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_4_1_d_resumen.mp4" muted loop playsinline preload="metadata" aria-label="Promedio y máximo"></video>
+        <figcaption>Nueve posiciones se convierten en dos números.</figcaption>
+      </figure>
+
+      <h3 id="c1-estimacion">La cabeza de estimación: una grieta que solo puede crecer</h3>
+      <p>Para estimar la grieta de un ciclo, la cabeza combina cuatro fuentes de información:</p>
+      <ul class="ui" style="font-size: 17px; line-height: 1.6; margin: 0 0 18px; padding-left: 22px">
+        <li>la huella de 32 números de la onda;</li>
+        <li>13 rasgos calculados directamente sobre la señal;</li>
+        <li>la grieta estimada en el ciclo anterior;</li>
+        <li>el logaritmo de los ciclos transcurridos desde la medida anterior.</li>
+      </ul>
+      <p>Los 13 rasgos son el valor eficaz del canal diferencial y su máximo absoluto, la correlación con la onda de referencia, el valor eficaz en ocho ventanas consecutivas de la traza, el centroide temporal de la energía diferencial y el retardo de fase en microsegundos. Entre todos recogen los tres fenómenos que explotan los métodos ganadores: pérdida de energía, cambio de fase y pérdida de parecido con la onda sana.</p>
+      <p>Lo más importante es cómo se construye la salida. La cabeza no predice la grieta directamente, sino cuánto ha crecido desde el ciclo anterior, y ese incremento pasa por una función llamada softplus, que siempre devuelve un número positivo:</p>
+      <div class="eq">\[a(k)=a(k-1)+\mathrm{softplus}\left(f\left(z_k,\,v_k,\,a(k-1),\,\log\Delta N_k\right)\right)\]</div>
+      <p>donde z<sub>k</sub> es la huella de la onda, v<sub>k</sub> los 13 rasgos, ΔN<sub>k</sub> los ciclos transcurridos y f una capa lineal.</p>
+      <p>El resultado es que la secuencia estimada nunca puede decrecer. La monotonía que exige el certamen no se impone después con un parche: está garantizada por construcción. Se probaron otras dos formas, y las dos fallaban. Predecir la grieta absoluta hacía que la red ignorase el contexto y se estancase en un valor constante. Predecir una velocidad y multiplicarla por los ciclos transcurridos amplificaba cualquier error por un factor que en este conjunto va de 0.5 a 36.</p>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_4_1_e_incremental.mp4" muted loop playsinline preload="metadata" aria-label="La salida incremental"></video>
+        <figcaption>Una escalera que solo sube.</figcaption>
+      </figure>
+
+      <h3 id="c1-coeficiente">La cabeza del coeficiente: un número por probeta</h3>
+      <p>El coeficiente C es una propiedad de la probeta, no de cada onda. Por eso esta cabeza lee el promedio de las huellas de todas las ondas de la probeta y produce un único valor:</p>
+      <div class="eq">\[\log_{10}C=\log_{10}C_{prior}+\varrho\,\tanh(u),\qquad \varrho=1\ \text{dex}\]</div>
+      <p>Aquí C<sub>prior</sub> es el coeficiente poblacional de la Parte 3, log10 C = -8.4264, y u es la salida de una capa lineal. La tangente hiperbólica está acotada entre -1 y 1, así que la red puede mover el coeficiente como mucho una década hacia arriba o hacia abajo, nunca más. Es una forma de dejarle libertad para adaptarse a cada probeta sin permitirle valores físicamente absurdos.</p>
+      <p>Con C y el exponente fijo m = 2.00, la ley de Paris tiene una solución exacta muy sencilla: desde la última grieta estimada, la grieta crece de forma exponencial con los ciclos, con una tasa k que depende de C y del rango de tensión equivalente del bloque de carga:</p>
+      <div class="eq">\[a(N)=a_0\,e^{k\,\Delta N},\qquad k=C\,\pi\,\Delta\sigma_{eq}^{2}\]</div>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_4_1_f_coeficiente.mp4" muted loop playsinline preload="metadata" aria-label="De las huellas al coeficiente"></video>
+        <figcaption>Promediar, acotar y obtener C.</figcaption>
+      </figure>
+
+      <h3 id="c1-perdida">La función de pérdida: cuatro exigencias a la vez</h3>
+      <p>Durante el entrenamiento la red minimiza una suma de cuatro términos. Cada uno expresa una exigencia distinta:</p>
+      <div class="eq">\[\mathcal{L}=\mathcal{L}_{datos}+\lambda_{fis}\,\mathcal{L}_{Paris}+\lambda_{mono}\,\mathcal{L}_{mono}+\lambda_{prior}\,\mathcal{L}_{prior},\qquad \lambda_{fis}=1,\ \lambda_{mono}=0.5,\ \lambda_{prior}=1\]</div>
+      <div class="rejilla">
+        <div><b>Datos</b>Compara la grieta estimada con la medida, castigando más quedarse corto que pasarse, igual que el certamen (divisores 0.2 y 0.5).</div>
+        <div><b>Física (Paris)</b>Entre ciclos consecutivos, la estimación posterior debe coincidir con lo que predice la ley partiendo de la anterior. Es lo que hace de la red una PINN.</div>
+        <div><b>Monotonía</b>Castiga que la estimación baje de un ciclo al siguiente durante el entrenamiento.</div>
+        <div><b>Prior</b>Penaliza que el coeficiente se aleje del valor poblacional, con una holgura de 0.3 décadas.</div>
+      </div>
+      <p>Tres de ellos se escriben así. El término de datos copia la forma asimétrica de la penalización oficial, con el exponente acotado en 6 para que no desborde al principio del entrenamiento; w<sub>i</sub> es el peso de cada medida:</p>
+      <div class="eq">\[\mathcal{L}_{datos}=\frac{1}{n}\sum_i w_i\left[\exp\left(\min\left(\frac{|\hat{x}_i-x_i|}{s_i},\,6\right)\right)-1\right]\]</div>
+      <p>El término físico promedia, con la función de Huber (cuadrática hasta 0.5 mm y lineal por encima), el residuo entre la estimación del ciclo siguiente y lo que predice la ley Π partiendo del anterior:</p>
+      <div class="eq">\[r_k=\hat{a}(N_{k+1})-\Pi\left(\hat{a}(N_k),\,\Delta N_k;\,C,\,m,\,\Delta\sigma_{eq}\right)\]</div>
+      <p>Y el prior es la penalización cuadrática de alejarse del coeficiente poblacional:</p>
+      <div class="eq">\[\mathcal{L}_{prior}=\left(\frac{\log_{10}C-\log_{10}C_{prior}}{\sigma_C}\right)^{2},\qquad \sigma_C=0.3\ \text{dex}\]</div>
+      <p>Dos detalles marcan la diferencia. El primero: en el término físico, la estimación del ciclo anterior se trata como un valor fijo. Así el término solo puede corregir la estimación posterior y el coeficiente, y no puede hacer trampa acercando ambas estimaciones entre sí. El segundo: el término físico no actúa desde el principio. Al comienzo las estimaciones aún son malas, y forzarlas a obedecer la ley haría que todas acabasen ajustadas a una misma curva. Por eso permanece apagado durante el primer 25% de las épocas y entra de forma gradual a lo largo del 15% siguiente.</p>
+      <p>Hay un último ajuste, quizá el que más influye en el resultado final: las dos primeras medidas de grieta no nula de cada probeta pesan 48 veces más que el resto. Son los puntos desde los que el protocolo obliga a extrapolar, de modo que acertar en ellos importa más que acertar en cualquier otro.</p>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_4_1_g_calentamiento.mp4" muted loop playsinline preload="metadata" aria-label="La física entra tarde"></video>
+        <figcaption>El peso del término físico a lo largo de las épocas.</figcaption>
+      </figure>
+
+      <h3 id="c1-entrenamiento">Cómo se entrena y cómo predice</h3>
+      <div class="tabla">
+        <table>
+          <thead><tr><th>Elemento</th><th>Valor</th></tr></thead>
+          <tbody>
+            <tr><td>Optimizador</td><td>AdamW, tasa de aprendizaje 3 × 10<sup>-3</sup> con recocido coseno, decaimiento de peso 10<sup>-3</sup></td></tr>
+            <tr><td>Épocas</td><td>600, sin parada temprana</td></tr>
+            <tr><td>Lote</td><td>Una probeta completa por paso, en orden aleatorio cada época</td></tr>
+            <tr><td>Aumento de datos</td><td>Desplazamiento de ±0.5 µs, ruido del 5% y ruido de 0.4 mm sobre la grieta previa</td></tr>
+            <tr><td>Conjunto</td><td>Cinco modelos con semillas distintas; se promedian sus predicciones</td></tr>
+            <tr><td>Cota de entrega</td><td>7.24 mm, la segunda mayor grieta observada en entrenamiento</td></tr>
+          </tbody>
+          <caption>Principales decisiones de entrenamiento e inferencia de la Configuración 1.</caption>
+        </table>
+      </div>
+      <p>El lote es una probeta entera, y no un puñado de ondas barajadas, porque dos piezas del modelo están definidas a nivel de probeta: el residuo físico, que compara ciclos consecutivos de la misma probeta, y la cabeza del coeficiente, que promedia todas sus ondas.</p>
+
+      <h3 id="c1-aumento">Aumento de datos: más variedad sin inventar señales</h3>
+      <p>Con 87 ondas repartidas entre seis probetas de entrenamiento, una red con miles de parámetros puede aprenderse cada onda de memoria en lugar de aprender a leer la grieta. Para evitarlo, en cada época cada onda se altera ligeramente al azar antes de entrar en la red, de modo que nunca ve exactamente la misma señal dos veces. Las alteraciones se aplican solo durante el entrenamiento; al predecir, la red recibe la onda tal cual.</p>
+      <p>La condición es que cada alteración reproduzca algo que la adquisición produce de verdad. Inventar variaciones que el ensayo no puede generar enseñaría a la red a tolerar cosas que nunca va a ver, y podría borrar justo la información que delata la grieta.</p>
+      <div class="tabla">
+        <table>
+          <thead><tr><th>Perturbación</th><th>Cómo se aplica</th><th>Qué reproduce</th></tr></thead>
+          <tbody>
+            <tr><td>Desplazamiento temporal</td><td>La onda se adelanta o se retrasa un número aleatorio de muestras entre -10 y +10, es decir, hasta ±0.5 µs.</td><td>La incertidumbre del instante de disparo de la adquisición.</td></tr>
+            <tr><td>Ruido gaussiano</td><td>Se suma ruido aleatorio con una desviación del 5% de la de la onda estandarizada.</td><td>El ruido eléctrico de la cadena de adquisición.</td></tr>
+            <tr><td>Ruido en la grieta previa</td><td>A la grieta del ciclo anterior se le suma ruido con desviación de 0.4 mm, recortado para que nunca sea negativa.</td><td>La diferencia entre entrenar con la medida exacta y predecir con la propia estimación.</td></tr>
+          </tbody>
+          <caption>Las tres perturbaciones aleatorias que se aplican durante el entrenamiento.</caption>
+        </table>
+      </div>
+      <p>La tercera no es un aumento de datos al uso. En entrenamiento la red recibe como contexto la grieta medida en el ciclo anterior, que es exacta; al predecir recibe su propia estimación, que arrastra error. Si solo hubiera visto valores exactos, ese error la pillaría por sorpresa. Perturbar la entrada durante el entrenamiento acerca las dos situaciones.</p>
+      <p>Igual de importante es lo que no se hace. No se estira ni se comprime la onda en el tiempo, ni se desplaza más de medio microsegundo, porque el tiempo de vuelo forma parte de la huella del daño: la grieta retrasa la llegada del paquete, y alterarlo más allá de la incertidumbre del disparo borraría precisamente lo que la red tiene que aprender.</p>
+      <figure class="fig">
+        <img src="../media/img/aumento_datos.png" alt="Efecto del aumento de datos sobre una onda y sobre la grieta previa del lote de T4">
+        <figcaption>Efecto del aumento de datos sobre el lote de T4. Arriba, detalle de una onda estandarizada antes y después del desplazamiento y el ruido: la forma del paquete no cambia. Abajo, grieta previa medida y perturbada a lo largo de las ondas del lote; la perturbada se recorta en cero y nunca es negativa.</figcaption>
+      </figure>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_4_1_i_aumento.mp4" muted loop playsinline preload="metadata" aria-label="La misma onda, nunca igual"></video>
+        <figcaption>Una onda perturbada en tres épocas distintas.</figcaption>
+      </figure>
+      <p>Para comprobar que el entrenamiento generaliza, el mismo modelo se entrenó cuatro veces dejando fuera cada vez una probeta distinta (T1, T3, T4 o T6) y midiendo la penalización oficial sobre ella cada cinco épocas. T7 y T8 no participan en esta validación.</p>
+      <figure class="fig">
+        <img src="../media/img/entrenamiento_validacion.png" alt="Pérdida de entrenamiento y penalización de validación a lo largo de las épocas">
+        <figcaption>Arriba, pérdida total de los modelos definitivos (media de las cinco semillas y su recorrido); la línea de puntos marca la entrada del término físico. Abajo, penalización oficial sobre la probeta apartada en cada pliegue. Más abajo es mejor en ambos paneles.</figcaption>
+      </figure>
+      <p>La pérdida desciende durante las 600 épocas, con un escalón cuando entra la física en la época 151. La validación toca su mínimo en la época 230 (12.51) y termina en 15.26, pero las probetas no se comportan igual: T6 se estabiliza mientras T4 empeora a partir de la 400. Con solo cuatro probetas de validación, esa disparidad es del mismo tamaño que la diferencia entre el mínimo y el final, así que la curva no permite fijar un punto de parada fiable.</p>
+      <figure class="fig">
+        <img src="../media/img/terminos_perdida.png" alt="Evolución de los términos de la pérdida">
+        <figcaption>Evolución de los términos de la pérdida en la primera semilla: el de datos domina al principio, el físico permanece inactivo durante el primer cuarto y entra de forma gradual, y el del prior mantiene el coeficiente cerca del valor poblacional.</figcaption>
+      </figure>
+      <p>A la hora de predecir, la estimación es recursiva: la grieta previa que recibe la red es su propia estimación del ciclo anterior, porque en T7 y T8 no hay ninguna medida disponible. Cuando se acaba la señal, la ley de Paris toma el relevo desde la última estimación, con el coeficiente que ha calculado la red, y la grieta entregada nunca supera la cota de 7.24 mm.</p>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_4_1_h_relevo.mp4" muted loop playsinline preload="metadata" aria-label="El relevo"></video>
+        <figcaption>La red entrega el testigo a la ley física.</figcaption>
+      </figure>
+
+      <h3 id="c1-resultados">Qué consigue</h3>
+      <div class="tabla">
+        <table>
+          <thead><tr><th>Probeta</th><th class="n">Penalización</th><th class="n">RMSE (mm)</th><th class="n">De la estimación</th><th class="n">De la prognosis</th></tr></thead>
+          <tbody>
+            <tr><td>T7</td><td class="n">6.49</td><td class="n">0.350</td><td class="n">1.59</td><td class="n">4.89</td></tr>
+            <tr><td>T8</td><td class="n">90.45</td><td class="n">2.418</td><td class="n">5.38</td><td class="n">85.07</td></tr>
+          </tbody>
+          <caption>Rendimiento de la Configuración 1 sobre las probetas de validación, con la penalización repartida entre los ciclos estimados y los extrapolados.</caption>
+        </table>
+      </div>
+      <figure class="fig">
+        <img src="../media/img/entrega_config1.png" alt="Grieta medida y entregada por la Configuración 1 en T7 y T8">
+        <figcaption>Grieta medida y entregada en T7 (izquierda) y T8 (derecha). Cuadrados: estimaciones desde la señal; rombos: proyecciones con la ley física. La línea discontinua vertical marca el último ciclo con señal y la horizontal de puntos, la cota de 7.24 mm.</figcaption>
+      </figure>
+      <p>En T7, la probeta de carga constante, la proyección sigue la forma de la curva medida con un error medio de 0.35 mm, y su penalización de 6.49 mejora la del tercer puesto publicado (9.23) y la de las tres réplicas (22.71, 83.25 y 215.12). En T8, la de carga variable, la historia es otra: la proyección alcanza la cota de 7.24 mm desde el primer ciclo sin señal y la penalización sube a 90.45.</p>
+      <p>El reparto de la penalización cuenta dónde está el problema: la prognosis aporta el 75.4% de la penalización en T7 y el 94.0% en T8. Dicho de otro modo, la red estima bien mientras hay señal; lo que decide el resultado es la extrapolación, y en particular el coeficiente con el que se hace. Ese es el hilo que siguen las configuraciones 2, 3 y 4, cuyos componentes actúan precisamente sobre la extrapolación.</p>
+      
+      <a class="cuaderno" href="../config1_cnn_pinn/configuracion1.html" target="_blank" rel="noopener">
+        <span><b>Cuaderno: Configuración 1</b>El entrenamiento, la validación y la entrega de la red convolucional con la ley física.</span>
+        <em>Abrir el cuaderno ↗</em>
+      </a>
+      <div class="ui" style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 30px; font-size: 16px">
+        <a href="parte3.html">Anterior: la ley física</a>
+        <a href="config2.html">Siguiente: Configuración 2</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  var videos = document.querySelectorAll("video.auto");
+  if (!("IntersectionObserver" in window)) {
+    videos.forEach(function (v) { v.play(); });
+    return;
+  }
+  var observador = new IntersectionObserver(function (entradas) {
+    entradas.forEach(function (e) {
+      if (e.isIntersecting) { e.target.play().catch(function () {}); }
+      else { e.target.pause(); }
+    });
+  }, { threshold: 0.5 });
+  videos.forEach(function (v) { observador.observe(v); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parte 1: el problema</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#ffffff}
+a{color:#A63C0A}a:hover{color:#4D1B06}
+.pg{font-family:'Source Serif 4',Georgia,serif;color:#262626;background:#ffffff}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px}
+.ui{font-family:'IBM Plex Sans',system-ui,sans-serif}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+.pg p{font-size:19px;line-height:1.65;margin:0 0 18px}
+.pg h2{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:30px;line-height:1.2;margin:0 0 18px;color:#1f1f1d}
+.pg h3{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:22px;line-height:1.25;margin:28px 0 12px;color:#1f1f1d}
+.sec{padding:56px 0;border-top:1px solid #e6e6e2}
+.kicker{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.06em;color:#5f5f5a;text-transform:uppercase;margin-bottom:8px;display:block}
+.nav{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid #d9d9d5;background:#fafaf8}
+.nav ul{display:flex;flex-wrap:wrap;gap:8px 20px;list-style:none;margin:0;padding:0;font-size:15px}
+.logo{width:120px;height:36px;background:#ececE8;border:1px dashed #b9b9b3;display:flex;align-items:center;justify-content:center;font-size:12px;color:#5f5f5a}
+.fig{margin:26px 0;display:flex;flex-direction:column;gap:10px}
+.fig img{width:100%;height:auto;display:block;border:1px solid #e0e0dc;border-radius:4px;background:#fff}
+.fig figcaption{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#4a4a46}
+.fila{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.anim{margin:28px 0;border:2px dashed #C2470D;border-radius:8px;background:repeating-linear-gradient(45deg,#fff3ec 0 12px,#fffaf6 12px 24px);padding:22px;display:flex;flex-direction:column;gap:12px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#3a1604}
+.anim .rot{font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:.06em;color:#A63C0A;font-weight:600}
+.anim h4{margin:0;font-size:19px;color:#4D1B06}
+.anim p{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.55;margin:0;color:#3a1604}
+.anim dl{display:grid;grid-template-columns:140px minmax(0,1fr);gap:6px 14px;margin:0;font-size:14.5px;line-height:1.5}
+.anim dt{font-weight:600;color:#7a2d08}
+.anim dd{margin:0}
+.anim .lienzo{aspect-ratio:16/9;max-height:300px;border:1px solid #e3b79f;border-radius:4px;background:#ffffffcc;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#A63C0A}
+.nota{font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.55;color:#6B2560;background:#faf3f8;border:1px dotted #b77aa9;border-radius:6px;padding:12px 14px;margin:18px 0}
+.dato{border:1px solid #d4d4d0;border-radius:8px;padding:16px;background:#fafaf8;display:flex;flex-direction:column;gap:4px}
+.dato b{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:28px;color:#4D1B06}
+.dato span{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;line-height:1.4;color:#4a4a46}
+.tabla{overflow-x:auto;margin:22px 0}
+.tabla table{border-collapse:collapse;width:100%;min-width:560px;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px}
+.tabla th,.tabla td{border-bottom:1px solid #e0e0dc;padding:9px 10px;text-align:left;vertical-align:top}
+.tabla th{background:#f4f4f1;font-weight:600}
+.tabla td.n,.tabla th.n{text-align:right;font-variant-numeric:tabular-nums}
+.tabla caption{caption-side:bottom;text-align:left;font-size:14px;color:#4a4a46;padding-top:8px}
+.eq{font-size:17px;background:#f6f6f3;border:1px solid #e3e3df;border-radius:6px;padding:14px 18px;margin:16px 0;overflow-x:auto;text-align:center}
+.eq math{font-size:1.2em}
+.eq details{margin-top:10px;text-align:left}
+.eq summary{cursor:pointer;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:13px;color:#5f5f5a;min-height:28px}
+.eq code{display:block;white-space:pre-wrap;word-break:break-all;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#3b3b38;margin-top:6px}
+.equipo{border:1px solid #d4d4d0;border-radius:8px;padding:20px;background:#ffffff;display:flex;flex-direction:column;gap:10px}
+.equipo h4{margin:0;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:19px}
+.equipo p{font-size:16px;line-height:1.55;margin:0}
+.equipo .ins{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;background:#f4f4f1;border-radius:6px;padding:10px 12px;color:#3b3b38}
+.toc{display:flex;flex-wrap:wrap;gap:8px 18px;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;margin-top:8px}
+a.equipo{text-decoration:none;color:#262626}
+a.equipo:hover{border-color:#A63C0A;box-shadow:0 2px 10px rgba(77,27,6,.08);color:#262626}
+.equipo .abrir{margin-top:auto;font-style:normal;font-family:'IBM Plex Sans',system-ui,sans-serif;font-weight:600;font-size:15px;color:#A63C0A}
+.aparte{border:1px solid #d4d4d0;border-radius:10px;background:#f7f7f4;padding:22px;margin:26px 0}
+.aparte h3{margin-top:0}
+
+.anim{margin:30px 0;border:0;border-radius:0;background:none;padding:0;display:flex;flex-direction:column;gap:10px}
+.anim video{display:block;width:100%;height:auto;border:1px solid #e0e0dc;border-radius:4px;background:#ffffff}
+.anim figcaption{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#4a4a46}
+.eq{overflow-x:auto;overflow-y:hidden;margin:20px 0;font-size:1.1em}
+.logo{width:auto;height:36px;background:none;border:0;display:block}
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'\\[',right:'\\]',display:true}]})"></script>
+</head>
+<body>
+<div class="pg" style="width: 100%">
+  <header class="nav ui">
+    <div style="display: flex; gap: 14px; align-items: center">
+      <img class="logo" src="../media/img/Logo_VIU.png" alt="VIU">
+      <a href="../index.html" style="font-size: 17px; font-weight: 700; color: #262626; text-decoration: none">Grietas, ondas y física</a>
+    </div>
+    <ul>
+      <li><strong>1. El problema</strong></li>
+      <li><a href="parte2.html">2. La señal</a></li>
+      <li><a href="parte3.html">3. La ley física</a></li>
+      <li><a href="parte4.html">4. El modelo</a></li>
+      <li><a href="conclusiones.html">5. Conclusiones</a></li>
+      <li><a href="bibliografia.html">Bibliografía</a></li>
+    </ul>
+  </header>
+
+  <section style="padding: 60px 0 36px; background: #fafaf8">
+    <div class="wrap">
+      <span class="kicker">Parte 1</span>
+      <h1 class="ui" style="margin: 0 0 14px; font-size: 42px; line-height: 1.12; color: #1f1f1d">Sobre el problema</h1>
+      <p style="font-size: 21px; color: #3b3b38">Antes de hablar de redes neuronales conviene entender qué se mide, quién lo midió y con qué regla se juzga una predicción. Esta parte responde a esas tres preguntas y termina con lo que hicieron los equipos que mejor resolvieron el reto.</p>
+      <nav class="toc" aria-label="Contenido de la parte 1">
+        <a href="#p1-intro">1.1 Una grieta que no se ve</a>
+        <a href="#p1-certamen">1.2 El certamen y sus datos</a>
+        <a href="#p1-metrica">1.3 Cómo se puntúa</a>
+        <a href="#p1-ganadores">1.4 Los tres primeros puestos</a>
+      </nav>
+    </div>
+  </section>
+
+  <section id="p1-intro" class="sec">
+    <div class="wrap">
+      <span class="kicker">1.1</span>
+      <h2>El daño que no se ve</h2>
+      <p>Cualquier pieza metálica sometida a cargas que suben y bajan una y otra vez se va dañando, aunque cada carga por separado sea perfectamente soportable. A ese desgaste se le llama fatiga. En las estructuras aeronáuticas de aluminio el daño suele empezar en un concentrador de tensiones, típicamente el borde del agujero de un remache, y desde ahí nace una grieta diminuta que avanza un poco con cada ciclo de carga.</p>
+      <p>La aviación convive con ese hecho mediante una filosofía llamada tolerancia al daño: se acepta que una estructura opere con una grieta siempre que esta pueda detectarse, medirse y, sobre todo, predecirse, de manera que se repare antes de que sea peligrosa. La pregunta práctica es doble. Primero, ¿cuánto mide la grieta hoy? Y segundo, ¿cuánto medirá dentro de unos miles de ciclos?</p>
+      <div class="fila">
+        <figure class="fig" style="margin: 0">
+          <img src="../media/img/fatiga_antes.png" alt="Pieza mecánica antes de someterse a cargas cíclicas">
+          <figcaption>(a) Pieza antes de las cargas cíclicas.</figcaption>
+        </figure>
+        <figure class="fig" style="margin: 0">
+          <img src="../media/img/fatiga_despues.png" alt="La misma pieza fracturada por fatiga">
+          <figcaption>(b) La misma pieza después: la fractura arranca en las esquinas del agujero rectangular, sin redondeo.</figcaption>
+        </figure>
+      </div>
+      <p style="margin-top: 22px">Medir la grieta directamente exige parar y desmontar, así que la alternativa es escucharla. Se pegan a la chapa pequeñas pastillas piezoeléctricas: una emite un pulso ultrasónico, la onda viaja por la placa y otra pastilla la recibe al otro lado. Si en el camino hay una grieta, la onda llega más débil y con la forma alterada. Toda la información sobre el daño está escondida en esos cambios sutiles.</p>
+      <p>El problema es que esa señal no está disponible siempre. En la práctica habrá tramos sin sensor y, aun así, habrá que decir cuánto crece la grieta. Ahí entra la física: aunque no podamos medir, sí sabemos cómo debe crecer una grieta bajo una carga conocida. Este trabajo intenta juntar las dos piezas en un mismo modelo.</p>
+      
+    </div>
+  </section>
+
+  <section id="p1-certamen" class="sec">
+    <div class="wrap">
+      <span class="kicker">1.2</span>
+      <h2>El certamen y sus datos</h2>
+      <p>Los datos proceden del PHM Data Challenge 2019 (en adelante, el certamen), una competición organizada por la PHM Society en la que equipos de todo el mundo recibieron el mismo conjunto de ensayos y debían entregar sus predicciones bajo una regla de puntuación común. Esa es su gran virtud: cualquier método nuevo se puede comparar con los ganadores usando exactamente la misma vara de medir.</p>
+
+      <h3>Qué se ensayó</h3>
+      <p>Ocho probetas, llamadas T1 a T8, que reproducen en laboratorio la unión de dos paneles de fuselaje: dos chapas de aluminio aeronáutico 2024-T3 de 1.6 mm de espesor, superpuestas y unidas por tres filas de cinco remaches. Una máquina hidráulica las carga cinco veces por segundo hasta romperlas. La grieta aparece siempre en el borde de un remache de la primera fila, que es la que más esfuerzo soporta, y avanza uniendo un agujero con el siguiente.</p>
+      <p>Para vigilar esa fila se pegan diez pastillas piezoeléctricas: cinco emiten y cinco reciben. Cada pareja define un camino que cruza la zona de remaches. El emisor lanza una onda de Lamb de 200 kHz, un tipo de onda que viaja guiada por la chapa, y el receptor la registra durante 200 µs a 20 millones de muestras por segundo. Como la grieta no nace en el mismo sitio en todas las probetas, el conjunto publica solo el camino en el que se observó.</p>
+      <figure class="fig">
+        <img src="../media/img/junta_sensores.png" alt="Plano de la junta traslapada con la posición de emisores, receptores y remaches">
+        <figcaption>Junta traslapada y disposición de los transductores: en rojo los emisores, en verde los receptores, y la línea discontinua es el camino de la onda. Adaptado de Lim y Sohn (2019).</figcaption>
+      </figure>
+      <p>Los transductores trabajan por parejas fijas, en lo que se llama configuración pitch-catch: el emisor 1 con el receptor 6, el 2 con el 7, y así hasta el 5 con el 10. Cada pareja está en la misma fila de la junta y su camino, horizontal, cruza un único remache de la primera fila, el de la columna más cercana a los emisores, que es donde nace la grieta. Al disparar, la onda se expande en todas direcciones, pero de cada disparo solo se guarda lo que llega al receptor de la pareja. Cada registro tiene dos canales: ch1, la excitación que lanza el emisor, y ch2, lo que recibe el receptor.</p>
+      <p>De los cinco caminos, el conjunto solo incluye, para cada probeta, aquel en el que se observó la grieta:</p>
+      <div class="tabla">
+        <table>
+          <thead><tr><th>Camino</th><th>Pareja (emisor → receptor)</th><th>Probetas</th></tr></thead>
+          <tbody>
+            <tr><td>I</td><td>1 → 6</td><td>T1, T6 y T8</td></tr>
+            <tr><td>II</td><td>2 → 7</td><td>ninguna</td></tr>
+            <tr><td>III</td><td>3 → 8</td><td>T3</td></tr>
+            <tr><td>IV</td><td>4 → 9</td><td>T2, T4 y T7</td></tr>
+            <tr><td>V</td><td>5 → 10</td><td>T5</td></tr>
+          </tbody>
+          <caption>Camino publicado para cada probeta, según la tabla 1 del ReadMe del certamen.</caption>
+        </table>
+      </div>
+      <p>Las dos probetas de validación comparten camino con probetas de entrenamiento: T7 con T2 y T4, y T8 con T1 y T6. Aun así, cada probeta lleva sus propios transductores, pegados por separado, y eso basta para que dos probetas con la misma grieta no den la misma señal. Es uno de los problemas que resuelve la Parte 2.</p>
+
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_1_2_a_onda_grieta.mp4" muted loop playsinline preload="metadata" aria-label="La onda que delata la grieta"></video>
+        <figcaption>Misma onda, sin grieta y con grieta.</figcaption>
+      </figure>
+
+      <h3>Las cifras del conjunto</h3>
+      <p>El conjunto es pequeño, y esa pequeñez condiciona todo lo que viene después. Cada vez que el ensayo se detiene para medir la grieta con un microscopio, también se registra la onda, dos veces seguidas.</p>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin: 18px 0 26px">
+        <div class="dato"><b>8</b><span>probetas: T1 a T6 para entrenar, T7 y T8 para validar</span></div>
+        <div class="dato"><b>87</b><span>ondas utilizables con su longitud de grieta</span></div>
+        <div class="dato"><b>65</b><span>de ellas con una grieta mayor que cero</span></div>
+        <div class="dato"><b>4000</b><span>muestras por registro: 200 µs a 20 MHz</span></div>
+      </div>
+      <p>Las probetas T1 a T7 se cargan siempre igual: la tensión oscila entre 4.77 y 100.21 MPa en todos los ciclos. T8 es diferente: su carga alterna bloques de 500 ciclos con un máximo de 90.00 MPa y otros 500 con 100.21 MPa. Ninguna probeta de entrenamiento comparte ese régimen, y por eso T8 es el caso más exigente del certamen.</p>
+      <figure class="fig">
+        <img src="../media/img/espectros_carga.png" alt="Ciclo de carga de amplitud constante y de amplitud variable">
+        <figcaption>Ciclo de carga leído de los ficheros del conjunto. Izquierda: amplitud constante de T1 a T7. Derecha: amplitud variable de T8, donde solo cambia la tensión máxima.</figcaption>
+      </figure>
+
+      <div class="aparte">
+        <span class="kicker">Un paréntesis necesario</span>
+        <h3>¿Por qué no añadir más datos?</h3>
+        <p>Con tan pocas probetas, la tentación obvia es sumar ensayos de otras fuentes. El problema es que una onda de Lamb no describe solo la grieta: describe todo el camino que recorre. Su forma depende de la geometría de la pieza y de sus agujeros, de los remaches y los bordes en los que rebota, del material y su espesor, de cómo está pegado cada transductor y de las condiciones del entorno, como la temperatura o la humedad. Kong et al. (2020), segundo puesto del certamen, señalan que la señal llega contaminada por el ruido del entorno, las reflexiones en los bordes, la propagación compleja de la onda y la deformación local de la geometría. En una junta remachada, además, los ecos del remache y de la grieta se superponen (He et al., 2013), y Rai y Mitra (2021) cuentan la temperatura, la humedad, las condiciones de contorno y el pegado de los transductores entre los factores que alteran la respuesta.</p>
+        <p>Tampoco la grieta crece igual en cualquier circunstancia. Su velocidad cambia con la temperatura (Wang et al., 2025) y con la corrosión (Dourado y Viana, 2019), y las constantes de la ley de crecimiento dependen del material y de la geometría de la unión, como se verá en la Parte 3.</p>
+        <p>Por eso los datos de otro ensayo no se pueden mezclar sin más. Una junta con otra geometría, otro espesor, otra aleación u otras condiciones de ensayo daría ondas y curvas de crecimiento que no significan lo mismo, y la red aprendería diferencias entre campañas en lugar de diferencias entre grietas. En la revisión realizada no se encontró otro conjunto público con juntas traslapadas remachadas de 2024-T3, la misma instrumentación, condiciones de ensayo controladas y medidas ópticas de la grieta, así que el trabajo se ciñe a las ocho probetas del certamen. Es también lo que hace justa la comparación con los ganadores: todos los métodos se miden sobre exactamente los mismos datos.</p>
+      </div>
+
+      <h3>Las dos tareas: estimar y predecir</h3>
+      <p>Aquí está el giro del certamen. En las probetas de validación, los organizadores cortan la señal ultrasónica mucho antes de la rotura, pero conservan las medidas ópticas para poder puntuar. Así que el problema se parte en dos tareas de naturaleza distinta:</p>
+      <ul class="ui" style="font-size: 17px; line-height: 1.6; margin: 0 0 18px; padding-left: 22px">
+        <li><strong>Estimación.</strong> Hay onda en ese ciclo y hay que convertirla en milímetros de grieta.</li>
+        <li><strong>Prognosis.</strong> Ya no hay onda. Solo se conoce la última grieta estimada y la carga futura, y hay que decir cuánto medirá varios miles de ciclos después.</li>
+      </ul>
+      <p>En T7 la ventana sin señal dura 8009 ciclos; en T8, 23843. Además, las predicciones se entregaban punto a punto, sin posibilidad de corregir las ya entregadas.</p>
+      <figure class="fig">
+        <img src="../media/img/curvas_grieta.png" alt="Curvas de crecimiento de grieta de las ocho probetas">
+        <figcaption>Curvas de crecimiento medidas ópticamente. Izquierda: probetas de entrenamiento. Derecha: validación; la línea de puntos marca el último ciclo con señal y los marcadores huecos son los puntos que hay que predecir sin información del sensor.</figcaption>
+      </figure>
+
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_1_2_b_corte.mp4" muted loop playsinline preload="metadata" aria-label="El corte de la señal"></video>
+        <figcaption>Dónde termina la estimación y empieza la prognosis.</figcaption>
+      </figure>
+
+      <h3>Peculiaridades que hubo que resolver en este dataset limitado</h3>
+      <p>Un conjunto real nunca llega limpio. Estas fueron las rarezas encontradas y lo que se hizo con cada una; el criterio fue siempre que la justificación no dependiera de la puntuación que se obtuviera después.</p>
+      <div class="tabla">
+        <table>
+          <thead><tr><th>Anomalía</th><th>Tratamiento</th></tr></thead>
+          <tbody>
+            <tr><td>El registro de T8 en el ciclo 40000 no se parece a ningún otro de T8 (correlación 0.27 a 0.48, frente a 0.64 a 0.99 entre los demás).</td><td>Se excluye; el ciclo 50000 pasa a ser la referencia sin daño de T8.</td></tr>
+            <tr><td>En T1, ciclo 50000, las dos repeticiones no son compatibles entre sí.</td><td>Para los registros de referencia se usa siempre la primera repetición.</td></tr>
+            <tr><td>El fichero de T4 anota el ciclo 7054, pero la carpeta es la 67054.</td><td>Se corrige al cargar los datos.</td></tr>
+            <tr><td>El ciclo 55391 de T3 tiene señal pero no longitud de grieta.</td><td>Se descarta.</td></tr>
+            <tr><td>El ciclo 42000 de T5 no tiene ficheros de señal.</td><td>Se retira.</td></tr>
+            <tr><td>T2 y T5 solo tienen dos medidas de grieta no nula.</td><td>Sirven para entrenar la red, pero no para calibrar la ley física ni como pliegue de validación.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      
+    </div>
+  </section>
+
+  <section id="p1-metrica" class="sec">
+    <div class="wrap">
+      <span class="kicker">1.3</span>
+      <h2>Cómo se puntúa</h2>
+      <p>El certamen no premia simplemente acertar en milímetros. Su regla, la penalización oficial, está pensada desde el punto de vista de quien mantiene el avión, y eso la hace bastante particular. Es un número sin unidades, cuanto más bajo mejor, que se calcula por probeta sumando una pequeña multa por cada punto entregado.</p>
+      <p>Antes de nada, todas las longitudes se dividen por la longitud final medida de la probeta (7.22 mm en T7 y 5.52 mm en T8). Así, un mismo error relativo pesa igual en probetas que rompen con grietas de distinto tamaño. Llamemos x a la grieta real normalizada y x̂ a la entregada:</p>
+      <div class="eq">\[x_i=\frac{a_i}{a_{final}},\qquad \hat{x}_i=\frac{\hat{a}_i}{a_{final}}\]</div>
+      <p>La multa de cada punto es el producto de tres factores, y la penalización de la probeta es la suma de todas:</p>
+      <div class="eq">\[S=\sum_{i=1}^{n} T(i)\cdot A(i)\cdot M(i)\]</div>
+
+      <h3>Factor temporal: el error pesa más a medida que crece la grieta</h3>
+      <div class="eq">\[T(i)=2+10\,x_i\]</div>
+      <p>Vale 2 cuando la grieta es nula y 12 cuando alcanza su longitud final. El mismo error cuesta seis veces más al final de la vida de la probeta que al principio, que es justo cuando una grieta es peligrosa.</p>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_1_3_a_factor_temporal.mp4" muted loop playsinline preload="metadata" aria-label="El factor temporal"></video>
+        <figcaption>El mismo error, al principio y al final.</figcaption>
+      </figure>
+
+      <h3>Factor de exactitud: subestimar cuesta más que sobreestimar</h3>
+      <div class="eq">\[A(i)=\exp\left(\frac{|\hat{x}_i-x_i|}{s_i}\right)-1,\qquad s_i=\begin{cases}0.2 &amp; \text{si } \hat{x}_i&lt;x_i\\0.5 &amp; \text{si } \hat{x}_i\geq x_i\end{cases}\]</div>
+      <p>Es el corazón de la regla. El error se castiga de forma exponencial y, además, asimétrica: si la grieta entregada es más corta que la real, el divisor es 0.2; si es más larga, 0.5. Con un error de 0.1 (un 10% de la longitud final), quedarse corto cuesta exp(0.5) - 1 = 0.65, mientras que pasarse cuesta exp(0.2) - 1 = 0.22, casi tres veces menos. La lógica es operativa: declarar una grieta más pequeña de lo que es resulta mucho más peligroso que declararla más grande.</p>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_1_3_b_asimetria.mp4" muted loop playsinline preload="metadata" aria-label="La asimetría"></video>
+        <figcaption>Pasarse frente a quedarse corto.</figcaption>
+      </figure>
+
+      <h3>Factor de monotonía: una grieta, una vez propagada, nunca encoge</h3>
+      <div class="eq">\[M(i)=\begin{cases}1+10\,|\hat{x}_i-\hat{x}_{i-1}| &amp; \text{si } \hat{x}_i&lt;\hat{x}_{i-1}\\1 &amp; \text{en otro caso}\end{cases}\]</div>
+      <p>Una grieta por fatiga no puede cerrarse. Si la secuencia entregada retrocede, la multa de ese punto se multiplica en proporción al tamaño del retroceso. Mientras la secuencia crece, este factor vale 1 y no hace nada.</p>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_1_3_c_monotonia.mp4" muted loop playsinline preload="metadata" aria-label="La monotonía"></video>
+        <figcaption>El castigo por retroceder.</figcaption>
+      </figure>
+      <p>Junto a la penalización se informa también del error medio en milímetros (RMSE), que es la métrica habitual en la literatura y permite comparar con trabajos que no usan la regla del certamen.</p>
+    </div>
+  </section>
+
+  <section id="p1-ganadores" class="sec">
+    <div class="wrap">
+      <span class="kicker">1.4</span>
+      <h2>Los tres primeros puestos</h2>
+      <p>Los tres equipos que encabezaron el certamen siguieron, en el fondo, la misma receta en dos etapas: primero extraen de la onda unas cuantas características elegidas a mano y las convierten en longitud de grieta; después anclan una curva o una ley física creciente a esas estimaciones y la prolongan hacia el futuro. Ninguno impuso la monotonía como restricción del aprendizaje; la obtienen de regalo porque la curva con la que extrapolan solo puede subir. Cada tarjeta abre, en otra pestaña, el cuaderno con la réplica del método.</p>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 22px 0">
+        <a class="equipo" href="../1st_place_baseline/1st_place_baseline.html" target="_blank" rel="noopener">
+          <span class="kicker" style="margin: 0">1.º puesto · 7.36</span>
+          <h4>Youn et al. (2020)</h4>
+          <p>Una regresión de vectores de soporte (SVR) con núcleo gaussiano sobre características filtradas de la señal, referidas al registro sin daño. Para el futuro usan trans-fitting: trasladan y reajustan una curva de crecimiento candidata.</p>
+          <div class="ins"><strong>Lo que se tomó:</strong> comparar cada onda con el registro sano de su propia probeta, y la idea de un valor a priori para reajustar los parámetros de crecimiento.</div>
+          <em class="abrir">Abrir la réplica ↗</em>
+        </a>
+        <a class="equipo" href="../2nd_place_baseline/2nd_place_baseline.html" target="_blank" rel="noopener">
+          <span class="kicker" style="margin: 0">2.º puesto · 7.63</span>
+          <h4>Kong et al. (2020)</h4>
+          <p>Un bosque aleatorio (Random Forest) estima la grieta, y la extrapolación se apoya en la ecuación de Walker, una variante de la ley de Paris sensible a la tensión media, con simulación de Monte Carlo para T8.</p>
+          <div class="ins"><strong>Lo que se tomó:</strong> la alineación de las ondas por correlación cruzada, el rango de tensión equivalente del bloque de carga y la búsqueda en rejilla con validación por probeta.</div>
+          <em class="abrir">Abrir la réplica ↗</em>
+        </a>
+        <a class="equipo" href="../3rd_place_baseline/3rd_place_baseline.html" target="_blank" rel="noopener">
+          <span class="kicker" style="margin: 0">3.º puesto · 16.14</span>
+          <h4>Rao et al. (2020)</h4>
+          <p>Solo cuatro características (primer pico, RMS, logaritmo de la curtosis y correlación) combinadas en una regresión lineal de conjunto, y una ley de Paris cuyos parámetros se ajustan con un algoritmo genético.</p>
+          <div class="ins"><strong>Lo que se tomó:</strong> la ley de Paris con factor geométrico unidad y su solución cerrada. Su uso del algoritmo genético motivó la comparación de algoritmos de la Parte 3.</div>
+          <em class="abrir">Abrir la réplica ↗</em>
+        </a>
+      </div>
+
+      <h3>Por qué no se pudieron replicar</h3>
+      <p>Para tener una referencia justa, los tres métodos se reconstruyeron desde cero a partir de sus artículos y se ejecutaron sobre los mismos datos y con el mismo protocolo. El resultado fue llamativo: las réplicas quedan entre quince y treinta veces por encima de los valores publicados.</p>
+      <div class="tabla">
+        <table>
+          <thead>
+            <tr><th>Método</th><th class="n">Publicado T7</th><th class="n">Publicado T8</th><th class="n">Publicado total</th><th class="n">Réplica T7</th><th class="n">Réplica T8</th><th class="n">Réplica total</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Youn et al. (2020)</td><td class="n">3.42</td><td class="n">3.94</td><td class="n">7.36</td><td class="n">22.71</td><td class="n">91.60</td><td class="n">114.31</td></tr>
+            <tr><td>Kong et al. (2020)</td><td class="n">3.54</td><td class="n">4.09</td><td class="n">7.63</td><td class="n">83.25</td><td class="n">148.34</td><td class="n">231.60</td></tr>
+            <tr><td>Rao et al. (2020)</td><td class="n">9.23</td><td class="n">6.86</td><td class="n">16.09</td><td class="n">215.12</td><td class="n">25.79</td><td class="n">240.91</td></tr>
+          </tbody>
+          <caption>Penalización oficial por probeta (menor es mejor). El reparto entre T7 y T8 de los valores publicados se deriva de las tablas de cada artículo.</caption>
+        </table>
+      </div>
+      <p>Esa distancia no significa que los valores publicados sean falsos. Significa que los artículos no contienen información suficiente para reproducirlos: ninguno publica código, ninguno publica los parámetros de la ley de crecimiento que usó, y quedan sin especificar el tratamiento exacto de la señal, las ventanas temporales y cómo se fijan los puntos desde los que se extrapola. Cada una de esas decisiones se reconstruyó a partir del texto, y otra reconstrucción daría otras cifras.</p>
+      <p>Los propios autores reconocen esa fragilidad: los tres señalan en sus conclusiones que el número de probetas de entrenamiento es escaso. Por eso, a lo largo del sitio, las cifras publicadas se mantienen como referencia superior y las réplicas como el único término de comparación reproducible.</p>
+      
+      <div class="ui" style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 30px; font-size: 16px">
+        <a href="../index.html">Volver a la portada</a>
+        <a href="parte2.html">Siguiente: tratamiento de la señal</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  var videos = document.querySelectorAll("video.auto");
+  if (!("IntersectionObserver" in window)) {
+    videos.forEach(function (v) { v.play(); });
+    return;
+  }
+  var observador = new IntersectionObserver(function (entradas) {
+    entradas.forEach(function (e) {
+      if (e.isIntersecting) { e.target.play().catch(function () {}); }
+      else { e.target.pause(); }
+    });
+  }, { threshold: 0.5 });
+  videos.forEach(function (v) { observador.observe(v); });
+})();
+</script>
+</body>
+</html>

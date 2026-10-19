@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configuración 4 y comparación</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#ffffff}
+a{color:#A63C0A}a:hover{color:#4D1B06}
+.pg{font-family:'Source Serif 4',Georgia,serif;color:#262626;background:#ffffff}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px}
+.ui{font-family:'IBM Plex Sans',system-ui,sans-serif}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+.pg p{font-size:19px;line-height:1.65;margin:0 0 18px}
+.pg h2{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:30px;line-height:1.2;margin:0 0 18px;color:#1f1f1d}
+.pg h3{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:22px;line-height:1.25;margin:32px 0 12px;color:#1f1f1d}
+.sec{padding:56px 0;border-top:1px solid #e6e6e2}
+.kicker{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.06em;color:#5f5f5a;text-transform:uppercase;margin-bottom:8px;display:block}
+.nav{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid #d9d9d5;background:#fafaf8}
+.nav ul{display:flex;flex-wrap:wrap;gap:8px 20px;list-style:none;margin:0;padding:0;font-size:15px}
+.logo{width:120px;height:36px;background:#ececE8;border:1px dashed #b9b9b3;display:flex;align-items:center;justify-content:center;font-size:12px;color:#5f5f5a}
+.fig{margin:26px 0;display:flex;flex-direction:column;gap:10px}
+.fig img{width:100%;height:auto;display:block;border:1px solid #e0e0dc;border-radius:4px;background:#fff}
+.fig figcaption{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#4a4a46}
+.anim{margin:28px 0;border:2px dashed #C2470D;border-radius:8px;background:repeating-linear-gradient(45deg,#fff3ec 0 12px,#fffaf6 12px 24px);padding:22px;display:flex;flex-direction:column;gap:12px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#3a1604}
+.anim .rot{font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:.06em;color:#A63C0A;font-weight:600}
+.anim h4{margin:0;font-size:19px;color:#4D1B06}
+.anim p{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.55;margin:0;color:#3a1604}
+.anim dl{display:grid;grid-template-columns:140px minmax(0,1fr);gap:6px 14px;margin:0;font-size:14.5px;line-height:1.5}
+.anim dt{font-weight:600;color:#7a2d08}
+.anim dd{margin:0}
+.anim .lienzo{aspect-ratio:16/9;max-height:300px;border:1px solid #e3b79f;border-radius:4px;background:#ffffffcc;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#A63C0A}
+.nota{font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.55;color:#6B2560;background:#faf3f8;border:1px dotted #b77aa9;border-radius:6px;padding:12px 14px;margin:18px 0}
+.tabla{overflow-x:auto;margin:22px 0}
+.tabla table{border-collapse:collapse;width:100%;min-width:560px;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px}
+.tabla th,.tabla td{border-bottom:1px solid #e0e0dc;padding:9px 10px;text-align:left;vertical-align:top}
+.tabla th{background:#f4f4f1;font-weight:600}
+.tabla td.n,.tabla th.n{text-align:right;font-variant-numeric:tabular-nums}
+.tabla caption{caption-side:bottom;text-align:left;font-size:14px;color:#4a4a46;padding-top:8px}
+.tabla tr.base td{background:#f1f6ee;font-weight:600}
+.dato{border:1px solid #d4d4d0;border-radius:8px;padding:16px;background:#fafaf8;display:flex;flex-direction:column;gap:4px}
+.dato b{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:28px;color:#4D1B06}
+.dato span{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;line-height:1.4;color:#4a4a46}
+.rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:18px 0 24px}
+.rejilla div{border:1px solid #d4d4d0;border-radius:8px;padding:14px;background:#fafaf8;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#3b3b38}
+.rejilla b{display:block;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:#5f5f5a;margin-bottom:4px}
+.aparte{border:1px solid #d4d4d0;border-radius:10px;background:#f7f7f4;padding:22px;margin:26px 0}
+.aparte h3{margin-top:0}
+.subnav{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+.subnav a,.subnav strong{display:inline-flex;align-items:center;min-height:40px;padding:0 12px;border:1px solid #c9c9c4;border-radius:20px;text-decoration:none;color:#262626;background:#ffffff;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px}
+.subnav strong{background:#4D1B06;color:#ffffff;border-color:#4D1B06}
+.toc{display:flex;flex-wrap:wrap;gap:8px 18px;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;margin-top:14px}
+.cuaderno{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 20px;border:1px solid #d4d4d0;border-left:4px solid #4D1B06;border-radius:8px;padding:16px 20px;margin:30px 0 0;background:#fafaf8;font-family:'IBM Plex Sans',system-ui,sans-serif;text-decoration:none;color:#262626}
+.cuaderno:hover{border-color:#A63C0A;color:#262626}
+.cuaderno span{font-size:15px;line-height:1.45;color:#4a4a46}
+.cuaderno b{display:block;font-size:17px;color:#1f1f1d;margin-bottom:2px}
+.cuaderno em{font-style:normal;font-weight:600;font-size:15px;color:#A63C0A;white-space:nowrap}
+
+.anim{margin:30px 0;border:0;border-radius:0;background:none;padding:0;display:flex;flex-direction:column;gap:10px}
+.anim video{display:block;width:100%;height:auto;border:1px solid #e0e0dc;border-radius:4px;background:#ffffff}
+.anim figcaption{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#4a4a46}
+.eq{overflow-x:auto;overflow-y:hidden;margin:20px 0;font-size:1.1em}
+.logo{width:auto;height:36px;background:none;border:0;display:block}
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'\\[',right:'\\]',display:true}]})"></script>
+</head>
+<body>
+<div class="pg" style="width: 100%">
+  <header class="nav ui">
+    <div style="display: flex; gap: 14px; align-items: center">
+      <img class="logo" src="../media/img/Logo_VIU.png" alt="VIU">
+      <a href="../index.html" style="font-size: 17px; font-weight: 700; color: #262626; text-decoration: none">Grietas, ondas y física</a>
+    </div>
+    <ul>
+      <li><a href="parte1.html">1. El problema</a></li>
+      <li><a href="parte2.html">2. La señal</a></li>
+      <li><a href="parte3.html">3. La ley física</a></li>
+      <li><strong>4. El modelo</strong></li>
+      <li><a href="conclusiones.html">5. Conclusiones</a></li>
+      <li><a href="bibliografia.html">Bibliografía</a></li>
+    </ul>
+  </header>
+
+  <section style="padding: 60px 0 36px; background: #fafaf8">
+    <div class="wrap">
+      <span class="kicker">Parte 4 · 4.4</span>
+      <h1 class="ui" style="margin: 0 0 14px; font-size: 42px; line-height: 1.12; color: #1f1f1d">Configuración 4 y las cuatro, frente a frente</h1>
+      <p style="font-size: 21px; color: #3b3b38">La última configuración junta las dos piezas opcionales. Su papel no es ganar, sino cerrar el estudio: con las cuatro combinaciones a la vista se puede separar lo que aporta cada pieza por su cuenta de lo que aportan juntas. Después toca comparar las cuatro y responder a la pregunta que queda abierta desde la Configuración 1: ¿por qué falla T8?</p>
+      <nav class="subnav" aria-label="Configuraciones">
+        <a href="parte4.html#p4-config1">4.1 Configuración 1</a>
+        <a href="config2.html">4.2 Configuración 2</a>
+        <a href="config3.html">4.3 Configuración 3</a>
+        <strong>4.4 Configuración 4 y comparación</strong>
+      </nav>
+      <nav class="toc" aria-label="Contenido de la página">
+        <a href="#c4-config">La Configuración 4</a>
+        <a href="#c4-comparacion">Las cuatro, frente a frente</a>
+        <a href="#c4-referencias">Frente a los ganadores</a>
+        <a href="#c4-t8">Por qué falla T8</a>
+      </nav>
+    </div>
+  </section>
+
+  <section id="c4-config" class="sec">
+    <div class="wrap">
+      <span class="kicker">Qué cambia</span>
+      <h2>Las dos piezas a la vez</h2>
+      <p>La Configuración 4 no introduce ninguna arquitectura nueva: es la red de la Configuración 3, con autoatención, acoplada al motor de extrapolación de la Configuración 2, con integración paso a paso. La variante 4b añade además el retardo de Wheeler. Como comparte la red de la Configuración 3, su entrenamiento es el mismo y su entrega coincide punto a punto con la de esta.</p>
+      <div class="rejilla">
+        <div><b>Red</b>La de la Configuración 3: codificador, cabeza de estimación y cabeza del coeficiente con autoatención.</div>
+        <div><b>Extrapolación</b>La de la Configuración 2: Runge-Kutta de cuarto orden sobre el bloque de carga real, con o sin retardo.</div>
+        <div><b>Entrenamiento</b>Ninguno propio. Hereda los pesos de la Configuración 3.</div>
+      </div>
+      <h3>Lo que aporta cada pieza, por diferencia</h3>
+      <p>Con las cuatro configuraciones disponibles, la aportación de cada pieza se obtiene comparando las parejas que solo se distinguen en ella. Por ejemplo, la Configuración 3 frente a la 1 y la 4 frente a la 2 aíslan la autoatención; la 2 frente a la 1 y la 4 frente a la 3 aíslan el predictor multi-paso. La aportación conjunta mide si las dos juntas hacen algo que no hacen por separado.</p>
+      <div class="tabla">
+        <table>
+          <thead><tr><th>Término</th><th class="n">T7</th><th class="n">T8</th></tr></thead>
+          <tbody>
+            <tr><td>Predictor multi-paso</td><td class="n">+0.00000004</td><td class="n">+0.00000000</td></tr>
+            <tr><td>Autoatención</td><td class="n">-0.60040</td><td class="n">+0.66880</td></tr>
+            <tr><td>Aportación conjunta de ambos</td><td class="n">-0.00000013</td><td class="n">+0.00000000</td></tr>
+          </tbody>
+          <caption>Aportación de cada componente, en penalización oficial. Un signo negativo indica mejora.</caption>
+        </table>
+      </div>
+      <p>El predictor multi-paso y la aportación conjunta salen nulos hasta la octava cifra decimal. No es una estimación sino una identidad: las parejas que los miden comparten pesos y entregan la misma curva, y una pieza que no cambia la curva no puede aportar nada, ni sola ni acompañada. El único término que puede ser distinto de cero es el de la autoatención, y para saber qué se puede afirmar sobre él hay que mirar cómo cambia con la semilla.</p>
+      <div class="tabla">
+        <table>
+          <thead><tr><th class="n">Tanda de semillas</th><th class="n">Aportación en T7</th><th class="n">Aportación en T8</th></tr></thead>
+          <tbody>
+            <tr><td class="n">0</td><td class="n">-0.600</td><td class="n">+0.669</td></tr>
+            <tr><td class="n">1</td><td class="n">+0.690</td><td class="n">+0.123</td></tr>
+            <tr><td class="n">2</td><td class="n">-0.342</td><td class="n">+0.488</td></tr>
+            <tr><td class="n">3</td><td class="n">-1.914</td><td class="n">+0.186</td></tr>
+          </tbody>
+          <caption>Aportación de la autoatención en cada una de las cuatro tandas de semillas.</caption>
+        </table>
+      </div>
+      <p>En T7 la aportación cambia de signo de una tanda a otra: la atención mejora unas veces y empeora otras, con un recorrido varias veces mayor que su media. En T8 mantiene el signo, pero el contrario al deseado: empeora en las cuatro tandas. No hay base para atribuirle una mejora en ninguna de las dos probetas.</p>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_4_4_a_aportacion.mp4" muted loop playsinline preload="metadata" aria-label="Aportación por diferencia"></video>
+        <figcaption>Restar parejas que solo difieren en una pieza.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="c4-comparacion" class="sec">
+    <div class="wrap">
+      <span class="kicker">Comparación</span>
+      <h2>Las cuatro, frente a frente</h2>
+      <p>El estudio de ablación produce seis filas, pero solo dos conjuntos de números distintos, uno por cada red entrenada. Las piezas que actúan después de la red no cambian nada de lo que se entrega.</p>
+      <div class="tabla">
+        <table>
+          <thead><tr><th>Configuración</th><th class="n">T7</th><th class="n">T8</th><th class="n">Total</th><th class="n">RMSE T7 (mm)</th><th class="n">RMSE T8 (mm)</th></tr></thead>
+          <tbody>
+            <tr class="base"><td>1 (a+b)</td><td class="n">6.49</td><td class="n">90.45</td><td class="n">96.94</td><td class="n">0.350</td><td class="n">2.418</td></tr>
+            <tr><td>2 (a+b+c)</td><td class="n">6.49</td><td class="n">90.45</td><td class="n">96.94</td><td class="n">0.350</td><td class="n">2.418</td></tr>
+            <tr><td>2b (a+b+c con retardo)</td><td class="n">6.49</td><td class="n">90.45</td><td class="n">96.94</td><td class="n">0.350</td><td class="n">2.418</td></tr>
+            <tr><td>3 (a+b+d)</td><td class="n">5.88</td><td class="n">91.12</td><td class="n">97.00</td><td class="n">0.522</td><td class="n">2.431</td></tr>
+            <tr><td>4 (a+b+c+d)</td><td class="n">5.88</td><td class="n">91.12</td><td class="n">97.00</td><td class="n">0.522</td><td class="n">2.431</td></tr>
+            <tr><td>4b (a+b+c con retardo+d)</td><td class="n">5.88</td><td class="n">91.12</td><td class="n">97.00</td><td class="n">0.522</td><td class="n">2.431</td></tr>
+          </tbody>
+          <caption>Estudio de ablación completo, en penalización oficial. Menor es mejor.</caption>
+        </table>
+      </div>
+      <p>El mejor total es el de la Configuración 1, la base sin piezas opcionales. La conclusión del estudio es que ninguno de los dos componentes opcionales aporta de forma atribuible en la métrica del certamen.</p>
+      <figure class="fig">
+        <img src="../media/img/grupos_entrega.png" alt="Grieta medida y entregada por cada grupo de configuraciones en T7 y T8">
+        <figcaption>Grieta medida y entregada por cada grupo de configuraciones. A la izquierda T7, a la derecha T8. Cuadrados: estimaciones desde la señal; rombos: proyecciones con la ley física.</figcaption>
+      </figure>
+      <p>La figura muestra la diferencia entre las dos probetas mejor que cualquier tabla. En T7, de carga constante, las dos familias siguen la forma de la curva medida durante toda la vida restante: el mayor error de la proyección es de 0.55 mm y el último punto queda 0.26 mm por debajo de la medida. En T8, de carga variable, la estimación ya parte en torno a un milímetro por encima, el punto de anclaje queda un 40% alto y la proyección toca la cota de 7.24 mm en el primer ciclo sin señal, mientras la grieta real termina en 5.52 mm.</p>
+      <div class="tabla">
+        <table>
+          <thead><tr><th>Magnitud</th><th class="n">T7, config. 1 y 2</th><th class="n">T7, config. 3 y 4</th><th class="n">T8, config. 1 y 2</th><th class="n">T8, config. 3 y 4</th></tr></thead>
+          <tbody>
+            <tr><td>Penalización</td><td class="n">6.49</td><td class="n">5.88</td><td class="n">90.45</td><td class="n">91.12</td></tr>
+            <tr><td>de la estimación</td><td class="n">1.59</td><td class="n">1.02</td><td class="n">5.38</td><td class="n">6.05</td></tr>
+            <tr><td>de la proyección</td><td class="n">4.89</td><td class="n">4.87</td><td class="n">85.07</td><td class="n">85.07</td></tr>
+            <tr><td>RMSE (mm)</td><td class="n">0.35</td><td class="n">0.52</td><td class="n">2.42</td><td class="n">2.43</td></tr>
+            <tr><td>Sesgo (mm)</td><td class="n">0.16</td><td class="n">0.38</td><td class="n">2.22</td><td class="n">2.25</td></tr>
+            <tr><td>Error del anclaje</td><td class="n">-6.8%</td><td class="n">-2.5%</td><td class="n">39.7%</td><td class="n">44.7%</td></tr>
+          </tbody>
+          <caption>Métricas de cada grupo de configuraciones. El sesgo es positivo cuando se sobreestima la grieta.</caption>
+        </table>
+      </div>
+      <p>Hay un detalle que parece contradictorio y no lo es. En T7, el grupo con atención puntúa mejor (5.88 frente a 6.49) teniendo un error cuadrático mayor (0.52 frente a 0.35 mm). La explicación está en la asimetría de la regla: ese grupo sobreestima más, con un sesgo de 0.38 frente a 0.16 mm, y el certamen castiga menos pasarse que quedarse corto.</p>
+    </div>
+  </section>
+
+  <section id="c4-referencias" class="sec">
+    <div class="wrap">
+      <span class="kicker">Contexto</span>
+      <h2>Frente a los ganadores del certamen</h2>
+      <p>Frente a las réplicas, que son el único término reproducible con el mismo protocolo, la Configuración 1 queda por delante de las tres en T7 y en el total, y de dos de las tres en T8. En T7 su penalización, 6.49, es tres veces y media menor que la de la mejor réplica (22.71, Youn et al.), supera al valor publicado por el tercer puesto (9.23) y queda en el mismo orden que los publicados por el primero y el segundo (3.42 y 3.54). Frente a estos dos, en cambio, pierde con claridad en el total, y la distancia procede entera de T8.</p>
+      <figure class="fig">
+        <img src="../media/img/frente_referencias_memoria.png" alt="La Configuración 1 frente a las tres referencias del certamen">
+        <figcaption>La Configuración 1 frente a las tres referencias del certamen, en escala logarítmica: en gris el valor publicado por sus autores, en rojo la réplica de este trabajo y en azul la Configuración 1. Más a la izquierda es mejor.</figcaption>
+      </figure>
+      <p>Conviene subrayar una decisión que encarece el resultado de T8 a propósito: esa probeta no se usó en ningún entrenamiento ni en ninguna selección de hiperparámetros. Hacerlo habría sido una fuga de información, es decir, usar los datos con los que se va a juzgar el método para tomar decisiones sobre él. Existen constantes con las que T8 puntúa mucho mejor, pero para encontrarlas hay que mirar su curva medida, que es justo lo que el método no tiene cuando predice.</p>
+    </div>
+  </section>
+
+  <section id="c4-t8" class="sec">
+    <div class="wrap">
+      <span class="kicker">Diagnóstico</span>
+      <h2>Por qué falla T8</h2>
+      <p>La penalización de T8 es catorce veces la de T7. El diagnóstico sitúa la diferencia en el coeficiente con el que se extrapola, no en la red que estima.</p>
+      <div class="tabla">
+        <table>
+          <thead><tr><th>Probeta</th><th class="n">log10 C emitido</th><th class="n">log10 C implicado por la curva</th><th>Banda con error inferior a 1 mm</th></tr></thead>
+          <tbody>
+            <tr><td>T7</td><td class="n">-8.423</td><td class="n">-8.420</td><td>De -8.635 a -8.290: el modelo cae dentro</td></tr>
+            <tr><td>T8</td><td class="n">-8.423</td><td class="n">-8.803</td><td>De -9.600 a -9.025: el modelo cae fuera por 0.602 décadas</td></tr>
+          </tbody>
+          <caption>Diagnóstico del coeficiente. El coeficiente implicado se deduce a posteriori de las medidas, información que el método no tiene al predecir.</caption>
+        </table>
+      </div>
+      <p>Con el coeficiente adecuado, la misma red entregaría en T8 un resultado unas seis veces mejor: un barrido del coeficiente, dejando todo lo demás fijo, sitúa el mínimo de la penalización en 14.34, con log10 C = -9.135. El estimador, por tanto, no es el culpable.</p>
+      <figure class="fig">
+        <img src="../media/img/t8_barrido_coef.png" alt="Curvas entregadas en T8 con distintos valores del coeficiente">
+        <figcaption>Curvas entregadas en T8 por el mismo estimador con distintos coeficientes. Solo cambia el coeficiente; el anclaje y la red son los mismos. Más cerca de la curva medida es mejor.</figcaption>
+      </figure>
+      <p>Hay que ser claros también sobre lo que significa el 90.45. Sin la cota de 7.24 mm, la extrapolación de T8 se dispara y la penalización sería de 8289.46. La cota la baja a 90.45, pero los cinco puntos predichos quedan en el mismo valor mientras la grieta real crece de 3.71 a 5.52 mm. Ese número refleja una sobreestimación acotada, no una prognosis: en la mitad ciega de T8, el método no aporta información.</p>
+
+      <h3>Un problema cerrado por dos lados</h3>
+      <p>Las configuraciones 2 y 3 fallan en T8 por razones independientes, y esa independencia es lo más informativo del estudio.</p>
+      <div class="rejilla">
+        <div><b>Configuración 2</b>Tiene el mecanismo: puede imponer la corrección sin necesidad de ejemplos. Pero no el alcance: su techo es de 0.255 décadas y T8 necesita al menos 0.612.</div>
+        <div><b>Configuración 3</b>Tiene el alcance: su cabeza puede emitir cualquier valor dentro de una década. Pero no la información: T7 y T8 son indistinguibles en la ventana con señal.</div>
+        <div><b>Configuración 4</b>Hereda las dos limitaciones sin añadir ninguna nueva.</div>
+      </div>
+
+      <h3>¿Y si se usaran otras constantes?</h3>
+      <p>Queda una última prueba: mantener la Configuración 1 tal cual y cambiar solo de dónde salen las constantes de la ley de Paris. El contraste se hace sobre las seis probetas que se pueden puntuar, para que el juicio no dependa de dos.</p>
+      <figure class="fig">
+        <img src="../media/img/procedencia_parametros.png" alt="Penalización por probeta según la procedencia de los parámetros físicos">
+        <figcaption>Penalización por probeta según la procedencia de las constantes, con la arquitectura de la Configuración 1 fija. Más abajo es mejor.</figcaption>
+      </figure>
+      <p>Las constantes identificadas en este trabajo ganan a todas las fuentes externas en las cinco probetas de carga constante, con márgenes de una vez y media a más de cuarenta veces. La única excepción es T8, y ahí la diferencia no es de grado. El coeficiente que optimiza T8 baja su penalización a 15.73, pero acumula 875.29 puntos en las otras cinco, catorce veces los 61.28 de las constantes adoptadas. El ajuste de la base de datos de la FAA para el 2024-T3 (Forman et al., 2005) repite el patrón sin haber sido elegido para ello: gana T8 con 14.17 y paga 968.17 en las otras cinco.</p>
+      <p>Que las constantes que convienen a T8 sean precisamente las que arruinan las demás indica que la discrepancia no es de ajuste sino de régimen: una firma de carga distinta pide constantes distintas. Las identificadas con carga constante no se pueden trasladar a carga variable, y el conjunto del certamen no ofrece ninguna probeta de carga variable en entrenamiento con la que identificar las suyas.</p>
+      <figure class="anim">
+        <video class="auto" src="../media/video/web_4_4_b_coeficiente_t8.mp4" muted loop playsinline preload="metadata" aria-label="El coeficiente que t8 necesitaba"></video>
+        <figcaption>Mover solo C y ver cómo cambia la entrega.</figcaption>
+      </figure>
+      
+      <a class="cuaderno" href="../config4_completa/configuracion4.html" target="_blank" rel="noopener">
+        <span><b>Cuaderno: Configuración 4</b>La combinación de las piezas, la comparación final y el origen del error en T8.</span>
+        <em>Abrir el cuaderno ↗</em>
+      </a>
+      <div class="ui" style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 30px; font-size: 16px">
+        <a href="config3.html">Anterior: Configuración 3</a>
+        <a href="conclusiones.html">Siguiente: conclusiones</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  var videos = document.querySelectorAll("video.auto");
+  if (!("IntersectionObserver" in window)) {
+    videos.forEach(function (v) { v.play(); });
+    return;
+  }
+  var observador = new IntersectionObserver(function (entradas) {
+    entradas.forEach(function (e) {
+      if (e.isIntersecting) { e.target.play().catch(function () {}); }
+      else { e.target.pause(); }
+    });
+  }, { threshold: 0.5 });
+  videos.forEach(function (v) { observador.observe(v); });
+})();
+</script>
+</body>
+</html>
