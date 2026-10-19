@@ -8,3 +8,15 @@ estado_del_arte/mendeley_sync/data/
 .DS_Store
 *.log
 */results/
+media/images/
+media/texts/
+media/videos/
+backup_*/
+resultados/
+metodologia/
+estado_del_arte/
+models/
+animaciones/
+resumen/
+comparativo_parametros/
+conclusiones/
