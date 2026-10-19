@@ -11,6 +11,14 @@ El problema tiene dos tareas: **estimar** la longitud de grieta mientras existe 
 El [sitio web del trabajo](https://carlosbravo1408.github.io/TFMProject/) lo explica paso a paso, con
 animaciones de cada etapa y una simulación de las ondas de Lamb sobre la junta.
 
+![Simulación de ondas de Lamb sobre la junta remachada](media/img/animacion0.gif)
+
+*Los cinco emisores disparan por turno; la línea gruesa marca la pareja activa y, debajo, la señal que
+recoge su receptor. Simulación ilustrativa de la ecuación de onda sobre las dos placas, acopladas por
+los remaches, con la geometría del certamen. La amplitud, la velocidad, las reflexiones en bordes y
+remaches y los ecos que generan están exagerados para que se vean: no es una reproducción fiel del
+ensayo. Animación generada con Claude (Anthropic).*
+
 ## Resultados principales
 
 | | T7 (amplitud constante) | T8 (amplitud variable) | Total |
