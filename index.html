@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portada del sitio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#ffffff}
+a{color:#A63C0A}a:hover{color:#4D1B06}
+.pg{font-family:'Source Serif 4',Georgia,serif;color:#262626;background:#ffffff}
+.wrap{max-width:900px;margin:0 auto;padding:0 24px}
+.ui{font-family:'IBM Plex Sans',system-ui,sans-serif}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+.pg p{font-size:19px;line-height:1.65;margin:0 0 18px}
+.nav{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid #d9d9d5;background:#fafaf8}
+.nav ul{display:flex;flex-wrap:wrap;gap:8px 20px;list-style:none;margin:0;padding:0;font-size:15px}
+.logo{width:120px;height:36px;background:#ececE8;border:1px dashed #b9b9b3;display:flex;align-items:center;justify-content:center;font-size:12px;color:#5f5f5a}
+.card{border:1px solid #d4d4d0;border-radius:8px;padding:22px;background:#ffffff;display:flex;flex-direction:column;gap:10px}
+.card h3{margin:0;font-size:21px}
+.card p{font-size:16px;line-height:1.55;margin:0;color:#3b3b38}
+.tag{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#5f5f5a}
+.nota{font-size:13.5px;line-height:1.55;color:#6B2560;background:#faf3f8;border:1px dotted #b77aa9;border-radius:6px;padding:12px 14px}
+.nota b{font-weight:600}
+.anim-mini{border:2px dashed #C2470D;border-radius:6px;padding:14px;background:repeating-linear-gradient(45deg,#fff3ec 0 10px,#fffaf6 10px 20px);color:#5a2207;font-size:14px}
+.anim0{margin:0;display:flex;flex-direction:column;gap:8px}
+.anim0 iframe{display:block;width:100%;aspect-ratio:2.33/1;border:0;background:transparent}
+.anim0 figcaption{font-size:14px;line-height:1.5;color:#5f5f5a}
+.wirebox{border:1px solid #d4d4d0;background:#f2f2ef;border-radius:6px;padding:14px;color:#3e3e3a;font-size:14px}
+
+.anim{margin:30px 0;border:0;border-radius:0;background:none;padding:0;display:flex;flex-direction:column;gap:10px}
+.anim video{display:block;width:100%;height:auto;border:1px solid #e0e0dc;border-radius:4px;background:#ffffff}
+.anim figcaption{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5;color:#4a4a46}
+.eq{overflow-x:auto;overflow-y:hidden;margin:20px 0;font-size:1.1em}
+.logo{width:auto;height:36px;background:none;border:0;display:block}
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'\\[',right:'\\]',display:true}]})"></script>
+</head>
+<body>
+<div class="pg" style="width: 100%; min-height: 100vh">
+  <header class="nav ui">
+    <div style="display: flex; gap: 14px; align-items: center">
+      <img class="logo" src="media/img/Logo_VIU.png" alt="VIU">
+      <strong style="font-size: 17px">Grietas, ondas y física</strong>
+    </div>
+    <ul>
+      <li><a href="pages/parte1.html">1. El problema</a></li>
+      <li><a href="pages/parte2.html">2. La señal</a></li>
+      <li><a href="pages/parte3.html">3. La ley física</a></li>
+      <li><a href="pages/parte4.html">4. El modelo</a></li>
+      <li><a href="pages/conclusiones.html">5. Conclusiones</a></li>
+      <li><a href="pages/bibliografia.html">Bibliografía</a></li>
+    </ul>
+  </header>
+
+  <section style="padding: 72px 0 48px; background: #fafaf8; border-bottom: 1px solid #e3e3df">
+    <div class="wrap" style="display: flex; flex-direction: column; gap: 22px">
+      <span class="tag ui">Trabajo Fin de Máster · Máster Universitario en Inteligencia Artificial (VIU) · 2026</span>
+      <h1 class="ui" style="margin: 0; font-size: 44px; line-height: 1.12; font-weight: 700; color: #1f1f1d">Estimación y predicción del crecimiento de grietas por fatiga en uniones de aluminio a partir de redes neuronales convolucionales físicamente informadas</h1>
+      <p style="font-size: 21px; color: #3b3b38; margin: 0">Un avión no se rompe de golpe: sus uniones acumulan millones de pequeños esfuerzos, y en algún momento aparece una grieta que crece poco a poco. Este sitio cuenta cómo se puede escuchar esa grieta con ultrasonidos y anticipar cuánto va a crecer cuando ya no podemos medirla.</p>
+      <div class="ui" style="display: flex; flex-wrap: wrap; gap: 12px 24px; font-size: 15px; color: #4a4a46">
+        <span>Autor: Carlos Javier Bravo Intriago</span>
+        <span>Director: Jesús Marcey García</span>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px">
+        <a class="ui" href="pages/parte1.html" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px; background: #4D1B06; color: #ffffff; border-radius: 6px; text-decoration: none; font-weight: 600">Empezar por el problema</a>
+        <a class="ui" href="#mapa" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px; border: 1px solid #4D1B06; color: #4D1B06; border-radius: 6px; text-decoration: none; font-weight: 600">Ver el recorrido</a>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding: 48px 0">
+    <div class="wrap" style="display: flex; flex-direction: column; gap: 18px">
+      <figure class="anim0">
+        <iframe src="pages/animacion0.html" title="Ondas ultrasónicas recorriendo la junta remachada" loading="lazy"></iframe>
+        <figcaption class="ui">Los cinco emisores disparan por turno; la línea gruesa marca la pareja activa y, debajo, la señal que recoge su receptor. Simulación ilustrativa de la ecuación de onda sobre las dos placas, acopladas por los remaches, con la geometría del certamen. La amplitud, la velocidad, las reflexiones en bordes y remaches y los ecos que generan están exagerados para que se vean: no es una reproducción fiel del ensayo y sus velocidades y amortiguamiento no están calibrados. Animación generada con Claude (Anthropic).</figcaption>
+      </figure>
+      <p>La idea del trabajo cabe en una frase: mientras hay señal ultrasónica, una red neuronal la lee y estima cuánto mide la grieta; cuando la señal desaparece, una ley física de crecimiento toma el relevo y proyecta el resto de la curva. Lo interesante está en los detalles, y para eso existen las cinco partes que siguen.</p>
+    </div>
+  </section>
+
+  <section id="mapa" style="padding: 8px 0 56px">
+    <div class="wrap" style="display: flex; flex-direction: column; gap: 22px">
+      <h2 class="ui" style="margin: 0; font-size: 28px">El recorrido</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px">
+        <div class="card">
+          <span class="tag ui">Parte 1</span>
+          <h3 class="ui">Sobre el problema</h3>
+          <p>Qué es una grieta por fatiga, cómo se diseñó el certamen que proporciona los datos, con qué regla se puntúa y qué hicieron los tres primeros clasificados.</p>
+          <a class="ui" href="pages/parte1.html" style="font-size: 15px">Ir a la parte 1</a>
+        </div>
+        <div class="card">
+          <span class="tag ui">Parte 2</span>
+          <h3 class="ui">Tratamiento de la señal</h3>
+          <p>Los cinco pasos que convierten un registro ultrasónico ruidoso en algo que una red puede comparar entre probetas distintas.</p>
+          <a class="ui" href="pages/parte2.html" style="font-size: 15px">Ir a la parte 2</a>
+        </div>
+        <div class="card">
+          <span class="tag ui">Parte 3</span>
+          <h3 class="ui">La ley física y sus parámetros</h3>
+          <p>Por qué hay que calibrar la ley de Paris-Erdogan, qué algoritmos se compararon para hacerlo y cómo se eligieron finalmente sus dos constantes.</p>
+          <a class="ui" href="pages/parte3.html" style="font-size: 15px">Ir a la parte 3</a>
+        </div>
+        <div class="card">
+          <span class="tag ui">Parte 4</span>
+          <h3 class="ui">El modelo</h3>
+          <p>La arquitectura, el estudio de ablación y, en detalle, las cuatro configuraciones: la base, una red convolucional unidimensional acoplada a la ley física, y las tres que le añaden piezas.</p>
+          <a class="ui" href="pages/parte4.html" style="font-size: 15px">Ir a la parte 4</a>
+        </div>
+        <div class="card">
+          <span class="tag ui">Parte 5</span>
+          <h3 class="ui">Conclusiones y trabajo futuro</h3>
+          <p>Qué se consiguió, qué no y por qué, y las tres líneas que más prometen para resolver el caso de carga variable.</p>
+          <a class="ui" href="pages/conclusiones.html" style="font-size: 15px">Ir a la parte 5</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="ui" style="padding: 28px 24px; border-top: 1px solid #d9d9d5; font-size: 14px; color: #5f5f5a; display: flex; flex-wrap: wrap; gap: 12px 28px; justify-content: space-between">
+    <span>Carlos J. Bravo · 2026</span>
+    <span><a href="pages/bibliografia.html">Bibliografía</a> · <a href="https://github.com/carlosbravo1408/TFMProject">Repositorio</a></span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var videos = document.querySelectorAll("video.auto");
+  if (!("IntersectionObserver" in window)) {
+    videos.forEach(function (v) { v.play(); });
+    return;
+  }
+  var observador = new IntersectionObserver(function (entradas) {
+    entradas.forEach(function (e) {
+      if (e.isIntersecting) { e.target.play().catch(function () {}); }
+      else { e.target.pause(); }
+    });
+  }, { threshold: 0.5 });
+  videos.forEach(function (v) { observador.observe(v); });
+})();
+</script>
+</body>
+</html>
